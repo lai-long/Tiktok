@@ -4,37 +4,29 @@ import (
 	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/entity"
-	"Tiktok/pkg/utils"
+	"Tiktok/biz/service"
+	"Tiktok/pkg/consts"
 	"context"
 	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func UserRegister(ctx context.Context, c *app.RequestContext) {
 	var userinfo dto.User
 	var err error
 	if err = c.BindAndValidate(&userinfo); err != nil {
-		baseResponse := dto.Base{Code: -1, Msg: "UserRegister BindAndValidate error"}
+		baseResponse := dto.Base{Code: consts.CodeError, Msg: "UserRegister BindAndValidate error"}
 		c.JSON(200, dto.Response{baseResponse, nil})
 		c.Abort()
 		return
-
 	}
-	var userEntity entity.UserEntity
-	userEntity.Username = userinfo.Username
-	bytes, err := bcrypt.GenerateFromPassword([]byte(userinfo.Password), bcrypt.DefaultCost)
-	userEntity.Password = string(bytes)
-	userEntity.Id = utils.IdGenerate()
-	if err := db.CreateUser(userEntity); err != nil {
-		baseResponse := dto.Base{Code: -1, Msg: "CreateUser error"}
-		log.Printf("CreateUser failed: %v", err)
-		c.JSON(200, baseResponse)
-		c.Abort()
-		return
+	code, msg := service.Register(userinfo)
+	res := dto.Response{
+		Base: dto.Base{Code: code, Msg: msg},
+		Data: nil,
 	}
-	c.JSON(200, dto.Response{dto.Base{Code: 10000, Msg: "Success"}, nil})
+	c.JSON(200, res)
 }
 
 func UserLogin(ctx context.Context, c *app.RequestContext) {
