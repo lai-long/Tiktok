@@ -5,60 +5,100 @@ import (
 	"Tiktok/pkg/conf"
 	"Tiktok/pkg/consts"
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
-
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type myClaims struct {
-	UserId   string
-	UserName string
+	UserId   string `json:"user_id"`
+	UserName string `json:"username"`
 	jwt.RegisteredClaims
 }
 
-func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
-	tokenStringByte := c.GetHeader("Authorization")
-	var res dto.Response
-	if len(tokenStringByte) == 0 {
-		res.Base.Msg = "tokenString is empty"
-		res.Base.Code = consts.CodeTokenGetError
-		c.JSON(200, res)
-		return
-	}
-	tokenString := string(tokenStringByte)
-	bearer := "Bearer"
-	for i := 0; i < len(bearer); i++ {
-		if tokenString[i] != bearer[i] {
-			res.Base.Msg = "tokenString is invalid"
-			res.Base.Code = consts.CodeTokenGetError
-			c.JSON(200, res)
+func AuthMiddleware() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		authHeader := string(c.GetHeader("Access-Token"))
+		if authHeader == "" {
+			c.JSON(200, dto.Response{
+				Base: struct {
+					Code int    `json:"code"`
+					Msg  string `json:"msg"`
+				}{
+					Code: consts.CodeTokenGetError,
+					Msg:  "Get access_token error",
+				},
+			})
+			c.Abort()
 			return
 		}
-	}
-	tokenString = tokenString[7:]
-	claims := myClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+
+		const bearerPrefix = "Bearer "
+		if !strings.HasPrefix(authHeader, bearerPrefix) {
+			c.JSON(200, dto.Response{
+				Base: struct {
+					Code int    `json:"code"`
+					Msg  string `json:"msg"`
+				}{
+					Code: consts.CodeTokenGetError,
+					Msg:  "token hasprefix error",
+				},
+			})
+			c.Abort()
+			return
 		}
-		return conf.JwtSecret, nil
-	})
-	if err != nil {
-		res.Base.Code = consts.CodeTokenGetError
-		res.Base.Msg = "token parse error"
-		c.JSON(200, res)
-		c.Abort()
-		return
+		tokenString := strings.TrimSpace(authHeader[len(bearerPrefix):])
+		if tokenString == "" {
+			c.JSON(200, dto.Response{
+				Base: struct {
+					Code int    `json:"code"`
+					Msg  string `json:"msg"`
+				}{
+					Code: consts.CodeTokenGetError,
+					Msg:  "empty token",
+				},
+			})
+			c.Abort()
+			return
+		}
+		claims := &myClaims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return conf.JwtSecret, nil
+		})
+		if err != nil {
+			c.JSON(200, dto.Response{
+				Base: struct {
+					Code int    `json:"code"`
+					Msg  string `json:"msg"`
+				}{
+					Code: consts.CodeTokenGetError,
+					Msg:  "token parse error",
+				},
+			})
+			c.Abort()
+			return
+		}
+		if !token.Valid {
+			c.JSON(200, dto.Response{
+				Base: struct {
+					Code int    `json:"code"`
+					Msg  string `json:"msg"`
+				}{
+					Code: consts.CodeTokenGetError,
+					Msg:  "token valid error",
+				},
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", claims.UserName)
+		c.Set("user_id", claims.UserId)
+
+		c.Next(ctx)
 	}
-	if !token.Valid {
-		res.Base.Code = consts.CodeTokenGetError
-		res.Base.Msg = "token.valid error"
-		c.JSON(200, res)
-		c.Abort()
-		return
-	}
-	c.Set("username", claims.UserName)
-	c.Set("id", claims.UserId)
 }
