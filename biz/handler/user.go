@@ -1,13 +1,10 @@
 package handler
 
 import (
-	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/model/entity"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
-	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -31,29 +28,25 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 
 func UserLogin(ctx context.Context, c *app.RequestContext) {
 	var userDto dto.User
-	var userEntity entity.UserEntity
-	var err error
-	if err = c.BindAndValidate(&userDto); err != nil {
+	if err := c.BindAndValidate(&userDto); err != nil {
 		baseResponse := dto.Base{Code: -1, Msg: "UserLogin BindAndValidate error"}
 		c.JSON(200, dto.Response{Base: baseResponse})
 		c.Abort()
 		return
 	}
-	userEntity, err = db.GetUserByUsername(userDto.Username)
-	if err != nil {
-		baseResponse := dto.Base{Code: -1, Msg: "GetUserByUsername error"}
-		log.Printf("查询失败: %v", err)
-		c.JSON(200, dto.Response{Base: baseResponse})
-		c.Abort()
-		return
+	code, msg, user, reToken, acToken := service.Login(userDto)
+	res := dto.LoginResponse{
+		Response: dto.Response{
+			Base: dto.Base{
+				Code: code,
+				Msg:  msg,
+			},
+			Data: user,
+		},
+		RefreshToken: reToken,
+		AccessToken:  acToken,
 	}
-	userDto.Password = userEntity.Password
-	userDto.AvatarURL = userEntity.Avatar_url
-	userDto.ID = userEntity.Id
-	userDto.Username = userEntity.Username
-	userDto.CreatedAt = userEntity.Created_at.String()
-	userDto.UpdatedAt = userEntity.Updated_at.String()
-	c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "Success"}, Data: userDto})
+	c.JSON(200, res)
 }
 
 func UserInfo(ctx context.Context, c *app.RequestContext) {
