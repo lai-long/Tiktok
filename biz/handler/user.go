@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -35,28 +36,33 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	code, msg, user, reToken, acToken := service.Login(userDto)
-	res := dto.LoginResponse{
-		Response: dto.Response{
-			Base: dto.Base{
-				Code: code,
-				Msg:  msg,
-			},
-			Data: user,
+	res := dto.Response{
+		Base: dto.Base{
+			Code: code,
+			Msg:  msg,
 		},
-		RefreshToken: reToken,
-		AccessToken:  acToken,
+		Data: user,
 	}
+
 	c.JSON(200, res)
+	c.JSON(200, map[string]interface{}{
+		"reToken": reToken,
+		"acToken": acToken,
+	})
 }
 
 func UserInfo(ctx context.Context, c *app.RequestContext) {
-	//userId := c.Param("user_id")
-	//userEntity, err := db.GetUserByUserId(userId)
-	//if err != nil {
-	//	baseResponse := dto.Base{Code: -1, Msg: "GetUserByUserId error"}
-	//	c.JSON(200, baseResponse)
-	//	c.Abort()
-	//	return
-	//}
-	//c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "success"}, Data: userEntity})
+	userId := c.Query("user_id")
+	userEntity, err := db.GetUserByUserId(userId)
+	if err != nil {
+		c.JSON(200, dto.Response{
+			Base: dto.Base{
+				Code: consts.CodeError,
+				Msg:  "GetUserByUserId error 用户不存在",
+			},
+		})
+		c.Abort()
+		return
+	}
+	c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "success"}, Data: userEntity})
 }

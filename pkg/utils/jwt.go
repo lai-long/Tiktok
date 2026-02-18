@@ -3,7 +3,6 @@ package utils
 import (
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/conf"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -29,7 +28,7 @@ func GetToken(username string, userid string, t time.Duration) (string, error) {
 		"exp":      time.Now().Add(t).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
-	tokenString, err := token.SignedString([]byte(os.Getenv(conf.JwtSecret)))
+	tokenString, err := token.SignedString([]byte(conf.JwtSecret))
 	if err != nil {
 		return "生成token错误", err
 	}
