@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -14,24 +13,18 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 	var userinfo dto.User
 	var err error
 	if err = c.BindAndValidate(&userinfo); err != nil {
-		baseResponse := dto.Base{Code: consts.CodeError, Msg: "UserRegister BindAndValidate error"}
-		c.JSON(200, dto.Response{baseResponse, nil})
+		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserRegister BindAndValidate error"}})
 		c.Abort()
 		return
 	}
 	code, msg := service.Register(userinfo)
-	res := dto.Response{
-		Base: dto.Base{Code: code, Msg: msg},
-		Data: nil,
-	}
-	c.JSON(200, res)
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
 
 func UserLogin(ctx context.Context, c *app.RequestContext) {
 	var userDto dto.User
 	if err := c.BindAndValidate(&userDto); err != nil {
-		baseResponse := dto.Base{Code: -1, Msg: "UserLogin BindAndValidate error"}
-		c.JSON(200, dto.Response{Base: baseResponse})
+		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserLogin BindAndValidate error"}})
 		c.Abort()
 		return
 	}
@@ -53,16 +46,21 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 
 func UserInfo(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
-	userEntity, err := db.GetUserByUserId(userId)
-	if err != nil {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeError,
-				Msg:  "GetUserByUserId error 用户不存在",
-			},
-		})
+	user, code, msg, ok := service.UserInfo(userId)
+	if !ok {
+		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		c.Abort()
 		return
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "success"}, Data: userEntity})
+	c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "success"}, Data: user})
+}
+
+func UserAvatar(ctx context.Context, c *app.RequestContext) {
+	data, _ := c.FormFile("data")
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
+	}
+	code, msg := service.UserAvatar(data, userId)
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
