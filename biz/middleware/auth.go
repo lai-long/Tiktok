@@ -18,27 +18,24 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	if authHeader == "" {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
-				Code: consts.CodeTokenGetError,
+				Code: consts.CodeTokenError,
 				Msg:  "get tokenHeader failed",
 			},
 		})
 		c.Abort()
 		return
 	}
-
 	tokenString := strings.TrimSpace(authHeader)
-
 	if tokenString == "" {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
-				Code: consts.CodeTokenGetError,
+				Code: consts.CodeTokenError,
 				Msg:  "get tokenString failed",
 			},
 		})
 		c.Abort()
 		return
 	}
-
 	claims := &jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -46,34 +43,29 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 		}
 		return []byte(conf.JwtSecret), nil
 	})
-
 	if err != nil {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
-				Code: consts.CodeTokenGetError,
+				Code: consts.CodeTokenError,
 				Msg:  "token ParseWithClaims failed",
 			},
 		})
 		c.Abort()
 		return
 	}
-
 	if !token.Valid {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
-				Code: consts.CodeTokenGetError,
+				Code: consts.CodeTokenError,
 				Msg:  "token invalid",
 			},
 		})
 		c.Abort()
 		return
 	}
-
 	username, _ := (*claims)["username"].(string)
 	userid, _ := (*claims)["userid"].(string)
-
 	c.Set("username", username)
 	c.Set("user_id", userid)
-
 	c.Next(ctx)
 }

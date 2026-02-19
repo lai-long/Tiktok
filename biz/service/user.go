@@ -6,7 +6,10 @@ import (
 	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
+	"io"
 	"log"
+	"mime/multipart"
+	"os"
 )
 
 func Register(userinfo dto.User) (int, string) {
@@ -15,10 +18,10 @@ func Register(userinfo dto.User) (int, string) {
 	exists, err := utils.IsUsernameExists(userinfo.Username)
 	if err != nil {
 		log.Fatal(err)
-		return consts.CodeCheckUserNameExistError, "register exists error"
+		return consts.CodeUserError, "register  IsUsernameExists error"
 	}
 	if exists {
-		return consts.CodeUserNameExist, "用户名已存在"
+		return consts.CodeUserError, "用户名已存在"
 	}
 	userEntity.Id = utils.IdGenerate()
 	userEntity.Username = userinfo.Username
@@ -28,7 +31,7 @@ func Register(userinfo dto.User) (int, string) {
 		return consts.CodeHashError, "hashPassword error"
 	}
 	if err = db.CreateUser(userEntity); err != nil {
-		return consts.CodeDBCreateUserError, "create user error"
+		return consts.CodeDBOperationError, "create user error"
 	}
 	return consts.CodeSuccess, "success"
 }
@@ -37,11 +40,11 @@ func Login(userDto dto.User) (int, string, dto.User, string, string) {
 	userEntity, err := db.GetUserByUsername(userDto.Username)
 	if err != nil {
 		log.Printf("查询失败: %v", err)
-		return consts.CodeGetUserByUserNameError, "用户名错误或用户不存在", dto.User{}, "", ""
+		return consts.CodeUserError, "GetUserByUsername Error", dto.User{}, "", ""
 	}
 	ok := utils.CheckPasswordHash(userEntity.Password, userDto.Password)
 	if !ok {
-		return consts.CodeCheckPasswordError, "密码错误", dto.User{}, "", ""
+		return consts.CodeUserError, "密码错误", dto.User{}, "", ""
 	}
 	userDto.AvatarURL = userEntity.Avatar_url
 	userDto.ID = userEntity.Id
@@ -50,7 +53,42 @@ func Login(userDto dto.User) (int, string, dto.User, string, string) {
 	userDto.UpdatedAt = userEntity.Updated_at.String()
 	reToken, acToken, ok := utils.GenerateTokens(userDto)
 	if ok == false {
-		return consts.CodeTokenGenerateError, "生成token错误", userDto, reToken, acToken
+		return consts.CodeTokenError, "生成token错误", userDto, reToken, acToken
 	}
 	return consts.CodeSuccess, "success", userDto, reToken, acToken
+}
+
+func UserInfo(userId string) (dto.User, int, string, bool) {
+	userEntity, err := db.GetUserByUserId(userId)
+	if err != nil {
+		return dto.User{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
+	}
+	var user dto.User
+	user.Username = userEntity.Username
+	user.AvatarURL = userEntity.Avatar_url
+	user.ID = userEntity.Id
+	return user, consts.CodeSuccess, "Get UserInfo success", true
+}
+
+func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string) {
+	dataFile, err := data.Open()
+	if err != nil {
+		return consts.CodeUserError, "data.Open Error"
+	}
+	defer dataFile.Close()
+	ok := utils.IsImageByDecode(dataFile)
+	if !ok {
+		return consts.CodeIOError, "IsImageByDecode false,文件不是图片"
+	}
+	file, _ := os.Create("/home/lai/avatar" + data.Filename)
+	defer file.Close()
+	_, err = io.Copy(file, dataFile)
+	if err != nil {
+		return consts.CodeIOError, "avatar io.copy error"
+	}
+	err = db.UpdateUserAvatar("/home/lai/avatar"+data.Filename, userId)
+	if err != nil {
+		return consts.CodeDBOperationError, "avatar db.UpdateUserAvatar error"
+	}
+	return consts.CodeSuccess, "avatar change success"
 }
