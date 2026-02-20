@@ -13,8 +13,8 @@ func GetVideoByUserID(userId string, pageSize string, pageNum string) ([]entity.
 	err := db.Get(&video, sql, userId, pageSize, pageNum)
 	return video, err
 }
-func GetVideoByVideoTitleOrDescription(title string, description string) (entity.VideoEntity, error) {
-	var video entity.VideoEntity
+func GetVideoByVideoTitleOrDescription(title string, description string) ([]entity.VideoEntity, error) {
+	var video []entity.VideoEntity
 	sql := `select * from videos where title = ? and description = ?`
 	err := db.Get(&video, sql, title, description)
 	return video, err

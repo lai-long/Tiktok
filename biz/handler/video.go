@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -33,5 +32,6 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 func VideoSearch(ctx context.Context, c *app.RequestContext) {
 	title := c.Query("title")
 	description := c.Query("description")
-	db.GetVideoByVideoTitleOrDescription(title, description)
+	code, msg, video := service.VideoSearch(title, description)
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Items{Video: video}})
 }

@@ -62,3 +62,26 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 	}
 	return consts.CodeSuccess, "success", videoDTOs
 }
+func VideoSearch(title string, description string) (int, string, []dto.Video) {
+	video, err := db.GetVideoByVideoTitleOrDescription(title, description)
+	if err != nil {
+		return consts.CodeVideoError, "GetVideoByVideoTitleOrDescription error", []dto.Video{}
+	}
+	videoDTOs := make([]dto.Video, len(video))
+	for i := 0; i < len(video); i++ {
+		videoDTOs[i].ID = video[i].ID
+		videoDTOs[i].Title = video[i].Title
+		videoDTOs[i].Description = video[i].Description
+		videoDTOs[i].VideoURL = video[i].VideoURL
+		videoDTOs[i].CreatedAt = video[i].CreatedAt
+		videoDTOs[i].DeletedAt = video[i].DeletedAt
+		videoDTOs[i].LikeCount = video[i].LikeCount
+		videoDTOs[i].UpdatedAt = video[i].UpdatedAt
+		videoDTOs[i].VideoURL = video[i].VideoURL
+		videoDTOs[i].CoverURL = video[i].CoverURL
+		videoDTOs[i].CommentCount = video[i].CommentCount
+		videoDTOs[i].CreatedAt = video[i].CreatedAt
+		videoDTOs[i].DeletedAt = video[i].DeletedAt
+	}
+	return consts.CodeSuccess, "success", videoDTOs
+}
