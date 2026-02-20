@@ -86,7 +86,7 @@ func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string) {
 	if err != nil {
 		return consts.CodeIOError, "avatar io.copy error"
 	}
-	err = db.UpdateUserAvatar("/home/lai/avatar"+data.Filename, userId)
+	err = db.UpdateUserAvatar("/home/lai/projetc/avatar"+data.Filename, userId)
 	if err != nil {
 		return consts.CodeDBOperationError, "avatar db.UpdateUserAvatar error"
 	}

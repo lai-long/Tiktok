@@ -8,4 +8,5 @@ const (
 	CodeDBSelectError    = 10004
 	CodeTokenError       = 10004
 	CodeIOError          = 10005
+	CodeVideoError       = 10006
 )
