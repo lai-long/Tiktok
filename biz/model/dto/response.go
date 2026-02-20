@@ -13,3 +13,7 @@ type LoginResponse struct {
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
 }
+type Items struct {
+	Video []Video `json:"video"`
+	Total int     `json:"total"`
+}

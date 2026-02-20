@@ -27,7 +27,8 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
-	service.VideoList(userId, pageSize, pageNum)
+	code, msg, video := service.VideoList(userId, pageSize, pageNum)
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Items{Video: video, Total: 0}})
 }
 func VideoSearch(ctx context.Context, c *app.RequestContext) {
 	title := c.Query("title")
