@@ -29,19 +29,19 @@ func SetRouters() {
 		video.POST("/search", handler.VideoSearch)
 		//video.GET("/popular", handler.VideoPopular)
 	}
-	//	//点赞操作、点赞列表、评论、评论列表、删除评论
-	//	like := h.Group("/like")
+	//点赞操作、点赞列表、评论、评论列表、删除评论
+	like := h.Group("/like")
 
-	//	{
-	//		like.POST("/action", handler.LikeAction)
-	//		like.GET("/list", handler.LikeList)
-	//	}
-	//	comment := h.Group("/comment")
-	//	{
-	//		comment.POST("/publish", handler.CommentPublish)
-	//		comment.GET("/list", handler.CommentList)
-	//		comment.DELETE("/delete", handler.CommentDelete)
-	//	}
+	{
+		like.POST("/action", handler.LikeAction)
+		like.GET("/list", handler.LikeList)
+	}
+	comment := h.Group("/comment")
+	{
+		comment.POST("/publish", handler.CommentPublish)
+		comment.GET("/list", handler.CommentList)
+		comment.DELETE("/delete", handler.CommentDelete)
+	}
 	//	//关注操作、关注列表、粉丝列表、好友列表
 	//	h.POST("/relation/action", handler.RelationAction)
 	//	h.GET("/following/list", handler.FollowingList)

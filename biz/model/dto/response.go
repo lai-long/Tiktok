@@ -14,6 +14,7 @@ type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 type Items struct {
-	Video []Video `json:"video"`
-	Total int     `json:"total"`
+	Video   []Video   `json:"video"`
+	Comment []Comment `json:"comment"`
+	Total   int       `json:"total"`
 }

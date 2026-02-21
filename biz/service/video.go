@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
+	"strconv"
 )
 
 func VideoPublish(video dto.Video, data *multipart.FileHeader) (int, string) {
@@ -38,10 +39,18 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader) (int, string) {
 	return consts.CodeSuccess, "success"
 }
 
-func VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video) {
-	videoList, err := db.GetVideoByUserID(userId, pageSize, pageNum)
+func VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool) {
+	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
-		return consts.CodeDBSelectError, "VideoList GetVideoByUserID error", []dto.Video{}
+		return consts.CodeError, "VideoList pageSize strconv error", []dto.Video{}, false
+	}
+	pageNumInt, err := strconv.Atoi(pageNum)
+	if err != nil {
+		return consts.CodeError, "VideoList pageNum error", []dto.Video{}, false
+	}
+	videoList, err := db.GetVideoByUserID(userId, pageSizeInt, pageNumInt)
+	if err != nil {
+		return consts.CodeDBSelectError, "VideoList GetVideoByUserID error", []dto.Video{}, false
 	}
 	videoDTOs := make([]dto.Video, len(videoList))
 	for i := 0; i < len(videoList); i++ {
@@ -60,12 +69,21 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 			VisitCount:   videoList[i].VisitCount,
 		}
 	}
-	return consts.CodeSuccess, "success", videoDTOs
+	return consts.CodeSuccess, "success", videoDTOs, true
 }
-func VideoSearch(title string, description string) (int, string, []dto.Video) {
-	video, err := db.GetVideoByVideoTitleOrDescription(title, description)
+
+func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
+	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
-		return consts.CodeVideoError, "GetVideoByVideoTitleOrDescription error", []dto.Video{}
+		return consts.CodeError, "VideoSearch pageSize strconv error", []dto.Video{}, false
+	}
+	pageNumInt, err := strconv.Atoi(pageNum)
+	if err != nil {
+		return consts.CodeError, "VideoSearch pageNum error", []dto.Video{}, false
+	}
+	video, err := db.GetVideoByKeyWord(keyword, pageNumInt, pageSizeInt)
+	if err != nil {
+		return consts.CodeVideoError, "GetVideoByVideoTitleOrDescription error", []dto.Video{}, false
 	}
 	videoDTOs := make([]dto.Video, len(video))
 	for i := 0; i < len(video); i++ {
@@ -83,5 +101,5 @@ func VideoSearch(title string, description string) (int, string, []dto.Video) {
 		videoDTOs[i].CreatedAt = video[i].CreatedAt
 		videoDTOs[i].DeletedAt = video[i].DeletedAt
 	}
-	return consts.CodeSuccess, "success", videoDTOs
+	return consts.CodeSuccess, "success", videoDTOs, true
 }

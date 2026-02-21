@@ -61,6 +61,10 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 	if !exist {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
 	}
-	code, msg := service.UserAvatar(data, userId)
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+	code, msg, ok, user := service.UserAvatar(data, userId)
+	if !ok {
+		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+		return
+	}
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: user})
 }
