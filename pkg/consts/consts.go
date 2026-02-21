@@ -9,4 +9,7 @@ const (
 	CodeTokenError       = 10004
 	CodeIOError          = 10005
 	CodeVideoError       = 10006
+	CodeLikeError        = 10007
+	CodeCommentError     = 10008
+	CodeError            = -1
 )

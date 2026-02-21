@@ -70,25 +70,33 @@ func UserInfo(userId string) (dto.User, int, string, bool) {
 	return user, consts.CodeSuccess, "Get UserInfo success", true
 }
 
-func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string) {
+func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User) {
 	dataFile, err := data.Open()
 	if err != nil {
-		return consts.CodeUserError, "data.Open Error"
+		return consts.CodeUserError, "data.Open Error", false, dto.User{}
 	}
 	defer dataFile.Close()
 	ok := utils.IsImageByDecode(dataFile)
 	if !ok {
-		return consts.CodeIOError, "IsImageByDecode false,文件不是图片"
+		return consts.CodeIOError, "IsImageByDecode false,文件不是图片", false, dto.User{}
 	}
 	file, _ := os.Create("/home/lai/avatar" + data.Filename)
 	defer file.Close()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
-		return consts.CodeIOError, "avatar io.copy error"
+		return consts.CodeIOError, "avatar io.copy error", false, dto.User{}
 	}
 	err = db.UpdateUserAvatar("/home/lai/projetc/avatar"+data.Filename, userId)
 	if err != nil {
-		return consts.CodeDBOperationError, "avatar db.UpdateUserAvatar error"
+		return consts.CodeDBOperationError, "avatar db.UpdateUserAvatar error", false, dto.User{}
 	}
-	return consts.CodeSuccess, "avatar change success"
+	userEntity, err := db.GetUserByUsername(userId.(string))
+	if err != nil {
+		return consts.CodeDBSelectError, "avatar db.GetUserByUsername error", false, dto.User{}
+	}
+	var user dto.User
+	user.Username = userEntity.Username
+	user.AvatarURL = userEntity.Avatar_url
+	user.ID = userEntity.Id
+	return consts.CodeSuccess, "avatar change success", true, user
 }

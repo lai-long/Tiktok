@@ -2,8 +2,8 @@ package dto
 
 // 视频
 type Video struct {
-	ID           string `json:"id"`
-	UserID       string `json:"user_id"`
+	ID           string `json:"id" `
+	UserID       string `json:"user_id" form:"user_id"`
 	Title        string `form:"title" json:"title" binding:"required"`
 	Description  string `form:"description" json:"description" binding:"required"`
 	CommentCount int64  `json:"comment_count"`
