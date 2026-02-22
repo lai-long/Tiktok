@@ -34,14 +34,12 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 			Code: code,
 			Msg:  msg,
 		},
-		Data: user,
+		Data:         user,
+		AccessToken:  acToken,
+		RefreshToken: reToken,
 	}
 
 	c.JSON(200, res)
-	c.JSON(200, map[string]interface{}{
-		"reToken": reToken,
-		"acToken": acToken,
-	})
 }
 
 func UserInfo(ctx context.Context, c *app.RequestContext) {

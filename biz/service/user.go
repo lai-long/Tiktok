@@ -39,7 +39,6 @@ func Register(userinfo dto.User) (int, string) {
 func Login(userDto dto.User) (int, string, dto.User, string, string) {
 	userEntity, err := db.GetUserByUsername(userDto.Username)
 	if err != nil {
-		log.Printf("查询失败: %v", err)
 		return consts.CodeUserError, "GetUserByUsername Error", dto.User{}, "", ""
 	}
 	ok := utils.CheckPasswordHash(userEntity.Password, userDto.Password)
@@ -67,6 +66,8 @@ func UserInfo(userId string) (dto.User, int, string, bool) {
 	user.Username = userEntity.Username
 	user.AvatarURL = userEntity.Avatar_url
 	user.ID = userEntity.Id
+	user.CreatedAt = userEntity.Created_at.String()
+	user.UpdatedAt = userEntity.Updated_at.String()
 	return user, consts.CodeSuccess, "Get UserInfo success", true
 }
 
