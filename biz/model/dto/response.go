@@ -16,5 +16,12 @@ type LoginResponse struct {
 type Items struct {
 	Video   []Video   `json:"video"`
 	Comment []Comment `json:"comment"`
-	Total   int       `json:"total"`
+	User    []User    `json:"user"`
+}
+type Total struct {
+	Total int `json:"total"`
+}
+type Data struct {
+	Items Items `json:"items"`
+	Total Total `json:"total"`
 }

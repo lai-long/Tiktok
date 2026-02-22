@@ -7,6 +7,7 @@ import (
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"io"
+	"math/rand"
 	"mime/multipart"
 	"os"
 	"strconv"
@@ -32,6 +33,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader) (int, string) {
 	videoEntity.VideoURL = video.VideoURL
 	videoEntity.UserID = video.UserID
 	videoEntity.ID = utils.IdGenerate()
+	videoEntity.VisitCount = rand.Intn(100)
 	err = db.CreatVideo(videoEntity)
 	if err != nil {
 		return consts.CodeDBOperationError, "VideoPublish db.Create err"
@@ -59,14 +61,14 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 			UserID:       videoList[i].UserID,
 			Title:        videoList[i].Title,
 			Description:  videoList[i].Description,
-			CommentCount: videoList[i].CommentCount,
+			CommentCount: int64(videoList[i].CommentCount),
 			CoverURL:     videoList[i].CoverURL,
 			CreatedAt:    videoList[i].CreatedAt,
 			DeletedAt:    videoList[i].DeletedAt,
-			LikeCount:    videoList[i].LikeCount,
+			LikeCount:    int64(videoList[i].LikeCount),
 			UpdatedAt:    videoList[i].UpdatedAt,
 			VideoURL:     videoList[i].VideoURL,
-			VisitCount:   videoList[i].VisitCount,
+			VisitCount:   int64(videoList[i].VisitCount),
 		}
 	}
 	return consts.CodeSuccess, "success", videoDTOs, true
@@ -93,11 +95,11 @@ func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, 
 		videoDTOs[i].VideoURL = video[i].VideoURL
 		videoDTOs[i].CreatedAt = video[i].CreatedAt
 		videoDTOs[i].DeletedAt = video[i].DeletedAt
-		videoDTOs[i].LikeCount = video[i].LikeCount
+		videoDTOs[i].LikeCount = int64(video[i].LikeCount)
 		videoDTOs[i].UpdatedAt = video[i].UpdatedAt
 		videoDTOs[i].VideoURL = video[i].VideoURL
 		videoDTOs[i].CoverURL = video[i].CoverURL
-		videoDTOs[i].CommentCount = video[i].CommentCount
+		videoDTOs[i].CommentCount = int64(video[i].CommentCount)
 		videoDTOs[i].CreatedAt = video[i].CreatedAt
 		videoDTOs[i].DeletedAt = video[i].DeletedAt
 	}
