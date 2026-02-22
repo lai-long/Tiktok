@@ -44,6 +44,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 		return []byte(conf.JwtSecret), nil
 	})
 	if err != nil {
+		log.Printf("JWT parse error: %v", err)
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
 				Code: consts.CodeTokenError,

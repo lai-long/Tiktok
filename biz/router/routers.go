@@ -18,7 +18,7 @@ func SetRouters() {
 		user.GET("/info", middleware.AuthMiddleware, handler.UserInfo)
 		user.POST("/login", handler.UserLogin)
 		user.POST("/register", handler.UserRegister)
-		user.POST("/avatar/upload", handler.UserAvatar)
+		user.POST("/avatar/upload", middleware.AuthMiddleware, handler.UserAvatar)
 	}
 	//投稿、发布列表、搜索视频、热门排行榜
 	video := h.Group("/video")
@@ -31,7 +31,7 @@ func SetRouters() {
 	}
 	//点赞操作、点赞列表、评论、评论列表、删除评论
 	like := h.Group("/like")
-
+	like.Use(middleware.AuthMiddleware)
 	{
 		like.POST("/action", handler.LikeAction)
 		like.GET("/list", handler.LikeList)
@@ -43,9 +43,9 @@ func SetRouters() {
 		comment.DELETE("/delete", handler.CommentDelete)
 	}
 	//关注操作、关注列表、粉丝列表、好友列表
-	h.POST("/relation/action", handler.RelationAction)
-	h.GET("/following/list", handler.FollowingList)
-	h.GET("/follower/list", handler.FollowerList)
-	h.GET("/friend/list", handler.FriendList)
+	h.POST("/relation/action", middleware.AuthMiddleware, handler.RelationAction)
+	h.GET("/following/list", middleware.AuthMiddleware, handler.FollowingList)
+	h.GET("/follower/list", middleware.AuthMiddleware, handler.FollowerList)
+	h.GET("/friend/list", middleware.AuthMiddleware, handler.FriendList)
 	h.Spin()
 }
