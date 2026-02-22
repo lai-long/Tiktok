@@ -11,5 +11,6 @@ const (
 	CodeVideoError       = 10006
 	CodeLikeError        = 10007
 	CodeCommentError     = 10008
+	CodeRelationError    = 10009
 	CodeError            = -1
 )

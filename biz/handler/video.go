@@ -41,7 +41,12 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		return
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Items{Video: video, Total: 0}})
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{
+		Items: dto.Items{Video: video},
+		Total: dto.Total{
+			Total: len(video),
+		},
+	}})
 }
 func VideoSearch(ctx context.Context, c *app.RequestContext) {
 	keywords := c.PostForm("keywords")

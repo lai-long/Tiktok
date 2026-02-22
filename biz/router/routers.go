@@ -42,10 +42,10 @@ func SetRouters() {
 		comment.GET("/list", handler.CommentList)
 		comment.DELETE("/delete", handler.CommentDelete)
 	}
-	//	//关注操作、关注列表、粉丝列表、好友列表
-	//	h.POST("/relation/action", handler.RelationAction)
-	//	h.GET("/following/list", handler.FollowingList)
-	//	h.GET("/follower/list", handler.FollowerList)
-	//	h.GET("/friend/list", handler.FriendList)
+	//关注操作、关注列表、粉丝列表、好友列表
+	h.POST("/relation/action", handler.RelationAction)
+	h.GET("/following/list", handler.FollowingList)
+	h.GET("/follower/list", handler.FollowerList)
+	h.GET("/friend/list", handler.FriendList)
 	h.Spin()
 }
