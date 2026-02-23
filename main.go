@@ -4,13 +4,14 @@ package main
 
 import (
 	"Tiktok/biz/dao/db"
+	"Tiktok/biz/dao/redis"
 	"Tiktok/biz/router"
 )
 
 func main() {
-	if err := db.InitDb(); err != nil {
-		panic(err)
-	}
+	rdb := redis.InitRedis()
+	defer rdb.Close()
+	ddb := db.InitDb()
+	defer ddb.Close()
 	router.SetRouters()
-
 }

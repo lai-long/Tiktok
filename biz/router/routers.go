@@ -18,7 +18,7 @@ func SetRouters() {
 		user.GET("/info", middleware.AuthMiddleware, handler.UserInfo)
 		user.POST("/login", handler.UserLogin)
 		user.POST("/register", handler.UserRegister)
-		user.POST("/avatar/upload", middleware.AuthMiddleware, handler.UserAvatar)
+		user.PUT("/avatar/upload", middleware.AuthMiddleware, handler.UserAvatar)
 	}
 	//投稿、发布列表、搜索视频、热门排行榜
 	video := h.Group("/video")

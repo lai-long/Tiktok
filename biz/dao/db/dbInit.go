@@ -2,7 +2,7 @@ package db
 
 import (
 	"Tiktok/pkg/conf"
-	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -10,12 +10,12 @@ import (
 
 var db *sqlx.DB
 
-func InitDb() error {
+func InitDb() *sqlx.DB {
 	var err error
 	db, err = sqlx.Connect("mysql", conf.DSN)
 	if err != nil {
-		return fmt.Errorf("InitDb err: %v", err)
+		log.Fatalf("InitDb err: %v", err)
 	}
-	fmt.Println("数据库连接成功")
-	return nil
+	log.Println("数据库连接成功")
+	return db
 }

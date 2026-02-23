@@ -19,7 +19,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader) (int, string) {
 		return consts.CodeIOError, "VideoPublish data.Open err"
 	}
 	defer dataFile.Close()
-	file, err := os.Create("/home/lai/project/video" + data.Filename)
+	file, err := os.Create("/home/lai-long/Tiktok/avatar" + data.Filename)
 	if err != nil {
 		return consts.CodeIOError, "VideoPublish os.Create err"
 	}
