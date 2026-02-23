@@ -27,7 +27,7 @@ func SetRouters() {
 		video.POST("/publish", handler.VideoPublish)
 		video.GET("/list", handler.VideoList)
 		video.POST("/search", handler.VideoSearch)
-		//video.GET("/popular", handler.VideoPopular)
+		video.GET("/popular", handler.VideoPopular)
 	}
 	//点赞操作、点赞列表、评论、评论列表、删除评论
 	like := h.Group("/like")

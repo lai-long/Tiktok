@@ -29,7 +29,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		})
 	}
 	video.UserID = userId.(string)
-	code, msg := service.VideoPublish(video, data)
+	code, msg := service.VideoPublish(video, data, ctx)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
 func VideoList(ctx context.Context, c *app.RequestContext) {
@@ -58,4 +58,14 @@ func VideoSearch(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Items{Video: video}})
+}
+func VideoPopular(ctx context.Context, c *app.RequestContext) {
+	pageNum := c.Query("page_num")
+	pageSize := c.Query("page_size")
+	code, msg, videos, ok := service.VideoPopular(ctx, pageNum, pageSize)
+	if !ok {
+		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+		return
+	}
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Items{Video: videos}})
 }

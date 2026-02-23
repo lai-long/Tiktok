@@ -2,10 +2,12 @@ package service
 
 import (
 	"Tiktok/biz/dao/db"
+	"Tiktok/biz/dao/redis"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
+	"context"
 	"io"
 	"math/rand"
 	"mime/multipart"
@@ -13,7 +15,7 @@ import (
 	"strconv"
 )
 
-func VideoPublish(video dto.Video, data *multipart.FileHeader) (int, string) {
+func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string) {
 	dataFile, err := data.Open()
 	if err != nil {
 		return consts.CodeIOError, "VideoPublish data.Open err"
@@ -34,6 +36,10 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader) (int, string) {
 	videoEntity.UserID = video.UserID
 	videoEntity.ID = utils.IdGenerate()
 	videoEntity.VisitCount = rand.Intn(100)
+	err = redis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
+	if err != nil {
+		return consts.CodeRedisError, `VideoPublish redis.VideoHotSet err`
+	}
 	err = db.CreatVideo(videoEntity)
 	if err != nil {
 		return consts.CodeDBOperationError, "VideoPublish db.Create err"
@@ -102,6 +108,38 @@ func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, 
 		videoDTOs[i].CommentCount = int64(video[i].CommentCount)
 		videoDTOs[i].CreatedAt = video[i].CreatedAt
 		videoDTOs[i].DeletedAt = video[i].DeletedAt
+	}
+	return consts.CodeSuccess, "success", videoDTOs, true
+}
+
+func VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
+	pageSizeInt, err := strconv.Atoi(pageSize)
+	if err != nil {
+		return consts.CodeVideoError, "VideoPopular pageSize strconv error", []dto.Video{}, false
+	}
+	pageNumInt, err := strconv.Atoi(pageNum)
+	if err != nil {
+		return consts.CodeVideoError, "VideoPopular pageNum strconv error", []dto.Video{}, false
+	}
+	z, err := redis.VideoHotGet(ctx, "videoHot", pageNumInt, pageSizeInt)
+	if err != nil {
+		return consts.CodeRedisError, "VideoPopular redis.VideoHotGet err", []dto.Video{}, false
+	}
+	videoEntity := make([]entity.VideoEntity, len(z))
+	for i, _ := range z {
+		videoEntity[i], err = db.GetVideoByVideoId(z[i].Member.(string))
+		if err != nil {
+			return consts.CodeDBSelectError, "VideoPopular db.GetVideoByVideoId err", []dto.Video{}, false
+		}
+	}
+	videoDTOs := make([]dto.Video, len(z))
+	for i := 0; i < len(z); i++ {
+		videoDTOs[i].ID = videoEntity[i].ID
+		videoDTOs[i].Title = videoEntity[i].Title
+		videoDTOs[i].Description = videoEntity[i].Description
+		videoDTOs[i].VideoURL = videoEntity[i].VideoURL
+		videoDTOs[i].CreatedAt = videoEntity[i].CreatedAt
+		videoDTOs[i].VisitCount = int64(videoEntity[i].VisitCount)
 	}
 	return consts.CodeSuccess, "success", videoDTOs, true
 }
