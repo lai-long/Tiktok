@@ -81,7 +81,7 @@ func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bo
 	if !ok {
 		return consts.CodeIOError, "IsImageByDecode false,文件不是图片", false, dto.User{}
 	}
-	file, _ := os.Create("/home/lai/avatar" + data.Filename)
+	file, _ := os.Create("/home/lai/project/avatar" + data.Filename)
 	defer file.Close()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
