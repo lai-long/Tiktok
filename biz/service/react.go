@@ -101,8 +101,15 @@ func CommentList(videoId string, pageSize string, pageNum string) (int, string, 
 	}
 	return consts.CodeSuccess, "CommentList success", comments, true
 }
-func CommentDelete(commentId string, videoId string) (int, string) {
-	err := db.CommentDelete(videoId, commentId)
+func CommentDelete(commentId string, videoId string, userId string) (int, string) {
+	comment, err := db.GetCommentById(commentId)
+	if err != nil {
+		return consts.CodeDBSelectError, "CommentDelete GetCommentById error"
+	}
+	if comment.UserId != userId {
+		return consts.CodeError, "CommentDelete GetUserId error,comment_userId != userId"
+	}
+	err = db.CommentDelete(videoId, commentId)
 	if err != nil {
 		return consts.CodeDBOperationError, "CommentDelete CreateComment error"
 	}

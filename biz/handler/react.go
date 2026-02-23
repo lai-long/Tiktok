@@ -98,7 +98,14 @@ func CommentList(ctx context.Context, c *app.RequestContext) {
 func CommentDelete(ctx context.Context, c *app.RequestContext) {
 	videoId := c.PostForm("video_id")
 	commentId := c.PostForm("comment_id")
-	code, msg := service.CommentDelete(commentId, videoId)
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(200, dto.Response{Base: dto.Base{
+			Code: consts.CodeCommentError,
+			Msg:  "commentDelete Get userId error",
+		}})
+	}
+	code, msg := service.CommentDelete(commentId, videoId, userId.(string))
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,

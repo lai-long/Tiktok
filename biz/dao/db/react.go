@@ -65,3 +65,9 @@ func CommentDelete(videoId string, commentId string) error {
 	_, err := db.Exec(sql, videoId, commentId)
 	return err
 }
+func GetCommentById(commentId string) (entity.CommentEntity, error) {
+	sql := `SELECT * FROM comments WHERE comment_id = ?`
+	var comment entity.CommentEntity
+	err := db.Get(&comment, sql, commentId)
+	return comment, err
+}
