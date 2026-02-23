@@ -12,5 +12,6 @@ const (
 	CodeLikeError        = 10007
 	CodeCommentError     = 10008
 	CodeRelationError    = 10009
+	CodeRedisError       = 10010
 	CodeError            = -1
 )

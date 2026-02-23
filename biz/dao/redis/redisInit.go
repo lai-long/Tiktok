@@ -8,8 +8,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+var rdb *redis.Client
+
 func InitRedis() *redis.Client {
-	rdb := redis.NewClient(&redis.Options{
+	rdb = redis.NewClient(&redis.Options{
 		Addr:     conf.Redis,
 		Password: "",
 		DB:       0,
