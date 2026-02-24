@@ -10,24 +10,24 @@ import (
 
 func LikeAction(userId string, videoId string, action string) (int, string) {
 	if action == "1" {
-		err := db.LikeCountUp(userId, videoId)
-		if err != nil {
-			return consts.CodeDBUpdateError, "LikeAction LikeCountUp error"
-		}
-		err = db.LikeCreate(userId, videoId)
+		err := db.LikeCreate(userId, videoId)
 		if err != nil {
 			return consts.CodeDBCreateError, "LikeAction LikeCreate error"
+		}
+		err = db.LikeCountUp(videoId)
+		if err != nil {
+			return consts.CodeDBUpdateError, "LikeAction LikeCountUp error"
 		}
 		return consts.CodeSuccess, "LikeAction success"
 	}
 	if action == "2" {
-		err := db.LikeCountDown(userId, videoId)
-		if err != nil {
-			return consts.CodeDBUpdateError, "LikeAction LikeCountDown error"
-		}
-		err = db.LikeDelete(userId, videoId)
+		err := db.LikeDelete(userId, videoId)
 		if err != nil {
 			return consts.CodeDBDeleteError, "LikeAction LikeDelete error"
+		}
+		err = db.LikeCountDown(videoId)
+		if err != nil {
+			return consts.CodeDBUpdateError, "LikeAction LikeCountDown error"
 		}
 		return consts.CodeSuccess, "LikeAction success"
 	}
