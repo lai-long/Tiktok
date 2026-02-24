@@ -3,7 +3,7 @@ package db
 import "Tiktok/biz/model/entity"
 
 func CreatVideo(entity entity.VideoEntity) error {
-	sql := `INSERT INTO videos (title ,description,id,user_id,video_url,cover_url) VALUES(?,?,?,?,?,?)`
+	sql := `INSERT INTO videos (title ,description,id,user_id,video_url) VALUES(?,?,?,?,?)`
 	_, err := db.Exec(sql, entity.Title, entity.Description, entity.ID, entity.UserID, entity.VideoURL)
 	return err
 }
