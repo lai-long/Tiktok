@@ -47,10 +47,8 @@ func LikeList(ctx context.Context, c *app.RequestContext) {
 				Msg:  msg,
 			},
 			Data: dto.Data{
-				Items: dto.Items{Video: videos},
-				Total: dto.Total{
-					Total: len(videos),
-				},
+				Items: videos,
+				Total: len(videos),
 			},
 		},
 	)
@@ -88,10 +86,8 @@ func CommentList(ctx context.Context, c *app.RequestContext) {
 		Msg:  msg,
 	},
 		Data: dto.Data{
-			dto.Items{Comment: comments},
-			dto.Total{
-				Total: len(comments),
-			},
+			Items: comments,
+			Total: len(comments),
 		}})
 }
 

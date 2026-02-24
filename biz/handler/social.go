@@ -49,12 +49,8 @@ func FollowingList(ctx context.Context, c *app.RequestContext) {
 			Msg:  msg,
 		},
 		Data: dto.Data{
-			Items: dto.Items{
-				User: users,
-			},
-			Total: dto.Total{
-				Total: len(users),
-			},
+			Items: users,
+			Total: len(users),
 		},
 	})
 }
@@ -78,12 +74,8 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 			Msg:  msg,
 		},
 		Data: dto.Data{
-			Items: dto.Items{
-				User: followers,
-			},
-			Total: dto.Total{
-				Total: len(followers),
-			},
+			Items: followers,
+			Total: len(followers),
 		},
 	})
 }
@@ -115,12 +107,8 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 			Msg:  msg,
 		},
 		Data: dto.Data{
-			Items: dto.Items{
-				User: friend,
-			},
-			Total: dto.Total{
-				Total: len(friend),
-			},
+			Items: friend,
+			Total: len(friend),
 		},
 	})
 }

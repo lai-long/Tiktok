@@ -60,7 +60,6 @@ func LikeList(userId string, pageNum string, pageSize string) (int, string, []dt
 			CommentCount: int64(video.CommentCount),
 			CoverURL:     video.CoverURL,
 			CreatedAt:    video.CreatedAt,
-			DeletedAt:    video.DeletedAt,
 			LikeCount:    int64(video.LikeCount),
 			UpdatedAt:    video.UpdatedAt,
 			VideoURL:     video.VideoURL,
