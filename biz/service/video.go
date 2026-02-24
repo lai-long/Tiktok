@@ -42,7 +42,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	}
 	err = db.CreatVideo(videoEntity)
 	if err != nil {
-		return consts.CodeDBOperationError, "VideoPublish db.Create err"
+		return consts.CodeDBCreateError, "VideoPublish db.Create err"
 	}
 	return consts.CodeSuccess, "success"
 }
