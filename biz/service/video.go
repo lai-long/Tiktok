@@ -73,7 +73,6 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 			CommentCount: int64(videoList[i].CommentCount),
 			CoverURL:     videoList[i].CoverURL,
 			CreatedAt:    videoList[i].CreatedAt,
-			DeletedAt:    videoList[i].DeletedAt,
 			LikeCount:    int64(videoList[i].LikeCount),
 			UpdatedAt:    videoList[i].UpdatedAt,
 			VideoURL:     videoList[i].VideoURL,
@@ -103,14 +102,12 @@ func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, 
 		videoDTOs[i].Description = video[i].Description
 		videoDTOs[i].VideoURL = video[i].VideoURL
 		videoDTOs[i].CreatedAt = video[i].CreatedAt
-		videoDTOs[i].DeletedAt = video[i].DeletedAt
 		videoDTOs[i].LikeCount = int64(video[i].LikeCount)
 		videoDTOs[i].UpdatedAt = video[i].UpdatedAt
 		videoDTOs[i].VideoURL = video[i].VideoURL
 		videoDTOs[i].CoverURL = video[i].CoverURL
 		videoDTOs[i].CommentCount = int64(video[i].CommentCount)
 		videoDTOs[i].CreatedAt = video[i].CreatedAt
-		videoDTOs[i].DeletedAt = video[i].DeletedAt
 	}
 	return consts.CodeSuccess, "success", videoDTOs, true
 }
@@ -132,6 +129,7 @@ func VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, st
 	for i, _ := range z {
 		videoEntity[i], err = db.GetVideoByVideoId(z[i].Member.(string))
 		if err != nil {
+			log.Printf("GetVideoByVideoId %v", err)
 			return consts.CodeDBSelectError, "VideoPopular db.GetVideoByVideoId err", []dto.Video{}, false
 		}
 	}
