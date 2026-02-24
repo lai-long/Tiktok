@@ -22,14 +22,14 @@ func DeleteFollower(userId string, toUserId string) error {
 }
 func FollowingIdList(userId string, pageNum int, pageSize int) ([]string, error) {
 	sql := `SELECT following_id FROM relations WHERE user_id = ? LIMIT ? OFFSET ?`
-	offset := (pageNum - 1) * pageSize
+	offset := pageNum * pageSize
 	var followingIds []string
 	err := db.Select(&followingIds, sql, userId, pageSize, offset)
 	return followingIds, err
 }
 func FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error) {
 	sql := `SELECT follower_id FROM relations WHERE user_id = ? LIMIT ? OFFSET ?`
-	offset := (pageNum - 1) * pageSize
+	offset := pageNum * pageSize
 	var followerIds []string
 	err := db.Select(&followerIds, sql, userId, pageSize, offset)
 	return followerIds, err

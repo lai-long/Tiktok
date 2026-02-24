@@ -60,6 +60,7 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 	}
 	videoList, err := db.GetVideoByUserID(userId, pageSizeInt, pageNumInt)
 	if err != nil {
+		log.Printf("GetVideoByUserID err: %v", err)
 		return consts.CodeDBSelectError, "VideoList GetVideoByUserID error", []dto.Video{}, false
 	}
 	videoDTOs := make([]dto.Video, len(videoList))
