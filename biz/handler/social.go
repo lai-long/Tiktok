@@ -16,7 +16,7 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 	if !exist {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
-				Code: consts.CodeError,
+				Code: consts.CodeRelationError,
 				Msg:  "RelationAction userId exist error",
 			},
 		})

@@ -12,22 +12,22 @@ func LikeAction(userId string, videoId string, action string) (int, string) {
 	if action == "1" {
 		err := db.LikeCountUp(userId, videoId)
 		if err != nil {
-			return consts.CodeDBOperationError, "LikeAction LikeCountUp error"
+			return consts.CodeDBUpdateError, "LikeAction LikeCountUp error"
 		}
 		err = db.LikeCreate(userId, videoId)
 		if err != nil {
-			return consts.CodeDBOperationError, "LikeAction LikeCreate error"
+			return consts.CodeDBCreateError, "LikeAction LikeCreate error"
 		}
 		return consts.CodeSuccess, "LikeAction success"
 	}
 	if action == "2" {
 		err := db.LikeCountDown(userId, videoId)
 		if err != nil {
-			return consts.CodeDBOperationError, "LikeAction LikeCountDown error"
+			return consts.CodeDBUpdateError, "LikeAction LikeCountDown error"
 		}
 		err = db.LikeDelete(userId, videoId)
 		if err != nil {
-			return consts.CodeDBOperationError, "LikeAction LikeDelete error"
+			return consts.CodeDBDeleteError, "LikeAction LikeDelete error"
 		}
 		return consts.CodeSuccess, "LikeAction success"
 	}
@@ -74,7 +74,7 @@ func CommentPublish(videoId string, userId string, content string) (int, string)
 	commentId := utils.IdGenerate()
 	err := db.CreateComment(commentId, videoId, userId, content)
 	if err != nil {
-		return consts.CodeDBOperationError, "CommentPublish CreateComment error"
+		return consts.CodeDBCreateError, "CommentPublish CreateComment error"
 	}
 	return consts.CodeSuccess, commentId
 }
@@ -111,7 +111,7 @@ func CommentDelete(commentId string, videoId string, userId string) (int, string
 	}
 	err = db.CommentDelete(videoId, commentId)
 	if err != nil {
-		return consts.CodeDBOperationError, "CommentDelete CreateComment error"
+		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"
 	}
 	return consts.CodeSuccess, commentId
 }

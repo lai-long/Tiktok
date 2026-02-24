@@ -31,7 +31,7 @@ func Register(userinfo dto.User) (int, string) {
 		return consts.CodeHashError, "hashPassword error"
 	}
 	if err = db.CreateUser(userEntity); err != nil {
-		return consts.CodeDBOperationError, "create user error"
+		return consts.CodeDBCreateError, "create user error"
 	}
 	return consts.CodeSuccess, "success"
 }
@@ -98,7 +98,7 @@ func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bo
 	}
 	err = db.UpdateUserAvatar("/home/lai-long/Tiktok/avatar/"+data.Filename, userId)
 	if err != nil {
-		return consts.CodeDBOperationError, "avatar db.UpdateUserAvatar error", false, dto.User{}
+		return consts.CodeDBUpdateError, "avatar db.UpdateUserAvatar error", false, dto.User{}
 	}
 	userEntity, err := db.GetUserByUserId(userId.(string))
 	if err != nil {

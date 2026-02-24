@@ -12,22 +12,22 @@ func RelationAction(toUserId string, actionType string, userId string) (int, str
 	if actionType == "0" {
 		err := db.CreateFollowing(userId, toUserId)
 		if err != nil {
-			return consts.CodeDBOperationError, "RelationAction CreateFollowing error"
+			return consts.CodeDBCreateError, "RelationAction CreateFollowing error"
 		}
 		err = db.CreateFollower(userId, toUserId)
 		if err != nil {
-			return consts.CodeDBOperationError, "RelationAction CreateFollower error"
+			return consts.CodeDBCreateError, "RelationAction CreateFollower error"
 		}
 		return consts.CodeSuccess, "RelationAction follow success"
 	}
 	if actionType == "1" {
 		err := db.DeleteFollowing(userId, toUserId)
 		if err != nil {
-			return consts.CodeDBOperationError, "RelationAction DeleteFollowing error"
+			return consts.CodeDBDeleteError, "RelationAction DeleteFollowing error"
 		}
 		err = db.DeleteFollower(userId, toUserId)
 		if err != nil {
-			return consts.CodeDBOperationError, "RelationAction DeleteFollower error"
+			return consts.CodeDBDeleteError, "RelationAction DeleteFollower error"
 		}
 		return consts.CodeSuccess, "RelationAction delete follow success"
 	}
