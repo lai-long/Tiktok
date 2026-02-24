@@ -10,6 +10,7 @@ import (
 func SetRouters() {
 	h := server.Default(
 		server.WithHostPorts("localhost:8888"),
+		server.WithMaxRequestBodySize(10*1024*1024),
 	)
 	defer h.Close()
 	//注册、登录、用户信息、上传头像

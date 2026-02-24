@@ -9,6 +9,7 @@ import (
 	"Tiktok/pkg/utils"
 	"context"
 	"io"
+	"log"
 	"math/rand"
 	"mime/multipart"
 	"os"
@@ -21,7 +22,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 		return consts.CodeIOError, "VideoPublish data.Open err"
 	}
 	defer dataFile.Close()
-	file, err := os.Create("/home/lai-long/Tiktok/avatar" + data.Filename)
+	file, err := os.Create("/home/lai-long/Tiktok/avatar/" + data.Filename)
 	if err != nil {
 		return consts.CodeIOError, "VideoPublish os.Create err"
 	}
@@ -32,7 +33,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = video.Title
 	videoEntity.Description = video.Description
-	videoEntity.VideoURL = video.VideoURL
+	videoEntity.VideoURL = "/home/lai-long/Tiktok/avatar/" + data.Filename
 	videoEntity.UserID = video.UserID
 	videoEntity.ID = utils.IdGenerate()
 	videoEntity.VisitCount = rand.Intn(100)
@@ -42,6 +43,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	}
 	err = db.CreatVideo(videoEntity)
 	if err != nil {
+		log.Fatalf("VideoPublish db.CreateVideo err: %v", err)
 		return consts.CodeDBCreateError, "VideoPublish db.Create err"
 	}
 	return consts.CodeSuccess, "success"
