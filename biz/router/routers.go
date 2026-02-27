@@ -38,6 +38,7 @@ func SetRouters() {
 		like.GET("/list", handler.LikeList)
 	}
 	comment := h.Group("/comment")
+	comment.Use(middleware.AuthMiddleware)
 	{
 		comment.POST("/publish", handler.CommentPublish)
 		comment.GET("/list", handler.CommentList)
@@ -47,6 +48,6 @@ func SetRouters() {
 	h.POST("/relation/action", middleware.AuthMiddleware, handler.RelationAction)
 	h.GET("/following/list", middleware.AuthMiddleware, handler.FollowingList)
 	h.GET("/follower/list", middleware.AuthMiddleware, handler.FollowerList)
-	h.GET("/friend/list", middleware.AuthMiddleware, handler.FriendList)
+	h.GET("/friends/list", middleware.AuthMiddleware, handler.FriendList)
 	h.Spin()
 }

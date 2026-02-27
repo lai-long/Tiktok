@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
+	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -30,7 +31,7 @@ func LikeList(ctx context.Context, c *app.RequestContext) {
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
 	userId := c.Query("user_id")
-	code, msg, videos, ok := service.LikeList(userId, pageSize, pageNum)
+	code, msg, videos, ok := service.LikeList(userId, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
@@ -61,7 +62,18 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 			Code: consts.CodeCommentError,
 			Msg:  "CommentPublish comment Bind error:",
 		}})
+		return
 	}
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(200, dto.Response{Base: dto.Base{
+			Code: consts.CodeCommentError,
+			Msg:  "CommentPublish userId exists error",
+		}})
+		log.Fatalf("CommentPublish userId exists error: %v", err)
+		return
+	}
+	comment.UserId = userId.(string)
 	code, msg := service.CommentPublish(comment.VideoId, comment.UserId, comment.Content)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
@@ -70,9 +82,9 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 
 }
 func CommentList(ctx context.Context, c *app.RequestContext) {
-	videoId := c.PostForm("video_id")
-	pageSize := c.PostForm("page_size")
-	pageNum := c.PostForm("page_num")
+	videoId := c.Query("video_id")
+	pageSize := c.Query("page_size")
+	pageNum := c.Query("page_num")
 	code, msg, comments, ok := service.CommentList(videoId, pageSize, pageNum)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{

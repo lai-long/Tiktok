@@ -90,6 +90,7 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 				Msg:  "FriendList userId exist not exist",
 			},
 		})
+		return
 	}
 	code, msg, friend, ok := service.FriendList(userId.(string), pageNum, pageSize)
 	if !ok {

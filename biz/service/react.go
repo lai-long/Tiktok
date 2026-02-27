@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
+	"log"
 	"strconv"
 )
 
@@ -75,11 +76,16 @@ func CommentPublish(videoId string, userId string, content string) (int, string)
 	if err != nil {
 		return consts.CodeDBCreateError, "CommentPublish CreateComment error"
 	}
-	return consts.CodeSuccess, commentId
+	err = db.CommentCountUp(videoId)
+	if err != nil {
+		return consts.CodeDBUpdateError, "CommentPublish CommentCountUp error"
+	}
+	return consts.CodeSuccess, "CommentPublish success"
 }
 func CommentList(videoId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool) {
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("pageNumInt, err := strconv.Atoi(pageNum) error: %v", err)
 		return consts.CodeError, "CommentList pageNumInt strconv error", []dto.Comment{}, false
 	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
@@ -88,6 +94,7 @@ func CommentList(videoId string, pageSize string, pageNum string) (int, string, 
 	}
 	err, commentEntity := db.GetComments(videoId, pageNumInt, pageSizeInt)
 	if err != nil {
+		log.Fatal("GetComments err: ", err)
 		return consts.CodeDBSelectError, "service CommentList GetComments error", []dto.Comment{}, false
 	}
 	comments := make([]dto.Comment, len(commentEntity))
@@ -112,5 +119,6 @@ func CommentDelete(commentId string, videoId string, userId string) (int, string
 	if err != nil {
 		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"
 	}
+	err = db.CommentCountDown(videoId)
 	return consts.CodeSuccess, commentId
 }
