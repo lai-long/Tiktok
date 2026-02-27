@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -22,7 +23,8 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 		return consts.CodeIOError, "VideoPublish data.Open err"
 	}
 	defer dataFile.Close()
-	file, err := os.Create("/home/lai-long/Tiktok/avatar/" + data.Filename)
+	filename := utils.IdGenerate()
+	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
 		return consts.CodeIOError, "VideoPublish os.Create err"
 	}
@@ -33,9 +35,9 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = video.Title
 	videoEntity.Description = video.Description
-	videoEntity.VideoURL = "/home/lai-long/Tiktok/avatar/" + data.Filename
+	videoEntity.VideoURL = "/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename)
 	videoEntity.UserID = video.UserID
-	videoEntity.ID = utils.IdGenerate()
+	videoEntity.ID = filename
 	videoEntity.VisitCount = rand.Intn(100)
 	err = redis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
 	if err != nil {

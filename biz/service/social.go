@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
+	"log"
 	"strconv"
 )
 
@@ -12,6 +13,7 @@ func RelationAction(toUserId string, actionType string, userId string) (int, str
 	if actionType == "0" {
 		err := db.CreateFollowing(userId, toUserId)
 		if err != nil {
+			log.Println(err)
 			return consts.CodeDBCreateError, "RelationAction CreateFollowing error"
 		}
 		err = db.CreateFollower(userId, toUserId)
@@ -53,7 +55,6 @@ func FollowingList(userId string, pageNum string, pageSize string) (int, string,
 			return consts.CodeDBSelectError, "FollowingList  db.GetUserByUserId error", []dto.User{}, false
 		}
 	}
-
 	dtoFollowings := make([]dto.User, len(followingUsers))
 	for i := 0; i < len(followingIds); i++ {
 		dtoFollowings[i].ID = followingIds[i]
@@ -91,20 +92,36 @@ func FollowerList(userId string, pageNum string, pageSize string) (int, string, 
 	return consts.CodeSuccess, "FollowerList success", dtoFollowers, true
 }
 func FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
-	FollowerCode, FollowerMsg, followers, FollowerOk := FollowerList(userId, pageNum, pageSize)
-	if !FollowerOk {
-		return FollowerCode, "FriendList FollowerList Followers error" + FollowerMsg, []dto.User{}, false
+	pageNumInt, err := strconv.Atoi(pageNum)
+	if err != nil {
+		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
 	}
-	FollowingCode, FollowingMsg, followings, FollowingOk := FollowingList(userId, pageNum, pageSize)
-	if !FollowingOk {
-		return FollowingCode, "FriendList FollowingList Followers error" + FollowingMsg, []dto.User{}, false
+	pageSizeInt, err := strconv.Atoi(pageSize)
+	if err != nil {
+		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
 	}
-	friends := make([]dto.User, len(followers)+len(followings))
-	for i := 0; i < len(followers); i++ {
-		friends[i] = followers[i]
+	followings, followers, err1, err2 := db.FriendIdList(userId, pageNumInt, pageSizeInt)
+	if err1 != nil || err2 != nil {
+		return consts.CodeDBSelectError, "FollowerList db.FriendIdList error", []dto.User{}, false
 	}
+	dtoFollowers := make([]dto.User, len(followings)+len(followers))
 	for i := 0; i < len(followings); i++ {
-		friends[len(friends)+i] = followings[i]
+		follow, err := db.GetUserByUserId(followings[i])
+		if err != nil {
+			return consts.CodeDBSelectError, "FollowerList followings db.GetUserByUserId error", []dto.User{}, false
+		}
+		dtoFollowers[i].ID = follow.Id
+		dtoFollowers[i].Username = follow.Username
+		dtoFollowers[i].AvatarURL = follow.Avatar_url
 	}
-	return consts.CodeSuccess, "FriendList success", friends, true
+	for i := 0; i < len(followers); i++ {
+		follow, err := db.GetUserByUserId(followers[i])
+		if err != nil {
+			return consts.CodeDBSelectError, "FollowerList followers db.GetUserByUserId error", []dto.User{}, false
+		}
+		dtoFollowers[i+len(followings)].ID = follow.Id
+		dtoFollowers[i+len(followings)].Username = follow.Username
+		dtoFollowers[i].AvatarURL = follow.Avatar_url
+	}
+	return consts.CodeSuccess, "FollowerList success", dtoFollowers, true
 }

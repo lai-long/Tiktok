@@ -34,3 +34,14 @@ func FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error) 
 	err := db.Select(&followerIds, sql, userId, pageSize, offset)
 	return followerIds, err
 }
+func FriendIdList(userId string, pageNum, pageSize int) (followingIds []string, followerIds []string, err1 error, err2 error) {
+	offset := pageNum * pageSize
+	sqlFollowing := `SELECT follower_id FROM relations WHERE user_id = ? LIMIT ? OFFSET ?`
+	err1 = db.Select(&followingIds, sqlFollowing, userId, pageSize, offset)
+	sqlFollower := `SELECT user_id FROM relations WHERE follower_id = ? LIMIT ? OFFSET ?`
+	err2 = db.Select(&followerIds, sqlFollower, userId, pageSize, offset)
+	if err1 != nil && err2 != nil {
+		return followingIds, followerIds, err1, err2
+	}
+	return followingIds, followerIds, nil, nil
+}

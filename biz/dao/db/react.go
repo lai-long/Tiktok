@@ -2,6 +2,7 @@ package db
 
 import (
 	"Tiktok/biz/model/entity"
+	"fmt"
 )
 
 func LikeCountUp(video_id string) error {
@@ -9,6 +10,7 @@ func LikeCountUp(video_id string) error {
 	_, err := db.Exec(sql, video_id)
 	return err
 }
+
 func LikeCreate(user_id string, video_id string) error {
 	sql := `INSERT INTO likes (video_id, user_id) VALUES (?, ?)`
 	_, err := db.Exec(sql, video_id, user_id)
@@ -21,14 +23,21 @@ func LikeCountDown(video_id string) error {
 }
 func LikeDelete(user_id string, video_id string) error {
 	sql := `DELETE FROM likes WHERE video_id = ? AND user_id = ?`
-	_, err := db.Exec(sql, video_id, user_id)
-	return err
+	result, err := db.Exec(sql, video_id, user_id)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("no like found to delete")
+	}
+	return nil
 }
 func LikeVideoIds(user_id string, pageNum int, pageSize int) (error, []string) {
-	sql := `SELECT video_id FROM likes WHERE user_id = ? ORDER BY video_id DESC LIMIT ? OFFSET ?`
+	sql := `SELECT video_id FROM likes WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var video_id []string
 	offset := pageNum * pageSize
-	err := db.Select(&video_id, sql, user_id, offset)
+	err := db.Select(&video_id, sql, user_id, pageSize, offset)
 	return err, video_id
 }
 func LikeVideos(videoId []string) (bool, []entity.VideoEntity) {
@@ -70,4 +79,14 @@ func GetCommentById(commentId string) (entity.CommentEntity, error) {
 	var comment entity.CommentEntity
 	err := db.Get(&comment, sql, commentId)
 	return comment, err
+}
+func CommentCountUp(videoId string) error {
+	sql := `UPDATE videos SET comment_count = comment_count + 1 WHERE id = ?`
+	_, err := db.Exec(sql, videoId)
+	return err
+}
+func CommentCountDown(videoId string) error {
+	sql := `UPDATE videos SET comment_count = comment_count - 1 WHERE id = ?`
+	_, err := db.Exec(sql, videoId)
+	return err
 }

@@ -10,6 +10,7 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 )
 
 func Register(userinfo dto.User) (int, string) {
@@ -85,28 +86,29 @@ func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bo
 		return consts.CodeIOError, "IsImage false,文件不是图片", false, dto.User{}
 	}
 	if _, err := dataFile.Seek(0, io.SeekStart); err != nil {
-		return consts.CodeIOError, "avatar dataFile.Seek 重置文件指针失败", false, dto.User{}
+		return consts.CodeIOError, "a dataFile.Seek 重置文件指针失败", false, dto.User{}
 	}
-	file, err := os.Create("/home/lai-long/Tiktok/avatar/" + data.Filename)
+	filename := utils.IdGenerate()
+	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
-		return consts.CodeUserError, "user avatar upload os.Create Error", false, dto.User{}
+		return consts.CodeUserError, "user a upload os.Create Error", false, dto.User{}
 	}
 	defer file.Close()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
-		return consts.CodeIOError, "avatar io.copy error", false, dto.User{}
+		return consts.CodeIOError, "a io.copy error", false, dto.User{}
 	}
-	err = db.UpdateUserAvatar("/home/lai-long/Tiktok/avatar/"+data.Filename, userId)
+	err = db.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
 	if err != nil {
-		return consts.CodeDBUpdateError, "avatar db.UpdateUserAvatar error", false, dto.User{}
+		return consts.CodeDBUpdateError, "a db.UpdateUserAvatar error", false, dto.User{}
 	}
 	userEntity, err := db.GetUserByUserId(userId.(string))
 	if err != nil {
-		return consts.CodeDBSelectError, "avatar db.GetUserByUserId error", false, dto.User{}
+		return consts.CodeDBSelectError, "a db.GetUserByUserId error", false, dto.User{}
 	}
 	var user dto.User
 	user.Username = userEntity.Username
 	user.AvatarURL = userEntity.Avatar_url
 	user.ID = userEntity.Id
-	return consts.CodeSuccess, "avatar change success", true, user
+	return consts.CodeSuccess, "a change success", true, user
 }

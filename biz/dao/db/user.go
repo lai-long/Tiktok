@@ -2,6 +2,7 @@ package db
 
 import (
 	"Tiktok/biz/model/entity"
+	"log"
 )
 
 func CreateUser(user entity.UserEntity) error {
@@ -21,6 +22,9 @@ func GetUserByUserId(userId string) (entity.UserEntity, error) {
 	var user entity.UserEntity
 	sql := `SELECT * FROM users WHERE id = ?`
 	err := db.Get(&user, sql, userId)
+	if err != nil {
+		log.Println(err)
+	}
 	return user, err
 }
 
