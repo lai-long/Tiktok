@@ -9,7 +9,7 @@ import (
 
 func SetRouters() {
 	h := server.Default(
-		server.WithHostPorts("localhost:8888"),
+		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
 	)
 	defer h.Close()
