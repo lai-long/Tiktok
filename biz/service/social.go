@@ -66,20 +66,24 @@ func FollowingList(userId string, pageNum string, pageSize string) (int, string,
 func FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("FollowerList PageNum strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
 	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("FollowerList PageSize strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
 	}
 	followerIds, err := db.FollowerIdList(userId, pageNumInt, pageSizeInt)
 	if err != nil {
+		log.Printf("FollowerList db.FollowerIdList error: %v", err)
 		return consts.CodeDBSelectError, "FollowerList db.FollowerIdList error", []dto.User{}, false
 	}
 	followerUsers := make([]entity.UserEntity, len(followerIds))
 	for i := 0; i < len(followerIds); i++ {
 		followerUsers[i], err = db.GetUserByUserId(followerIds[i])
 		if err != nil {
+			log.Printf("FollowerList db.GetUserByUserId error: %v", err)
 			return consts.CodeDBSelectError, "FollowerList db.GetUserByUserId error", []dto.User{}, false
 		}
 	}
@@ -94,20 +98,24 @@ func FollowerList(userId string, pageNum string, pageSize string) (int, string, 
 func FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("FriendList PageNum strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
 	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("FriendList PageSize strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
 	}
 	followings, followers, err1, err2 := db.FriendIdList(userId, pageNumInt, pageSizeInt)
 	if err1 != nil || err2 != nil {
+		log.Printf("FriendList db.FriendIdList error: %v and %v", err1, err2)
 		return consts.CodeDBSelectError, "FollowerList db.FriendIdList error", []dto.User{}, false
 	}
 	dtoFollowers := make([]dto.User, len(followings)+len(followers))
 	for i := 0; i < len(followings); i++ {
 		follow, err := db.GetUserByUserId(followings[i])
 		if err != nil {
+			log.Printf("FriendList db.GetUserByUserId error: %v", err)
 			return consts.CodeDBSelectError, "FollowerList followings db.GetUserByUserId error", []dto.User{}, false
 		}
 		dtoFollowers[i].ID = follow.Id
@@ -117,6 +125,7 @@ func FriendList(userId string, pageNum string, pageSize string) (int, string, []
 	for i := 0; i < len(followers); i++ {
 		follow, err := db.GetUserByUserId(followers[i])
 		if err != nil {
+			log.Printf("FriendList db.GetUserByUserId error: %v", err)
 			return consts.CodeDBSelectError, "FollowerList followers db.GetUserByUserId error", []dto.User{}, false
 		}
 		dtoFollowers[i+len(followings)].ID = follow.Id

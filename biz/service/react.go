@@ -37,14 +37,17 @@ func LikeAction(userId string, videoId string, action string) (int, string) {
 func LikeList(userId string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("LikeList pageNum strconv error : %v", err)
 		return consts.CodeError, "LikeList pageNum strconv error", []dto.Video{}, false
 	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("LikeList pageSize strconv error : %v", err)
 		return consts.CodeError, "LikeList pageSize strconv error", []dto.Video{}, false
 	}
 	err, videoId := db.LikeVideoIds(userId, pageNumInt, pageSizeInt)
 	if err != nil {
+		log.Printf("LikeList err : %v", err)
 		return consts.CodeDBSelectError, "LikeList db.LikeVideoIds error", []dto.Video{}, false
 	}
 	ok, videos := db.LikeVideos(videoId)
@@ -74,10 +77,12 @@ func CommentPublish(videoId string, userId string, content string) (int, string)
 	commentId := utils.IdGenerate()
 	err := db.CreateComment(commentId, videoId, userId, content)
 	if err != nil {
+		log.Printf("CommentPublish err : %v", err)
 		return consts.CodeDBCreateError, "CommentPublish CreateComment error"
 	}
 	err = db.CommentCountUp(videoId)
 	if err != nil {
+		log.Printf("CommentPublish err : %v", err)
 		return consts.CodeDBUpdateError, "CommentPublish CommentCountUp error"
 	}
 	return consts.CodeSuccess, "CommentPublish success"
@@ -90,11 +95,12 @@ func CommentList(videoId string, pageSize string, pageNum string) (int, string, 
 	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("pageSizeInt, err := strconv.Atoi(pageSize) error: %v", err)
 		return consts.CodeError, "CommentList pageSize strconv error", []dto.Comment{}, false
 	}
 	err, commentEntity := db.GetComments(videoId, pageNumInt, pageSizeInt)
 	if err != nil {
-		log.Fatal("GetComments err: ", err)
+		log.Printf("GetComments err: ", err)
 		return consts.CodeDBSelectError, "service CommentList GetComments error", []dto.Comment{}, false
 	}
 	comments := make([]dto.Comment, len(commentEntity))
@@ -110,6 +116,7 @@ func CommentList(videoId string, pageSize string, pageNum string) (int, string, 
 func CommentDelete(commentId string, videoId string, userId string) (int, string) {
 	comment, err := db.GetCommentById(commentId)
 	if err != nil {
+		log.Printf("CommentDelete err : %v", err)
 		return consts.CodeDBSelectError, "CommentDelete GetCommentById error"
 	}
 	if comment.UserId != userId {
@@ -117,6 +124,7 @@ func CommentDelete(commentId string, videoId string, userId string) (int, string
 	}
 	err = db.CommentDelete(videoId, commentId)
 	if err != nil {
+		log.Printf("CommentDelete err : %v", err)
 		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"
 	}
 	err = db.CommentCountDown(videoId)

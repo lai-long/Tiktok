@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
+	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -13,6 +14,7 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 	var userinfo dto.User
 	var err error
 	if err = c.BindAndValidate(&userinfo); err != nil {
+		log.Println("UserRegister.BindAndValidate error:", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserRegister BindAndValidate error"}})
 		c.Abort()
 		return
@@ -24,11 +26,13 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 func UserLogin(ctx context.Context, c *app.RequestContext) {
 	var userDto dto.User
 	if err := c.BindAndValidate(&userDto); err != nil {
+		log.Println("UserLogin.bindAndValidate error:", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserLogin BindAndValidate error"}})
 		c.Abort()
 		return
 	}
-	code, msg, user, reToken, acToken := service.Login(userDto)
+	mfcCode := c.PostForm("code")
+	code, msg, user, reToken, acToken := service.Login(userDto, mfcCode)
 	res := dto.Response{
 		Base: dto.Base{
 			Code: code,

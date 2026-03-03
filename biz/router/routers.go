@@ -21,6 +21,11 @@ func SetRouters() {
 		user.POST("/register", handler.UserRegister)
 		user.PUT("/avatar/upload", middleware.AuthMiddleware, handler.UserAvatar)
 	}
+	authMfa := h.Group("/auth/mfa")
+	{
+		authMfa.GET("/qrcode", middleware.AuthMiddleware, handler.MfaQrcode)
+		authMfa.POST("/bind", middleware.AuthMiddleware, handler.MfaBind)
+	}
 	//投稿、发布列表、搜索视频、热门排行榜
 	video := h.Group("/video")
 	video.Use(middleware.AuthMiddleware)
