@@ -11,6 +11,8 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+
+	"github.com/pquerna/otp/totp"
 )
 
 func Register(userinfo dto.User) (int, string) {
@@ -37,9 +39,10 @@ func Register(userinfo dto.User) (int, string) {
 	return consts.CodeSuccess, "success"
 }
 
-func Login(userDto dto.User) (int, string, dto.User, string, string) {
+func Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string) {
 	userEntity, err := db.GetUserByUsername(userDto.Username)
 	if err != nil {
+		log.Println("get user entity error", err)
 		return consts.CodeUserError, "GetUserByUsername Error", dto.User{}, "", ""
 	}
 	ok := utils.CheckPasswordHash(userEntity.Password, userDto.Password)
@@ -51,6 +54,24 @@ func Login(userDto dto.User) (int, string, dto.User, string, string) {
 	userDto.Username = userEntity.Username
 	userDto.CreatedAt = userEntity.Created_at.String()
 	userDto.UpdatedAt = userEntity.Updated_at.String()
+	err, enable := db.CheckMfaBind(userDto.ID)
+	if err != nil {
+		log.Println(err)
+		return consts.CodeUserError, "CheckMfaBind error", dto.User{}, "", ""
+	}
+	if enable != 0 {
+		if mfaCode == "" {
+			return consts.CodeMfaError, "GetMfaCode from front error", dto.User{}, "", ""
+		}
+		mfaSecret, err := db.GetMfaSecret(userDto.ID)
+		if err != nil {
+			log.Println(err)
+			return consts.CodeDBSelectError, "GetMfaSecret from db error", dto.User{}, "", ""
+		}
+		if !totp.Validate(mfaCode, mfaSecret) {
+			return consts.CodeMfaError, "totp.Validate error", dto.User{}, "", ""
+		}
+	}
 	reToken, acToken, ok := utils.GenerateTokens(userDto)
 	if ok == false {
 		return consts.CodeTokenError, "生成token错误", userDto, reToken, acToken
@@ -61,6 +82,7 @@ func Login(userDto dto.User) (int, string, dto.User, string, string) {
 func UserInfo(userId string) (dto.User, int, string, bool) {
 	userEntity, err := db.GetUserByUserId(userId)
 	if err != nil {
+		log.Printf("GetUserByUserIdError : %v", err)
 		return dto.User{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
 	}
 	var user dto.User
@@ -75,11 +97,13 @@ func UserInfo(userId string) (dto.User, int, string, bool) {
 func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User) {
 	dataFile, err := data.Open()
 	if err != nil {
+		log.Printf("data.Open error: %v", err)
 		return consts.CodeUserError, "data.Open Error", false, dto.User{}
 	}
 	defer dataFile.Close()
 	ok, err := utils.IsImage(dataFile)
 	if err != nil {
+		log.Printf("IsImage error: %v", err)
 		return consts.CodeUserError, "utils.IsImage Error", false, dto.User{}
 	}
 	if !ok {
@@ -91,19 +115,23 @@ func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bo
 	filename := utils.IdGenerate()
 	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
+		log.Printf("os.Create error: %v", err)
 		return consts.CodeUserError, "user a upload os.Create Error", false, dto.User{}
 	}
 	defer file.Close()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
+		log.Printf("io.Copy error: %v", err)
 		return consts.CodeIOError, "a io.copy error", false, dto.User{}
 	}
 	err = db.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
 	if err != nil {
+		log.Printf("db.UpdateUserAvatar error: %v", err)
 		return consts.CodeDBUpdateError, "a db.UpdateUserAvatar error", false, dto.User{}
 	}
 	userEntity, err := db.GetUserByUserId(userId.(string))
 	if err != nil {
+		log.Printf("db.GetUserByUserIderror: %v", err)
 		return consts.CodeDBSelectError, "a db.GetUserByUserId error", false, dto.User{}
 	}
 	var user dto.User

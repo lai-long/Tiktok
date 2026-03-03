@@ -54,10 +54,12 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 func VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool) {
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeError, "VideoList pageSize strconv error", []dto.Video{}, false
 	}
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeError, "VideoList pageNum error", []dto.Video{}, false
 	}
 	videoList, err := db.GetVideoByUserID(userId, pageSizeInt, pageNumInt)
@@ -87,14 +89,17 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeError, "VideoSearch pageSize strconv error", []dto.Video{}, false
 	}
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("VideoSearch pageNum  strconv error: %v", err)
 		return consts.CodeError, "VideoSearch pageNum error", []dto.Video{}, false
 	}
 	video, err := db.GetVideoByKeyWord(keyword, pageNumInt, pageSizeInt)
 	if err != nil {
+		log.Printf("db.GetVideoByKeyWord err: %v", err)
 		return consts.CodeVideoError, "GetVideoByVideoTitleOrDescription error", []dto.Video{}, false
 	}
 	videoDTOs := make([]dto.Video, len(video))
@@ -117,14 +122,17 @@ func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, 
 func VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
+		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeVideoError, "VideoPopular pageSize strconv error", []dto.Video{}, false
 	}
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
+		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeVideoError, "VideoPopular pageNum strconv error", []dto.Video{}, false
 	}
 	z, err := redis.VideoHotGet(ctx, "videoHot", pageNumInt, pageSizeInt)
 	if err != nil {
+		log.Printf("redis.VideoHotGet err: %v", err)
 		return consts.CodeRedisError, "VideoPopular redis.VideoHotGet err", []dto.Video{}, false
 	}
 	videoEntity := make([]entity.VideoEntity, len(z))

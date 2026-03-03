@@ -14,7 +14,7 @@ func InitDb() *sqlx.DB {
 	var err error
 	db, err = sqlx.Connect("mysql", conf.DSN)
 	if err != nil {
-		log.Fatalf("InitDb err: %v", err)
+		log.Printf("InitDb err: %v", err)
 	}
 	log.Println("数据库连接成功")
 	return db

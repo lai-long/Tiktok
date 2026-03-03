@@ -11,4 +11,5 @@ RUN go build -o Tiktok
 FROM scratch
 WORKDIR /app
 COPY --from=builder /build/Tiktok /app
+EXPOSE 8888
 CMD ["./Tiktok"]

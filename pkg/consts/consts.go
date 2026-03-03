@@ -15,5 +15,6 @@ const (
 	CodeCommentError  = -12
 	CodeRelationError = -13
 	CodeRedisError    = -14
+	CodeMfaError      = -15
 	CodeError         = -1
 )

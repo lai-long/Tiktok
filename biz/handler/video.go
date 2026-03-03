@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
+	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -12,11 +13,13 @@ import (
 func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	var video dto.Video
 	if err := c.Bind(&video); err != nil {
+		log.Printf("c.Bind: %v", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish Bind Error"}})
 		return
 	}
 	data, err := c.FormFile("data")
 	if err != nil {
+		log.Printf("c.FormFile: %v", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish FormFile Error"}})
 	}
 	userId, exist := c.Get("user_id")
