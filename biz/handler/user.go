@@ -33,12 +33,14 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	}
 	mfcCode := c.PostForm("code")
 	code, msg, user, reToken, acToken := service.Login(userDto, mfcCode)
-	res := dto.Response{
-		Base: dto.Base{
-			Code: code,
-			Msg:  msg,
+	res := dto.LoginResponse{
+		Response: dto.Response{
+			Base: dto.Base{
+				Code: code,
+				Msg:  msg,
+			},
+			Data: user,
 		},
-		Data:         user,
 		AccessToken:  acToken,
 		RefreshToken: reToken,
 	}
