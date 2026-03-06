@@ -5,10 +5,8 @@ type Base struct {
 	Msg  string `json:"msg"`
 }
 type Response struct {
-	Base         Base        `json:"base"`
-	Data         interface{} `json:"data"`
-	AccessToken  string      `json:"access_token"`
-	RefreshToken string      `json:"refresh_token"`
+	Base Base        `json:"base"`
+	Data interface{} `json:"data"`
 }
 type LoginResponse struct {
 	Response
