@@ -12,7 +12,8 @@ import (
 
 func LikeAction(ctx context.Context, c *app.RequestContext) {
 	action := c.PostForm("action_type")
-	id := c.PostForm("video_id")
+	videoId := c.PostForm("video_id")
+	commentId := c.PostForm("comment_id")
 	userId, exist := c.Get("user_id")
 	if !exist {
 		c.JSON(200, dto.Response{Base: dto.Base{
@@ -21,11 +22,26 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 		return
 	}
-	code, msg := service.LikeAction(userId.(string), id, action)
-	c.JSON(200, dto.Response{Base: dto.Base{
-		Code: code,
-		Msg:  msg,
-	}})
+	if commentId == "" && videoId == "" {
+		c.JSON(200, dto.Response{Base: dto.Base{
+			Code: consts.CodeLikeError,
+			Msg:  "likeAction Get commentId or videoId error",
+		}})
+	}
+	if videoId != "" {
+		code, msg := service.VideoLikeAction(userId.(string), videoId, action)
+		c.JSON(200, dto.Response{Base: dto.Base{
+			Code: code,
+			Msg:  msg,
+		}})
+	}
+	if commentId != "" {
+		code, msg := service.CommentLikeAction(userId.(string), commentId, action)
+		c.JSON(200, dto.Response{Base: dto.Base{
+			Code: code,
+			Msg:  msg,
+		}})
+	}
 }
 func LikeList(ctx context.Context, c *app.RequestContext) {
 	pageSize := c.Query("page_size")
