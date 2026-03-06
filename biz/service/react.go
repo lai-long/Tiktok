@@ -9,30 +9,59 @@ import (
 	"strconv"
 )
 
-func LikeAction(userId string, videoId string, action string) (int, string) {
+func VideoLikeAction(userId string, videoId string, action string) (int, string) {
 	if action == "1" {
-		err := db.LikeCreate(userId, videoId)
+		err := db.VideoLikeCreate(userId, videoId)
 		if err != nil {
 			return consts.CodeDBCreateError, "LikeAction LikeCreate error"
 		}
-		err = db.LikeCountUp(videoId)
+		err = db.VideoLikeCountUp(videoId)
 		if err != nil {
 			return consts.CodeDBUpdateError, "LikeAction LikeCountUp error"
 		}
 		return consts.CodeSuccess, "LikeAction success"
 	}
 	if action == "2" {
-		err := db.LikeDelete(userId, videoId)
+		err := db.VideoLikeDelete(userId, videoId)
 		if err != nil {
-			return consts.CodeDBDeleteError, "LikeAction LikeDelete error"
+			log.Println(err)
+			return consts.CodeDBDeleteError, "VideoLikeAction LikeDelete error"
 		}
-		err = db.LikeCountDown(videoId)
+		err = db.VideoLikeCountDown(videoId)
 		if err != nil {
-			return consts.CodeDBUpdateError, "LikeAction LikeCountDown error"
+			log.Println(err)
+			return consts.CodeDBUpdateError, "VideoLikeAction LikeCountDown error"
 		}
-		return consts.CodeSuccess, "LikeAction success"
+		return consts.CodeSuccess, "VideoLikeAction success"
 	}
-	return consts.CodeLikeError, "LikeAction action num error"
+	return consts.CodeLikeError, "VideoLikeAction action num error"
+}
+func CommentLikeAction(userId string, commentId string, action string) (int, string) {
+	if action == "1" {
+		err := db.CommentLikeCreate(userId, commentId)
+		if err != nil {
+			log.Println("CommentLikeAction LikeCreate error", err)
+			return consts.CodeDBCreateError, "CommentLikeAction CommentCreate error"
+		}
+		err = db.CommentLikeCountUp(commentId)
+		if err != nil {
+			log.Println("CommentLikeAction CommentCountUp error", err)
+			return consts.CodeDBUpdateError, "CommentLikeAction CommentCountUp error"
+		}
+	}
+	if action == "2" {
+		err := db.CommentLikeDelete(userId, commentId)
+		if err != nil {
+			log.Println("CommentLikeAction CommentDelete error", err)
+			return consts.CodeDBDeleteError, "CommentLikeAction CommentDelete error"
+		}
+		err = db.CommentLikeCountDown(commentId)
+		if err != nil {
+			log.Println("CommentLikeAction CommentCountDown error", err)
+			return consts.CodeDBUpdateError, "CommentLikeAction CommentCountDown error"
+		}
+	}
+	return consts.CodeSuccess, "CommentLikeAction action num error"
 }
 func LikeList(userId string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
 	pageNumInt, err := strconv.Atoi(pageNum)

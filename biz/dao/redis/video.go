@@ -16,7 +16,7 @@ func VideoHotSet(ctx context.Context, key string, member interface{}, score floa
 	return nil
 }
 func VideoHotGet(ctx context.Context, key string, pageNum int, pageSize int) ([]redis.Z, error) {
-	z, err := rdb.ZRevRangeWithScores(ctx, key, 0, int64(pageSize+pageSize*pageNum)).Result()
+	z, err := rdb.ZRevRangeWithScores(ctx, key, int64(pageSize*pageNum), int64(pageSize+pageSize*pageNum)).Result()
 	if err != nil {
 		return nil, err
 	}

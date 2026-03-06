@@ -34,7 +34,8 @@ func Register(userinfo dto.User) (int, string) {
 		return consts.CodeHashError, "hashPassword error"
 	}
 	if err = db.CreateUser(userEntity); err != nil {
-		return consts.CodeDBCreateError, "create user error"
+		log.Println(err)
+		return consts.CodeDBCreateError, "db create user error"
 	}
 	return consts.CodeSuccess, "success"
 }
