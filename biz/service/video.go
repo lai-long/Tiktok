@@ -24,12 +24,19 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	}
 	defer dataFile.Close()
 	filename := utils.IdGenerate()
+	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
+	if err != nil {
+		log.Println(err)
+		return consts.CodeIOError, "VideoPublish os.MkdirAll err"
+	}
 	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
+		log.Println(err)
 		return consts.CodeIOError, "VideoPublish os.Create err"
 	}
 	defer file.Close()
 	if _, err := io.Copy(file, dataFile); err != nil {
+		log.Println(err)
 		return consts.CodeIOError, "VideoPublish io.copy err"
 	}
 	var videoEntity entity.VideoEntity
