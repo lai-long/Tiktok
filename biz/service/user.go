@@ -114,6 +114,11 @@ func UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bo
 		return consts.CodeIOError, "a dataFile.Seek 重置文件指针失败", false, dto.User{}
 	}
 	filename := utils.IdGenerate()
+	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
+	if err != nil {
+		log.Println(err)
+		return consts.CodeUserError, "a user avatar MkdirAll Error", false, dto.User{}
+	}
 	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
 		log.Printf("os.Create error: %v", err)
