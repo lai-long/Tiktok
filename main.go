@@ -6,9 +6,16 @@ import (
 	"Tiktok/biz/dao/db"
 	"Tiktok/biz/dao/redis"
 	"Tiktok/biz/router"
+	"Tiktok/pkg/conf"
+	"log"
 )
 
 func main() {
+	cfg, err := conf.Load([]string{"./pkg/conf"})
+	if err != nil {
+		log.Fatal("加载config.yaml错误", err)
+	}
+	log.Println(cfg)
 	rdb := redis.InitRedis()
 	defer rdb.Close()
 	ddb := db.InitDb()
