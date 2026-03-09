@@ -46,6 +46,7 @@ func FollowingList(userId string, pageNum string, pageSize string) (int, string,
 	}
 	followingIds, err := db.FollowingIdList(userId, pageNumInt, pageSizeInt)
 	if err != nil {
+		log.Println(err)
 		return consts.CodeDBSelectError, "FollowingList  db.FollowingIdList error", []dto.User{}, false
 	}
 	followingUsers := make([]entity.UserEntity, len(followingIds))
