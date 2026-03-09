@@ -28,7 +28,7 @@ func GetToken(username string, userid string, t time.Duration) (string, error) {
 		"exp":      time.Now().Add(t).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
-	tokenString, err := token.SignedString([]byte(conf.JwtSecret))
+	tokenString, err := token.SignedString([]byte(conf.Cfg.Jwt.Secret))
 	if err != nil {
 		return "生成token错误", err
 	}
