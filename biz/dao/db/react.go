@@ -61,7 +61,7 @@ func CommentLikeDelete(userId string, commentId string) error {
 	return nil
 }
 func LikeVideoIds(userId string, pageNum int, pageSize int) (error, []string) {
-	sql := `SELECT to_video_id FROM likes WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	sql := `SELECT to_video_id FROM likes WHERE to_video_id IS NOT NULL AND user_id = ?  ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var videoId []string
 	offset := pageNum * pageSize
 	err := db.Select(&videoId, sql, userId, pageSize, offset)
