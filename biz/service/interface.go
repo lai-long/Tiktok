@@ -54,6 +54,12 @@ type MfaDatabase interface {
 	MfaBindUpdate(userId string) error
 	CheckMfaBind(userId string) (error, int)
 }
+type VideoDatabase interface {
+	CreatVideo(entity entity.VideoEntity) error
+	GetVideoByUserID(userId string, pageSize int, pageNum int) ([]entity.VideoEntity, error)
+	GetVideoByKeyWord(keyword string, pageNum int, pageSize int) ([]entity.VideoEntity, error)
+	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
+}
 type Service struct {
 	db Database
 }
@@ -69,4 +75,12 @@ type UserService struct {
 
 func NewUserService(userDb UserDatabase, mfaDb MfaDatabase) *UserService {
 	return &UserService{userDb: userDb, mfaDb: mfaDb}
+}
+
+type VideoService struct {
+	videoDb VideoDatabase
+}
+
+func NewVideoService(videoDb VideoDatabase) *VideoService {
+	return &VideoService{videoDb: videoDb}
 }

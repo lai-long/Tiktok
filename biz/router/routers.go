@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
-func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler) {
+func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler) {
 	h := server.Default(
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
@@ -30,10 +30,10 @@ func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler) {
 	video := h.Group("/video")
 	video.Use(middleware.AuthMiddleware)
 	{
-		video.POST("/publish", handler.VideoPublish)
-		video.GET("/list", handler.VideoList)
-		video.POST("/search", handler.VideoSearch)
-		video.GET("/popular", handler.VideoPopular)
+		video.POST("/publish", videoHandler.VideoPublish)
+		video.GET("/list", videoHandler.VideoList)
+		video.POST("/search", videoHandler.VideoSearch)
+		video.GET("/popular", videoHandler.VideoPopular)
 	}
 	//点赞操作、点赞列表、评论、评论列表、删除评论
 	like := h.Group("/like")
