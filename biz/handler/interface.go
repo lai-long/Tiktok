@@ -17,12 +17,18 @@ func NewHandler(service *service.Service) *Handler {
 
 type UserHandler struct {
 	userService UserSever
+	MfaServer   MfaServer
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
-	return &UserHandler{userService: service}
+func NewUserHandler(userService *service.UserService) *UserHandler {
+	return &UserHandler{userService: userService}
 }
 
+type MfaServer interface {
+	GenerateMfa(username string, userId string) (bool, string, string, int, string)
+	MfaBindByCode(code string, userId string) (int, string)
+	MfaBindBySecret(secret string, userId string) (int, string)
+}
 type UserSever interface {
 	Register(userinfo dto.User) (int, string)
 	Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string)
@@ -30,9 +36,6 @@ type UserSever interface {
 	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
 }
 type Sever interface {
-	GenerateMfa(username string, userId string) (bool, string, string, int, string)
-	MfaBindByCode(code string, userId string) (int, string)
-	MfaBindBySecret(secret string, userId string) (int, string)
 	VideoLikeAction(userId string, videoId string, action string) (int, string)
 	CommentLikeAction(userId string, commentId string, action string) (int, string)
 	LikeList(userId string, pageNum string, pageSize string) (int, string, []dto.Video, bool)

@@ -20,14 +20,20 @@ func main() {
 		log.Fatal("加载config.yaml错误", err)
 	}
 	log.Println(cfg)
+
 	rdb := redis.InitRedis()
 	defer rdb.Close()
+
 	ddb := db.InitDb()
 	mysqlDb := db.NewMySQLdb(ddb)
+
 	svc := service.NewService(mysqlDb)
-	usvc := service.NewUserService(mysqlDb, mysqlDb)
 	h := handler.NewHandler(svc)
-	uh := handler.NewUserHandler(usvc)
+
+	userSVC := service.NewUserService(mysqlDb, mysqlDb)
+	uh := handler.NewUserHandler(userSVC)
+
 	defer ddb.Close()
+
 	router.SetRouters(h, uh)
 }
