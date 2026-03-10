@@ -9,7 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func (h *Handler) VideoPublish(ctx context.Context, c *app.RequestContext) {
+func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) {
 	var video dto.Video
 	if err := c.Bind(&video); err != nil {
 		log.Printf("c.Bind: %v", err)
@@ -31,14 +31,14 @@ func (h *Handler) VideoPublish(ctx context.Context, c *app.RequestContext) {
 		})
 	}
 	video.UserID = userId.(string)
-	code, msg := h.service.VideoPublish(video, data, ctx)
+	code, msg := h.videoService.VideoPublish(video, data, ctx)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
-func (h *Handler) VideoList(ctx context.Context, c *app.RequestContext) {
+func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
-	code, msg, video, ok := h.service.VideoList(userId, pageSize, pageNum)
+	code, msg, video, ok := h.videoService.VideoList(userId, pageSize, pageNum)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		return
@@ -48,11 +48,11 @@ func (h *Handler) VideoList(ctx context.Context, c *app.RequestContext) {
 		Total: len(video),
 	}})
 }
-func (h *Handler) VideoSearch(ctx context.Context, c *app.RequestContext) {
+func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 	keywords := c.PostForm("keywords")
 	pageSize := c.PostForm("page_size")
 	pageNum := c.PostForm("page_num")
-	code, msg, video, ok := h.service.VideoSearch(keywords, pageNum, pageSize)
+	code, msg, video, ok := h.videoService.VideoSearch(keywords, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		return
@@ -62,10 +62,10 @@ func (h *Handler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 		Total: len(video),
 	}})
 }
-func (h *Handler) VideoPopular(ctx context.Context, c *app.RequestContext) {
+func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) {
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
-	code, msg, videos, ok := h.service.VideoPopular(ctx, pageNum, pageSize)
+	code, msg, videos, ok := h.videoService.VideoPopular(ctx, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		return

@@ -31,9 +31,11 @@ func main() {
 	h := handler.NewHandler(svc)
 
 	userSVC := service.NewUserService(mysqlDb, mysqlDb)
-	uh := handler.NewUserHandler(userSVC)
+	userHandler := handler.NewUserHandler(userSVC)
 
+	videoSVC := service.NewVideoService(mysqlDb)
+	videoHandler := handler.NewVideoHandler(videoSVC)
 	defer ddb.Close()
 
-	router.SetRouters(h, uh)
+	router.SetRouters(h, userHandler, videoHandler)
 }
