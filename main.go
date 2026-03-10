@@ -25,7 +25,9 @@ func main() {
 	ddb := db.InitDb()
 	mysqlDb := db.NewMySQLdb(ddb)
 	svc := service.NewService(mysqlDb)
+	usvc := service.NewUserService(mysqlDb, mysqlDb)
 	h := handler.NewHandler(svc)
+	uh := handler.NewUserHandler(usvc)
 	defer ddb.Close()
-	router.SetRouters(h)
+	router.SetRouters(h, uh)
 }
