@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
-func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler) {
+func SetRouters(LikeHandler *handler.LikeHandler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler, socialHandler *handler.SocialHandler) {
 	h := server.Default(
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
@@ -39,20 +39,20 @@ func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler, vide
 	like := h.Group("/like")
 	like.Use(middleware.AuthMiddleware)
 	{
-		like.POST("/action", handler.LikeAction)
-		like.GET("/list", handler.LikeList)
+		like.POST("/action", LikeHandler.LikeAction)
+		like.GET("/list", LikeHandler.LikeList)
 	}
 	comment := h.Group("/comment")
 	comment.Use(middleware.AuthMiddleware)
 	{
-		comment.POST("/publish", handler.CommentPublish)
-		comment.GET("/list", handler.CommentList)
-		comment.DELETE("/delete", handler.CommentDelete)
+		comment.POST("/publish", LikeHandler.CommentPublish)
+		comment.GET("/list", LikeHandler.CommentList)
+		comment.DELETE("/delete", LikeHandler.CommentDelete)
 	}
 	//关注操作、关注列表、粉丝列表、好友列表
-	h.POST("/relation/action", middleware.AuthMiddleware, handler.RelationAction)
-	h.GET("/following/list", middleware.AuthMiddleware, handler.FollowingList)
-	h.GET("/follower/list", middleware.AuthMiddleware, handler.FollowerList)
-	h.GET("/friends/list", middleware.AuthMiddleware, handler.FriendList)
+	h.POST("/relation/action", middleware.AuthMiddleware, socialHandler.RelationAction)
+	h.GET("/following/list", middleware.AuthMiddleware, socialHandler.FollowingList)
+	h.GET("/follower/list", middleware.AuthMiddleware, socialHandler.FollowerList)
+	h.GET("/friends/list", middleware.AuthMiddleware, socialHandler.FriendList)
 	h.Spin()
 }

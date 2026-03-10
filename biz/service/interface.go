@@ -6,11 +6,8 @@ import (
 )
 
 type Database interface {
-	CreateUser(user entity.UserEntity) error
 	GetUserByUsername(username string) (entity.UserEntity, error)
 	GetUserByUserId(userId string) (entity.UserEntity, error)
-	UpdateUserAvatar(url string, userId interface{}) error
-	CreatVideo(entity entity.VideoEntity) error
 	GetVideoByUserID(userId string, pageSize int, pageNum int) ([]entity.VideoEntity, error)
 	GetVideoByKeyWord(keyword string, pageNum int, pageSize int) ([]entity.VideoEntity, error)
 	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
@@ -60,6 +57,27 @@ type VideoDatabase interface {
 	GetVideoByKeyWord(keyword string, pageNum int, pageSize int) ([]entity.VideoEntity, error)
 	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
 }
+type SocialDatabase interface {
+	CreateFollowing(userId string, toUserId string) error
+	CreateFollower(userId string, toUserId string) error
+	DeleteFollowing(userId string, toUserId string) error
+	DeleteFollower(userId string, toUserId string) error
+	FollowingIdList(userId string, pageNum int, pageSize int) ([]string, error)
+	FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error)
+	FriendIdList(userId string, pageNum, pageSize int) (followingIds []string, followerIds []string, err1 error, err2 error)
+}
+type SocialService struct {
+	social SocialDatabase
+	user   UserDatabase
+}
+
+func NewSocialService(social SocialDatabase, user UserDatabase) *SocialService {
+	return &SocialService{
+		social: social,
+		user:   user,
+	}
+}
+
 type Service struct {
 	db Database
 }

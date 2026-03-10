@@ -27,15 +27,18 @@ func main() {
 	ddb := db.InitDb()
 	mysqlDb := db.NewMySQLdb(ddb)
 
-	svc := service.NewService(mysqlDb)
-	h := handler.NewHandler(svc)
+	likesvc := service.NewService(mysqlDb)
+	likeHandler := handler.NewLikeHandler(likesvc)
 
 	userSVC := service.NewUserService(mysqlDb, mysqlDb)
 	userHandler := handler.NewUserHandler(userSVC)
 
 	videoSVC := service.NewVideoService(mysqlDb)
 	videoHandler := handler.NewVideoHandler(videoSVC)
+
+	socialSVC := service.NewSocialService(mysqlDb, mysqlDb)
+	socialHandler := handler.NewSocialHandler(socialSVC)
 	defer ddb.Close()
 
-	router.SetRouters(h, userHandler, videoHandler)
+	router.SetRouters(likeHandler, userHandler, videoHandler, socialHandler)
 }
