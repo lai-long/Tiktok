@@ -23,8 +23,8 @@ func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler) {
 	}
 	authMfa := h.Group("/auth/mfa")
 	{
-		authMfa.GET("/qrcode", middleware.AuthMiddleware, handler.MfaQrcode)
-		authMfa.POST("/bind", middleware.AuthMiddleware, handler.MfaBind)
+		authMfa.GET("/qrcode", middleware.AuthMiddleware, userHandler.MfaQrcode)
+		authMfa.POST("/bind", middleware.AuthMiddleware, userHandler.MfaBind)
 	}
 	//投稿、发布列表、搜索视频、热门排行榜
 	video := h.Group("/video")
