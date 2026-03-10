@@ -9,7 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func (h *Handler) LikeAction(ctx context.Context, c *app.RequestContext) {
+func (h *LikeHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 	action := c.PostForm("action_type")
 	videoId := c.PostForm("video_id")
 	commentId := c.PostForm("comment_id")
@@ -42,7 +42,7 @@ func (h *Handler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 	}
 }
-func (h *Handler) LikeList(ctx context.Context, c *app.RequestContext) {
+func (h *LikeHandler) LikeList(ctx context.Context, c *app.RequestContext) {
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
 	userId := c.Query("user_id")
@@ -69,7 +69,7 @@ func (h *Handler) LikeList(ctx context.Context, c *app.RequestContext) {
 		},
 	)
 }
-func (h *Handler) CommentPublish(ctx context.Context, c *app.RequestContext) {
+func (h *LikeHandler) CommentPublish(ctx context.Context, c *app.RequestContext) {
 	var comment dto.Comment
 	err := c.Bind(&comment)
 	if err != nil {
@@ -96,7 +96,7 @@ func (h *Handler) CommentPublish(ctx context.Context, c *app.RequestContext) {
 	}})
 
 }
-func (h *Handler) CommentList(ctx context.Context, c *app.RequestContext) {
+func (h *LikeHandler) CommentList(ctx context.Context, c *app.RequestContext) {
 	videoId := c.Query("video_id")
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
@@ -118,7 +118,7 @@ func (h *Handler) CommentList(ctx context.Context, c *app.RequestContext) {
 		}})
 }
 
-func (h *Handler) CommentDelete(ctx context.Context, c *app.RequestContext) {
+func (h *LikeHandler) CommentDelete(ctx context.Context, c *app.RequestContext) {
 	videoId := c.PostForm("video_id")
 	commentId := c.PostForm("comment_id")
 	userId, exist := c.Get("user_id")

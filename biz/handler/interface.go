@@ -7,12 +7,12 @@ import (
 	"mime/multipart"
 )
 
-type Handler struct {
-	service Sever
+type LikeHandler struct {
+	service LikeSever
 }
 
-func NewHandler(service *service.Service) *Handler {
-	return &Handler{service: service}
+func NewLikeHandler(service *service.Service) *LikeHandler {
+	return &LikeHandler{service: service}
 }
 
 type UserHandler struct {
@@ -50,15 +50,24 @@ type VideoSever interface {
 	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool)
 	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool)
 }
-type Sever interface {
+type LikeSever interface {
 	VideoLikeAction(userId string, videoId string, action string) (int, string)
 	CommentLikeAction(userId string, commentId string, action string) (int, string)
 	LikeList(userId string, pageNum string, pageSize string) (int, string, []dto.Video, bool)
 	CommentPublish(videoId string, userId string, content string) (int, string)
 	CommentList(videoId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool)
 	CommentDelete(commentId string, videoId string, userId string) (int, string)
+}
+type SocialSever interface {
 	RelationAction(toUserId string, actionType string, userId string) (int, string)
 	FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
 	FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
 	FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
+}
+type SocialHandler struct {
+	socialService SocialSever
+}
+
+func NewSocialHandler(service SocialSever) *SocialHandler {
+	return &SocialHandler{socialService: service}
 }
