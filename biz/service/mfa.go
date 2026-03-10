@@ -1,14 +1,13 @@
 package service
 
 import (
-	"Tiktok/biz/dao/db"
 	"Tiktok/pkg/consts"
 	"log"
 
 	"github.com/pquerna/otp/totp"
 )
 
-func GenerateMfa(username string, userId string) (bool, string, string, int, string) {
+func (s *Service) GenerateMfa(username string, userId string) (bool, string, string, int, string) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
@@ -18,15 +17,15 @@ func GenerateMfa(username string, userId string) (bool, string, string, int, str
 		return false, "", "", consts.CodeMfaError, "Mfa Generate err"
 	}
 	secret := key.Secret()
-	err = db.SaveMfaSecret(secret, userId)
+	err = s.db.SaveMfaSecret(secret, userId)
 	if err != nil {
 		log.Println("Generate MFA err:", err)
 		return false, "", "", consts.CodeDBUpdateError, "Mfa Generate err"
 	}
 	return true, key.URL(), secret, consts.CodeSuccess, "Mfa Generate success"
 }
-func MfaBindByCode(code string, userId string) (int, string) {
-	secret, err := db.GetMfaSecret(userId)
+func (s *Service) MfaBindByCode(code string, userId string) (int, string) {
+	secret, err := s.db.GetMfaSecret(userId)
 	if err != nil {
 		log.Println("Get MFA secret err:", err)
 		return consts.CodeDBSelectError, "GetMfaSecret err:"
@@ -35,15 +34,15 @@ func MfaBindByCode(code string, userId string) (int, string) {
 	if !valid {
 		return consts.CodeMfaError, "GetMfaSecret err:"
 	}
-	err = db.MfaBindUpdate(userId)
+	err = s.db.MfaBindUpdate(userId)
 	if err != nil {
 		log.Println("MfaBindUpdate err:", err)
 		return consts.CodeDBUpdateError, "MfaBindUpdate err:"
 	}
 	return consts.CodeSuccess, "MfaBindUpdate success"
 }
-func MfaBindBySecret(secret string, userId string) (int, string) {
-	dbSecret, err := db.GetMfaSecret(userId)
+func (s *Service) MfaBindBySecret(secret string, userId string) (int, string) {
+	dbSecret, err := s.db.GetMfaSecret(userId)
 	if err != nil {
 		log.Println("Get MFA secret err:", err)
 		return consts.CodeDBSelectError, "GetMfaSecret err:"
@@ -51,7 +50,7 @@ func MfaBindBySecret(secret string, userId string) (int, string) {
 	if dbSecret != secret {
 		return consts.CodeMfaError, "MfaSecret false err:"
 	}
-	err = db.MfaBindUpdate(userId)
+	err = s.db.MfaBindUpdate(userId)
 	if err != nil {
 		log.Println("MfaBindUpdate err:", err)
 		return consts.CodeDBUpdateError, "MfaBindUpdate err:"

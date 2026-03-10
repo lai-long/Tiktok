@@ -5,8 +5,12 @@ package main
 import (
 	"Tiktok/biz/dao/db"
 	"Tiktok/biz/dao/redis"
+	"Tiktok/biz/handler"
+
 	"Tiktok/biz/router"
+	"Tiktok/biz/service"
 	"Tiktok/pkg/conf"
+
 	"log"
 )
 
@@ -19,6 +23,9 @@ func main() {
 	rdb := redis.InitRedis()
 	defer rdb.Close()
 	ddb := db.InitDb()
+	mysqlDb := db.NewMySQLdb(ddb)
+	svc := service.NewService(mysqlDb)
+	h := handler.NewHandler(svc)
 	defer ddb.Close()
-	router.SetRouters()
+	router.SetRouters(h)
 }

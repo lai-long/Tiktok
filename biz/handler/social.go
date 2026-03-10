@@ -2,14 +2,13 @@ package handler
 
 import (
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func RelationAction(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) RelationAction(ctx context.Context, c *app.RequestContext) {
 	toUserId := c.PostForm("to_user_id")
 	actionType := c.PostForm("action_type")
 	userId, exist := c.Get("user_id")
@@ -21,7 +20,7 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 			},
 		})
 	}
-	code, msg := service.RelationAction(toUserId, actionType, userId.(string))
+	code, msg := h.service.RelationAction(toUserId, actionType, userId.(string))
 	c.JSON(200, dto.Response{
 		Base: dto.Base{
 			Code: code,
@@ -29,11 +28,11 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 		},
 	})
 }
-func FollowingList(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) FollowingList(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
-	code, msg, users, ok := service.FollowingList(userId, pageNum, pageSize)
+	code, msg, users, ok := h.service.FollowingList(userId, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
@@ -54,11 +53,11 @@ func FollowingList(ctx context.Context, c *app.RequestContext) {
 		},
 	})
 }
-func FollowerList(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) FollowerList(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
-	code, msg, followers, ok := service.FollowerList(userId, pageNum, pageSize)
+	code, msg, followers, ok := h.service.FollowerList(userId, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
@@ -79,7 +78,7 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 		},
 	})
 }
-func FriendList(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) FriendList(ctx context.Context, c *app.RequestContext) {
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
 	userId, exist := c.Get("user_id")
@@ -92,7 +91,7 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 		})
 		return
 	}
-	code, msg, friend, ok := service.FriendList(userId.(string), pageNum, pageSize)
+	code, msg, friend, ok := h.service.FriendList(userId.(string), pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{

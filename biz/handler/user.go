@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
@@ -10,7 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func UserRegister(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) UserRegister(ctx context.Context, c *app.RequestContext) {
 	var userinfo dto.User
 	var err error
 	if err = c.BindAndValidate(&userinfo); err != nil {
@@ -19,11 +18,11 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		c.Abort()
 		return
 	}
-	code, msg := service.Register(userinfo)
+	code, msg := h.service.Register(userinfo)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
 
-func UserLogin(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) UserLogin(ctx context.Context, c *app.RequestContext) {
 	var userDto dto.User
 	if err := c.BindAndValidate(&userDto); err != nil {
 		log.Println("UserLogin.bindAndValidate error:", err)
@@ -32,7 +31,7 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	mfcCode := c.PostForm("code")
-	code, msg, user, reToken, acToken := service.Login(userDto, mfcCode)
+	code, msg, user, reToken, acToken := h.service.Login(userDto, mfcCode)
 	res := dto.LoginResponse{
 		Response: dto.Response{
 			Base: dto.Base{
@@ -48,9 +47,9 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, res)
 }
 
-func UserInfo(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) UserInfo(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
-	user, code, msg, ok := service.UserInfo(userId)
+	user, code, msg, ok := h.service.UserInfo(userId)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		c.Abort()
@@ -59,13 +58,13 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "success"}, Data: user})
 }
 
-func UserAvatar(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 	data, _ := c.FormFile("data")
 	userId, exist := c.Get("user_id")
 	if !exist {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
 	}
-	code, msg, ok, user := service.UserAvatar(data, userId)
+	code, msg, ok, user := h.service.UserAvatar(data, userId)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 		return
