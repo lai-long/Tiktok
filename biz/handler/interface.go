@@ -15,6 +15,20 @@ func NewHandler(service *service.Service) *Handler {
 	return &Handler{service: service}
 }
 
+type UserHandler struct {
+	userService UserSever
+}
+
+func NewUserHandler(service *service.UserService) *UserHandler {
+	return &UserHandler{userService: service}
+}
+
+type UserSever interface {
+	Register(userinfo dto.User) (int, string)
+	Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string)
+	UserInfo(userId string) (dto.User, int, string, bool)
+	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
+}
 type Sever interface {
 	GenerateMfa(username string, userId string) (bool, string, string, int, string)
 	MfaBindByCode(code string, userId string) (int, string)
@@ -29,10 +43,6 @@ type Sever interface {
 	FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
 	FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
 	FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
-	Register(userinfo dto.User) (int, string)
-	Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string)
-	UserInfo(userId string) (dto.User, int, string, bool)
-	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
 	VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string)
 	VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool)
 	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool)

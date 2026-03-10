@@ -3,16 +3,7 @@ package service
 import (
 	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/entity"
-	"database/sql"
 )
-
-type Service struct {
-	db Database
-}
-
-func NewService(db *db.MySQLdb) *Service {
-	return &Service{db: db}
-}
 
 type Database interface {
 	CreateUser(user entity.UserEntity) error
@@ -51,14 +42,31 @@ type Database interface {
 	MfaBindUpdate(userId string) error
 	CheckMfaBind(userId string) (error, int)
 }
+type UserDatabase interface {
+	CreateUser(user entity.UserEntity) error
+	GetUserByUsername(username string) (entity.UserEntity, error)
+	GetUserByUserId(userId string) (entity.UserEntity, error)
+	UpdateUserAvatar(url string, userId interface{}) error
+}
+type MfaDatabase interface {
+	SaveMfaSecret(mfa string, userId string) error
+	GetMfaSecret(userId string) (string, error)
+	MfaBindUpdate(userId string) error
+	CheckMfaBind(userId string) (error, int)
+}
+type Service struct {
+	db Database
+}
 
-func (s *Service) IsUsernameExists(username string) (bool, error) {
-	_, err := s.db.GetUserByUsername(username)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
+func NewService(db *db.MySQLdb) *Service {
+	return &Service{db: db}
+}
+
+type UserService struct {
+	userDb UserDatabase
+	mfaDb  MfaDatabase
+}
+
+func NewUserService(userDb UserDatabase, mfaDb MfaDatabase) *UserService {
+	return &UserService{userDb: userDb, mfaDb: mfaDb}
 }

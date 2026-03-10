@@ -26,10 +26,6 @@ type MySQLdb struct {
 	db *sqlx.DB
 }
 
-func (m *MySQLdb) IsUsernameExists(username string) (bool, error) {
-	panic("implement me")
-}
-
 func NewMySQLdb(db *sqlx.DB) *MySQLdb {
 	return &MySQLdb{db: db}
 }

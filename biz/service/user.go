@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
+	"database/sql"
 	"io"
 	"log"
 	"mime/multipart"
@@ -14,7 +15,17 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
-func (s *Service) Register(userinfo dto.User) (int, string) {
+func (s *UserService) IsUsernameExists(username string) (bool, error) {
+	_, err := s.userDb.GetUserByUsername(username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+func (s *UserService) Register(userinfo dto.User) (int, string) {
 	var userEntity entity.UserEntity
 	var err error
 	exists, err := s.IsUsernameExists(userinfo.Username)
@@ -32,15 +43,15 @@ func (s *Service) Register(userinfo dto.User) (int, string) {
 		log.Println(err)
 		return consts.CodeHashError, "hashPassword error"
 	}
-	if err = s.db.CreateUser(userEntity); err != nil {
+	if err = s.userDb.CreateUser(userEntity); err != nil {
 		log.Println(err)
 		return consts.CodeDBCreateError, "db create user error"
 	}
 	return consts.CodeSuccess, "success"
 }
 
-func (s *Service) Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string) {
-	userEntity, err := s.db.GetUserByUsername(userDto.Username)
+func (s *UserService) Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string) {
+	userEntity, err := s.userDb.GetUserByUsername(userDto.Username)
 	if err != nil {
 		log.Println("get user entity error", err)
 		return consts.CodeUserError, "GetUserByUsername Error", dto.User{}, "", ""
@@ -54,7 +65,7 @@ func (s *Service) Login(userDto dto.User, mfaCode string) (int, string, dto.User
 	userDto.Username = userEntity.Username
 	userDto.CreatedAt = userEntity.Created_at.String()
 	userDto.UpdatedAt = userEntity.Updated_at.String()
-	err, enable := s.db.CheckMfaBind(userDto.ID)
+	err, enable := s.mfaDb.CheckMfaBind(userDto.ID)
 	if err != nil {
 		log.Println(err)
 		return consts.CodeUserError, "CheckMfaBind error", dto.User{}, "", ""
@@ -63,7 +74,7 @@ func (s *Service) Login(userDto dto.User, mfaCode string) (int, string, dto.User
 		if mfaCode == "" {
 			return consts.CodeMfaError, "GetMfaCode from front error", dto.User{}, "", ""
 		}
-		mfaSecret, err := s.db.GetMfaSecret(userDto.ID)
+		mfaSecret, err := s.mfaDb.GetMfaSecret(userDto.ID)
 		if err != nil {
 			log.Println(err)
 			return consts.CodeDBSelectError, "GetMfaSecret from db error", dto.User{}, "", ""
@@ -79,8 +90,8 @@ func (s *Service) Login(userDto dto.User, mfaCode string) (int, string, dto.User
 	return consts.CodeSuccess, "success", userDto, reToken, acToken
 }
 
-func (s *Service) UserInfo(userId string) (dto.User, int, string, bool) {
-	userEntity, err := s.db.GetUserByUserId(userId)
+func (s *UserService) UserInfo(userId string) (dto.User, int, string, bool) {
+	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		log.Printf("GetUserByUserIdError : %v", err)
 		return dto.User{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
@@ -94,7 +105,7 @@ func (s *Service) UserInfo(userId string) (dto.User, int, string, bool) {
 	return user, consts.CodeSuccess, "Get UserInfo success", true
 }
 
-func (s *Service) UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User) {
+func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User) {
 	dataFile, err := data.Open()
 	if err != nil {
 		log.Printf("data.Open error: %v", err)
@@ -129,12 +140,12 @@ func (s *Service) UserAvatar(data *multipart.FileHeader, userId interface{}) (in
 		log.Printf("io.Copy error: %v", err)
 		return consts.CodeIOError, "a io.copy error", false, dto.User{}
 	}
-	err = s.db.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
+	err = s.userDb.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
 	if err != nil {
 		log.Printf("db.UpdateUserAvatar error: %v", err)
 		return consts.CodeDBUpdateError, "a db.UpdateUserAvatar error", false, dto.User{}
 	}
-	userEntity, err := s.db.GetUserByUserId(userId.(string))
+	userEntity, err := s.userDb.GetUserByUserId(userId.(string))
 	if err != nil {
 		log.Printf("db.GetUserByUserIderror: %v", err)
 		return consts.CodeDBSelectError, "a db.GetUserByUserId error", false, dto.User{}

@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
-func SetRouters(handler *handler.Handler) {
+func SetRouters(handler *handler.Handler, userHandler *handler.UserHandler) {
 	h := server.Default(
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
@@ -16,10 +16,10 @@ func SetRouters(handler *handler.Handler) {
 	//注册、登录、用户信息、上传头像
 	user := h.Group("/user")
 	{
-		user.GET("/info", middleware.AuthMiddleware, handler.UserInfo)
-		user.POST("/login", handler.UserLogin)
-		user.POST("/register", handler.UserRegister)
-		user.PUT("/avatar/upload", middleware.AuthMiddleware, handler.UserAvatar)
+		user.GET("/info", middleware.AuthMiddleware, userHandler.UserInfo)
+		user.POST("/login", userHandler.UserLogin)
+		user.POST("/register", userHandler.UserRegister)
+		user.PUT("/avatar/upload", middleware.AuthMiddleware, userHandler.UserAvatar)
 	}
 	authMfa := h.Group("/auth/mfa")
 	{
