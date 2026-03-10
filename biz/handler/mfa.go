@@ -2,14 +2,13 @@ package handler
 
 import (
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func MfaQrcode(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	userId, exist := c.Get("user_id")
 	if !exist {
 		c.JSON(200, dto.Base{
@@ -26,7 +25,7 @@ func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 		})
 		return
 	}
-	ok, key, secret, code, msg := service.GenerateMfa(userName.(string), userId.(string))
+	ok, key, secret, code, msg := h.service.GenerateMfa(userName.(string), userId.(string))
 	if !ok {
 		c.JSON(200, dto.Base{
 			Code: code,
@@ -45,11 +44,11 @@ func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 		},
 	})
 }
-func MfaBind(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) MfaBind(ctx context.Context, c *app.RequestContext) {
 	mfaCode := c.PostForm("code")
 	secret := c.PostForm("secret")
 	if secret != "" {
-		service.MfaBindBySecret(mfaCode, secret)
+		h.service.MfaBindBySecret(mfaCode, secret)
 		c.JSON(200, dto.Base{
 			Code: consts.CodeSuccess,
 			Msg:  "mfa bind success",
@@ -63,7 +62,7 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 			Msg:  "GET USER ID not found",
 		})
 	}
-	code, msg := service.MfaBindByCode(mfaCode, userId.(string))
+	code, msg := h.service.MfaBindByCode(mfaCode, userId.(string))
 	c.JSON(200, dto.Base{
 		Code: code,
 		Msg:  msg,

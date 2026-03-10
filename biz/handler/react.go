@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
@@ -10,7 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-func LikeAction(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) LikeAction(ctx context.Context, c *app.RequestContext) {
 	action := c.PostForm("action_type")
 	videoId := c.PostForm("video_id")
 	commentId := c.PostForm("comment_id")
@@ -29,25 +28,25 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 	}
 	if videoId != "" {
-		code, msg := service.VideoLikeAction(userId.(string), videoId, action)
+		code, msg := h.service.VideoLikeAction(userId.(string), videoId, action)
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
 			Msg:  msg,
 		}})
 	}
 	if commentId != "" {
-		code, msg := service.CommentLikeAction(userId.(string), commentId, action)
+		code, msg := h.service.CommentLikeAction(userId.(string), commentId, action)
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
 			Msg:  msg,
 		}})
 	}
 }
-func LikeList(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) LikeList(ctx context.Context, c *app.RequestContext) {
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
 	userId := c.Query("user_id")
-	code, msg, videos, ok := service.LikeList(userId, pageNum, pageSize)
+	code, msg, videos, ok := h.service.LikeList(userId, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
@@ -70,7 +69,7 @@ func LikeList(ctx context.Context, c *app.RequestContext) {
 		},
 	)
 }
-func CommentPublish(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) CommentPublish(ctx context.Context, c *app.RequestContext) {
 	var comment dto.Comment
 	err := c.Bind(&comment)
 	if err != nil {
@@ -90,18 +89,18 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	comment.UserId = userId.(string)
-	code, msg := service.CommentPublish(comment.VideoId, comment.UserId, comment.Content)
+	code, msg := h.service.CommentPublish(comment.VideoId, comment.UserId, comment.Content)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,
 	}})
 
 }
-func CommentList(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) CommentList(ctx context.Context, c *app.RequestContext) {
 	videoId := c.Query("video_id")
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
-	code, msg, comments, ok := service.CommentList(videoId, pageSize, pageNum)
+	code, msg, comments, ok := h.service.CommentList(videoId, pageSize, pageNum)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
@@ -119,7 +118,7 @@ func CommentList(ctx context.Context, c *app.RequestContext) {
 		}})
 }
 
-func CommentDelete(ctx context.Context, c *app.RequestContext) {
+func (h *Handler) CommentDelete(ctx context.Context, c *app.RequestContext) {
 	videoId := c.PostForm("video_id")
 	commentId := c.PostForm("comment_id")
 	userId, exist := c.Get("user_id")
@@ -129,7 +128,7 @@ func CommentDelete(ctx context.Context, c *app.RequestContext) {
 			Msg:  "commentDelete Get userId error",
 		}})
 	}
-	code, msg := service.CommentDelete(commentId, videoId, userId.(string))
+	code, msg := h.service.CommentDelete(commentId, videoId, userId.(string))
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,

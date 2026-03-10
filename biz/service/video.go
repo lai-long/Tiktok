@@ -1,7 +1,6 @@
 package service
 
 import (
-	"Tiktok/biz/dao/db"
 	"Tiktok/biz/dao/redis"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/entity"
@@ -17,7 +16,7 @@ import (
 	"strconv"
 )
 
-func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string) {
+func (s *Service) VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string) {
 	dataFile, err := data.Open()
 	if err != nil {
 		return consts.CodeIOError, "VideoPublish data.Open err"
@@ -50,7 +49,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	if err != nil {
 		return consts.CodeRedisError, `VideoPublish redis.VideoHotSet err`
 	}
-	err = db.CreatVideo(videoEntity)
+	err = s.db.CreatVideo(videoEntity)
 	if err != nil {
 		log.Fatalf("VideoPublish db.CreateVideo err: %v", err)
 		return consts.CodeDBCreateError, "VideoPublish db.Create err"
@@ -58,7 +57,7 @@ func VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Conte
 	return consts.CodeSuccess, "success"
 }
 
-func VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool) {
+func (s *Service) VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool) {
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("strconv.Atoi error: %v", err)
@@ -69,7 +68,7 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeError, "VideoList pageNum error", []dto.Video{}, false
 	}
-	videoList, err := db.GetVideoByUserID(userId, pageSizeInt, pageNumInt)
+	videoList, err := s.db.GetVideoByUserID(userId, pageSizeInt, pageNumInt)
 	if err != nil {
 		log.Printf("GetVideoByUserID err: %v", err)
 		return consts.CodeDBSelectError, "VideoList GetVideoByUserID error", []dto.Video{}, false
@@ -93,7 +92,7 @@ func VideoList(userId string, pageSize string, pageNum string) (int, string, []d
 	return consts.CodeSuccess, "success", videoDTOs, true
 }
 
-func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
+func (s *Service) VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("strconv.Atoi error: %v", err)
@@ -104,7 +103,7 @@ func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, 
 		log.Printf("VideoSearch pageNum  strconv error: %v", err)
 		return consts.CodeError, "VideoSearch pageNum error", []dto.Video{}, false
 	}
-	video, err := db.GetVideoByKeyWord(keyword, pageNumInt, pageSizeInt)
+	video, err := s.db.GetVideoByKeyWord(keyword, pageNumInt, pageSizeInt)
 	if err != nil {
 		log.Printf("db.GetVideoByKeyWord err: %v", err)
 		return consts.CodeVideoError, "GetVideoByVideoTitleOrDescription error", []dto.Video{}, false
@@ -126,7 +125,7 @@ func VideoSearch(keyword string, pageNum string, pageSize string) (int, string, 
 	return consts.CodeSuccess, "success", videoDTOs, true
 }
 
-func VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
+func (s *Service) VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("strconv.Atoi error: %v", err)
@@ -144,7 +143,7 @@ func VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, st
 	}
 	videoEntity := make([]entity.VideoEntity, len(z))
 	for i, _ := range z {
-		videoEntity[i], err = db.GetVideoByVideoId(z[i].Member.(string))
+		videoEntity[i], err = s.db.GetVideoByVideoId(z[i].Member.(string))
 		if err != nil {
 			log.Printf("GetVideoByVideoId %v", err)
 			return consts.CodeDBSelectError, "VideoPopular db.GetVideoByVideoId err", []dto.Video{}, false

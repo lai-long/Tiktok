@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
-func SetRouters() {
+func SetRouters(handler *handler.Handler) {
 	h := server.Default(
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
