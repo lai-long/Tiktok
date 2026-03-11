@@ -15,6 +15,22 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
+type UserDatabase interface {
+	CreateUser(user entity.UserEntity) error
+	GetUserByUsername(username string) (entity.UserEntity, error)
+	GetUserByUserId(userId string) (entity.UserEntity, error)
+	UpdateUserAvatar(url string, userId interface{}) error
+}
+
+type UserService struct {
+	userDb UserDatabase
+	mfaDb  MfaDatabase
+}
+
+func NewUserService(userDb UserDatabase, mfaDb MfaDatabase) *UserService {
+	return &UserService{userDb: userDb, mfaDb: mfaDb}
+}
+
 func (s *UserService) IsUsernameExists(username string) (bool, error) {
 	_, err := s.userDb.GetUserByUsername(username)
 	if err != nil {

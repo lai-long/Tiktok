@@ -16,6 +16,20 @@ import (
 	"strconv"
 )
 
+type VideoDatabase interface {
+	CreatVideo(entity entity.VideoEntity) error
+	GetVideoByUserID(userId string, pageSize int, pageNum int) ([]entity.VideoEntity, error)
+	GetVideoByKeyWord(keyword string, pageNum int, pageSize int) ([]entity.VideoEntity, error)
+	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
+}
+type VideoService struct {
+	videoDb VideoDatabase
+}
+
+func NewVideoService(videoDb VideoDatabase) *VideoService {
+	return &VideoService{videoDb: videoDb}
+}
+
 func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string) {
 	dataFile, err := data.Open()
 	if err != nil {

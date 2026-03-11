@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
-func SetRouters(LikeHandler *handler.LikeHandler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler, socialHandler *handler.SocialHandler) {
+func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler, socialHandler *handler.SocialHandler, likesHandler *handler.LikesHandler) {
 	h := server.Default(
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
@@ -39,15 +39,15 @@ func SetRouters(LikeHandler *handler.LikeHandler, userHandler *handler.UserHandl
 	like := h.Group("/like")
 	like.Use(middleware.AuthMiddleware)
 	{
-		like.POST("/action", LikeHandler.LikeAction)
-		like.GET("/list", LikeHandler.LikeList)
+		like.POST("/action", likesHandler.LikeAction)
+		like.GET("/list", likesHandler.LikeList)
 	}
 	comment := h.Group("/comment")
 	comment.Use(middleware.AuthMiddleware)
 	{
-		comment.POST("/publish", LikeHandler.CommentPublish)
-		comment.GET("/list", LikeHandler.CommentList)
-		comment.DELETE("/delete", LikeHandler.CommentDelete)
+		comment.POST("/publish", commentHandler.CommentPublish)
+		comment.GET("/list", commentHandler.CommentList)
+		comment.DELETE("/delete", commentHandler.CommentDelete)
 	}
 	//关注操作、关注列表、粉丝列表、好友列表
 	h.POST("/relation/action", middleware.AuthMiddleware, socialHandler.RelationAction)

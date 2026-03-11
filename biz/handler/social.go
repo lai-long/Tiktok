@@ -8,6 +8,20 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
+type SocialSever interface {
+	RelationAction(toUserId string, actionType string, userId string) (int, string)
+	FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
+	FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
+	FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
+}
+type SocialHandler struct {
+	socialService SocialSever
+}
+
+func NewSocialHandler(service SocialSever) *SocialHandler {
+	return &SocialHandler{socialService: service}
+}
+
 func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContext) {
 	toUserId := c.PostForm("to_user_id")
 	actionType := c.PostForm("action_type")

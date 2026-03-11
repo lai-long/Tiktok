@@ -2,12 +2,30 @@ package handler
 
 import (
 	"Tiktok/biz/model/dto"
+	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
+	"mime/multipart"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
+
+type UserSever interface {
+	Register(userinfo dto.User) (int, string)
+	Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string)
+	UserInfo(userId string) (dto.User, int, string, bool)
+	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
+}
+type UserHandler struct {
+	userService UserSever
+	MfaServer   MfaServer
+}
+
+func NewUserHandler(userService *service.UserService) *UserHandler {
+	return &UserHandler{userService: userService,
+		MfaServer: userService}
+}
 
 func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 	var userinfo dto.User
