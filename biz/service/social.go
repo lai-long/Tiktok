@@ -8,6 +8,26 @@ import (
 	"strconv"
 )
 
+type SocialDatabase interface {
+	CreateFollowing(userId string, toUserId string) error
+	CreateFollower(userId string, toUserId string) error
+	DeleteFollowing(userId string, toUserId string) error
+	DeleteFollower(userId string, toUserId string) error
+	FollowingIdList(userId string, pageNum int, pageSize int) ([]string, error)
+	FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error)
+	FriendIdList(userId string, pageNum, pageSize int) (followingIds []string, followerIds []string, err1 error, err2 error)
+}
+type SocialService struct {
+	social SocialDatabase
+	user   UserDatabase
+}
+
+func NewSocialService(social SocialDatabase, user UserDatabase) *SocialService {
+	return &SocialService{
+		social: social,
+		user:   user,
+	}
+}
 func (s *SocialService) RelationAction(toUserId string, actionType string, userId string) (int, string) {
 	if actionType == "0" {
 		err := s.social.CreateFollowing(userId, toUserId)

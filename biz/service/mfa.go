@@ -7,6 +7,13 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
+type MfaDatabase interface {
+	SaveMfaSecret(mfa string, userId string) error
+	GetMfaSecret(userId string) (string, error)
+	MfaBindUpdate(userId string) error
+	CheckMfaBind(userId string) (error, int)
+}
+
 func (s *UserService) GenerateMfa(username string, userId string) (bool, string, string, int, string) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",

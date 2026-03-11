@@ -8,6 +8,12 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
+type MfaServer interface {
+	GenerateMfa(username string, userId string) (bool, string, string, int, string)
+	MfaBindByCode(code string, userId string) (int, string)
+	MfaBindBySecret(secret string, userId string) (int, string)
+}
+
 func (h *UserHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	userId, exist := c.Get("user_id")
 	if !exist {

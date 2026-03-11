@@ -5,9 +5,24 @@ import (
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
+	"mime/multipart"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
+
+type VideoSever interface {
+	VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string)
+	VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool)
+	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool)
+	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool)
+}
+type VideoHandler struct {
+	videoService VideoSever
+}
+
+func NewVideoHandler(videoService VideoSever) *VideoHandler {
+	return &VideoHandler{videoService: videoService}
+}
 
 func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) {
 	var video dto.Video
