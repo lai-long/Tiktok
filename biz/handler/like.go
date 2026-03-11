@@ -45,6 +45,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 			Code: consts.CodeLikeError,
 			Msg:  "likeAction Get commentId or videoId error",
 		}})
+		return
 	}
 	if videoId != "" {
 		code, msg := h.video.VideoLikeAction(userId.(string), videoId, action)
@@ -52,6 +53,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 			Code: code,
 			Msg:  msg,
 		}})
+		return
 	}
 	if commentId != "" {
 		code, msg := h.comment.CommentLikeAction(userId.(string), commentId, action)
@@ -59,6 +61,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 			Code: code,
 			Msg:  msg,
 		}})
+		return
 	}
 }
 func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
