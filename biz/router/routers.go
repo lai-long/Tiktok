@@ -20,6 +20,7 @@ func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.Use
 		user.POST("/login", userHandler.UserLogin)
 		user.POST("/register", userHandler.UserRegister)
 		user.PUT("/avatar/upload", middleware.AuthMiddleware, userHandler.UserAvatar)
+		user.POST("/refresh", userHandler.RefreshToken)
 	}
 	authMfa := h.Group("/auth/mfa")
 	{

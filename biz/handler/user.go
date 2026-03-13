@@ -16,6 +16,7 @@ type UserSever interface {
 	Login(userDto dto.User, mfaCode string, ctx context.Context) (int, string, dto.User, string, string)
 	UserInfo(userId string) (dto.User, int, string, bool)
 	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
+	RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool)
 }
 type UserHandler struct {
 	userService UserSever
@@ -89,4 +90,19 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: user})
+}
+func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
+	refreshToken := c.PostForm("refresh_token")
+	code, msg, reToken, acToken, ok := h.userService.RefreshToken(ctx, refreshToken)
+	if !ok {
+		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+		return
+	}
+	c.JSON(200, dto.LoginResponse{
+		Response: dto.Response{
+			Base: dto.Base{Code: code, Msg: msg},
+		},
+		RefreshToken: reToken,
+		AccessToken:  acToken,
+	})
 }

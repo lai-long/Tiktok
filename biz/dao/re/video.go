@@ -2,7 +2,6 @@ package re
 
 import (
 	"context"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -23,14 +22,3 @@ func (rdb *Redis) VideoHotGet(ctx context.Context, key string, pageNum int, page
 	}
 	return z, nil
 }
-func (rdb *Redis) UserTokenSet(ctx context.Context, refreshToken string, userId string) error {
-	err := rdb.redis.Set(ctx, "refresh:"+refreshToken, userId, 7*24*time.Hour).Err()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//func (rdb *Redis) UserGetByRefreshToken(ctx context.Context, refreshToken string) (userId string, err error) {
-//	rdb.redis.Get(ctx, "refresh:"+refreshToken).Result()
-//}

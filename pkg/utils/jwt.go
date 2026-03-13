@@ -3,6 +3,7 @@ package utils
 import (
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/conf"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,10 +14,12 @@ func GenerateTokens(userDto dto.User) (string, string, bool) {
 	accessTime := 24 * time.Hour
 	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, conf.Cfg.Jwt.RefreshSecret)
 	if err != nil {
+		log.Println(err)
 		return "生成refreshToken错误", "", false
 	}
 	accessToken, err := GetToken(userDto.Username, userDto.ID, accessTime, conf.Cfg.Jwt.AccessSecret)
 	if err != nil {
+		log.Println(err)
 		return "生成accessToken错误", "", false
 	}
 	return refreshToken, accessToken, true
