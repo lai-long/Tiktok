@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
+	"context"
 	"database/sql"
 	"io"
 	"log"
@@ -15,6 +16,9 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
+type UserRedis interface {
+	UserTokenSet(ctx context.Context, refreshToken string, userId string) error
+}
 type UserDatabase interface {
 	CreateUser(user entity.UserEntity) error
 	GetUserByUsername(username string) (entity.UserEntity, error)
@@ -25,10 +29,11 @@ type UserDatabase interface {
 type UserService struct {
 	userDb UserDatabase
 	mfaDb  MfaDatabase
+	redis  UserRedis
 }
 
-func NewUserService(userDb UserDatabase, mfaDb MfaDatabase) *UserService {
-	return &UserService{userDb: userDb, mfaDb: mfaDb}
+func NewUserService(userDb UserDatabase, mfaDb MfaDatabase, redis UserRedis) *UserService {
+	return &UserService{userDb: userDb, mfaDb: mfaDb, redis: redis}
 }
 
 func (s *UserService) IsUsernameExists(username string) (bool, error) {
@@ -66,7 +71,7 @@ func (s *UserService) Register(userinfo dto.User) (int, string) {
 	return consts.CodeSuccess, "success"
 }
 
-func (s *UserService) Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string) {
+func (s *UserService) Login(userDto dto.User, mfaCode string, ctx context.Context) (int, string, dto.User, string, string) {
 	userEntity, err := s.userDb.GetUserByUsername(userDto.Username)
 	if err != nil {
 		log.Println("get user entity error", err)
@@ -102,6 +107,11 @@ func (s *UserService) Login(userDto dto.User, mfaCode string) (int, string, dto.
 	reToken, acToken, ok := utils.GenerateTokens(userDto)
 	if ok == false {
 		return consts.CodeTokenError, "生成token错误", userDto, reToken, acToken
+	}
+	err = s.redis.UserTokenSet(ctx, reToken, userDto.ID)
+	if err != nil {
+		log.Println(err)
+		return consts.CodeUserError, "db create user refresh token error", dto.User{}, "", ""
 	}
 	return consts.CodeSuccess, "success", userDto, reToken, acToken
 }
