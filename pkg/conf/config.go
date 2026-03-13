@@ -21,7 +21,8 @@ type RedisConfig struct {
 	Database int    `mapstructure:"database"`
 }
 type JwtConfig struct {
-	Secret string `mapstructure:"secret"`
+	AccessSecret  string `mapstructure:"access_secret"`
+	RefreshSecret string `mapstructure:"refresh_secret"`
 }
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
@@ -45,7 +46,6 @@ func Load(confPath []string) (*Config, error) {
 	v.SetDefault("re.host", "localhost")
 	v.SetDefault("re.port", 6379)
 	v.SetDefault("re.password", "")
-	v.SetDefault("jwt.secret", "secret")
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
