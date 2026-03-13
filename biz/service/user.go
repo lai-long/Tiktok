@@ -18,6 +18,8 @@ import (
 
 type UserRedis interface {
 	UserTokenSet(ctx context.Context, refreshToken string, userId string) error
+	UserGetByRefreshToken(ctx context.Context, refreshToken string) (userId string, err error)
+	UserTokenDelete(ctx context.Context, refreshToken string) error
 }
 type UserDatabase interface {
 	CreateUser(user entity.UserEntity) error
@@ -181,4 +183,34 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 	user.AvatarURL = userEntity.Avatar_url
 	user.ID = userEntity.Id
 	return consts.CodeSuccess, "a change success", true, user
+}
+func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool) {
+	userId, err := s.redis.UserGetByRefreshToken(ctx, refreshToken)
+	if err != nil {
+		log.Printf("redis.UserGetByRefreshToken error: %v", err)
+		return consts.CodeDBSelectError, "token 错误，s.redis.UserGetByRefreshToken err", "", "", false
+	}
+	user, err := s.userDb.GetUserByUserId(userId)
+	if err != nil {
+		log.Printf("s.userDb.GetUserByUserIderror: %v", err)
+		return consts.CodeDBSelectError, "RefreshToken userDb.GetUserByUserId err ", "", "", false
+	}
+	var userDto dto.User
+	userDto.Username = user.Username
+	userDto.ID = user.Id
+	refreshToken2, accessToken, ok := utils.GenerateTokens(userDto)
+	if !ok {
+		return consts.CodeUserError, "RefreshToken utils.GenerateTokens err", "", "", false
+	}
+	err = s.redis.UserTokenDelete(ctx, refreshToken)
+	if err != nil {
+		log.Printf("redis.UserTokenDelete error: %v", err)
+		return consts.CodeUserError, "RefreshToken s.redis.UserTokenDelete err", "", "", false
+	}
+	err = s.redis.UserTokenSet(ctx, refreshToken2, userDto.ID)
+	if err != nil {
+		log.Printf("redis.UserTokenSet error: %v", err)
+		return consts.CodeUserError, "RefreshToken s.redis.UserTokenSet err", "", "", false
+	}
+	return consts.CodeSuccess, "refreshToken s.redis.UserTokenSet success", refreshToken2, accessToken, true
 }
