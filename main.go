@@ -34,7 +34,7 @@ func main() {
 	commentSVC := service.NewCommentService(mysqlDb)
 	commentHandler := handler.NewCommentHandler(commentSVC)
 
-	userSVC := service.NewUserService(mysqlDb, mysqlDb)
+	userSVC := service.NewUserService(mysqlDb, mysqlDb, re)
 	userHandler := handler.NewUserHandler(userSVC)
 
 	videoSVC := service.NewVideoService(mysqlDb, re)

@@ -13,7 +13,7 @@ import (
 
 type UserSever interface {
 	Register(userinfo dto.User) (int, string)
-	Login(userDto dto.User, mfaCode string) (int, string, dto.User, string, string)
+	Login(userDto dto.User, mfaCode string, ctx context.Context) (int, string, dto.User, string, string)
 	UserInfo(userId string) (dto.User, int, string, bool)
 	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
 }
@@ -50,7 +50,7 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	mfcCode := c.PostForm("code")
-	code, msg, user, reToken, acToken := h.userService.Login(userDto, mfcCode)
+	code, msg, user, reToken, acToken := h.userService.Login(userDto, mfcCode, ctx)
 	res := dto.LoginResponse{
 		Response: dto.Response{
 			Base: dto.Base{
