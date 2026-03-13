@@ -1,7 +1,6 @@
 package service
 
 import (
-	"Tiktok/biz/dao/redis"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
@@ -14,8 +13,14 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/redis/go-redis/v9"
 )
 
+type VideoRedis interface {
+	VideoHotSet(ctx context.Context, key string, member interface{}, score float64) error
+	VideoHotGet(ctx context.Context, key string, pageNum int, pageSize int) ([]redis.Z, error)
+}
 type VideoDatabase interface {
 	CreatVideo(entity entity.VideoEntity) error
 	GetVideoByUserID(userId string, pageSize int, pageNum int) ([]entity.VideoEntity, error)
@@ -23,11 +28,12 @@ type VideoDatabase interface {
 	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
 }
 type VideoService struct {
-	videoDb VideoDatabase
+	videoDb    VideoDatabase
+	VideoRedis VideoRedis
 }
 
-func NewVideoService(videoDb VideoDatabase) *VideoService {
-	return &VideoService{videoDb: videoDb}
+func NewVideoService(videoDb VideoDatabase, videoRedis VideoRedis) *VideoService {
+	return &VideoService{videoDb: videoDb, VideoRedis: videoRedis}
 }
 
 func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string) {
@@ -59,9 +65,9 @@ func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader,
 	videoEntity.UserID = video.UserID
 	videoEntity.ID = filename
 	videoEntity.VisitCount = rand.Intn(100)
-	err = redis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
+	err = s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
 	if err != nil {
-		return consts.CodeRedisError, `VideoPublish redis.VideoHotSet err`
+		return consts.CodeRedisError, `VideoPublish re.VideoHotSet err`
 	}
 	err = s.videoDb.CreatVideo(videoEntity)
 	if err != nil {
@@ -150,10 +156,10 @@ func (s *VideoService) VideoPopular(ctx context.Context, pageNum string, pageSiz
 		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeVideoError, "VideoPopular pageNum strconv error", []dto.Video{}, false
 	}
-	z, err := redis.VideoHotGet(ctx, "videoHot", pageNumInt, pageSizeInt)
+	z, err := s.VideoRedis.VideoHotGet(ctx, "videoHot", pageNumInt, pageSizeInt)
 	if err != nil {
-		log.Printf("redis.VideoHotGet err: %v", err)
-		return consts.CodeRedisError, "VideoPopular redis.VideoHotGet err", []dto.Video{}, false
+		log.Printf("re.VideoHotGet err: %v", err)
+		return consts.CodeRedisError, "VideoPopular re.VideoHotGet err", []dto.Video{}, false
 	}
 	videoEntity := make([]entity.VideoEntity, len(z))
 	for i, _ := range z {
