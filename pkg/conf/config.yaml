@@ -15,4 +15,5 @@ redis:
   password: ""
   db: 0
 jwt:
-  secret: "secret"
+  access_secret: "secret1"
+  refresh_secret: "secret2"
