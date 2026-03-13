@@ -4,7 +4,7 @@ package main
 
 import (
 	"Tiktok/biz/dao/db"
-	"Tiktok/biz/dao/redis"
+	"Tiktok/biz/dao/re"
 	"Tiktok/biz/handler"
 
 	"Tiktok/biz/router"
@@ -21,7 +21,8 @@ func main() {
 	}
 	log.Println(cfg)
 
-	rdb := redis.InitRedis()
+	rdb := re.InitRedis()
+	re := re.NewRedis(rdb)
 	defer rdb.Close()
 
 	ddb := db.InitDb()
@@ -36,7 +37,7 @@ func main() {
 	userSVC := service.NewUserService(mysqlDb, mysqlDb)
 	userHandler := handler.NewUserHandler(userSVC)
 
-	videoSVC := service.NewVideoService(mysqlDb)
+	videoSVC := service.NewVideoService(mysqlDb, re)
 	videoHandler := handler.NewVideoHandler(videoSVC)
 
 	socialSVC := service.NewSocialService(mysqlDb, mysqlDb)

@@ -25,7 +25,7 @@ type JwtConfig struct {
 }
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
-	Redis RedisConfig `mapstructure:"redis"`
+	Redis RedisConfig `mapstructure:"re"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
 }
 
@@ -42,9 +42,9 @@ func Load(confPath []string) (*Config, error) {
 	v.SetDefault("mysql.port", 3306)
 	v.SetDefault("mysql.user", "root")
 	v.SetDefault("mysql.password", "root")
-	v.SetDefault("redis.host", "localhost")
-	v.SetDefault("redis.port", 6379)
-	v.SetDefault("redis.password", "")
+	v.SetDefault("re.host", "localhost")
+	v.SetDefault("re.port", 6379)
+	v.SetDefault("re.password", "")
 	v.SetDefault("jwt.secret", "secret")
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err

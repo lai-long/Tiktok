@@ -24,7 +24,8 @@ type UserHandler struct {
 
 func NewUserHandler(userService *service.UserService) *UserHandler {
 	return &UserHandler{userService: userService,
-		MfaServer: userService}
+		MfaServer: userService,
+	}
 }
 
 func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {

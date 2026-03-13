@@ -1,4 +1,4 @@
-package redis
+package re
 
 import (
 	"Tiktok/pkg/conf"
@@ -11,6 +11,13 @@ import (
 
 var rdb *redis.Client
 
+type Redis struct {
+	redis *redis.Client
+}
+
+func NewRedis(client *redis.Client) *Redis {
+	return &Redis{redis: client}
+}
 func InitRedis() *redis.Client {
 	redisAddr := fmt.Sprintf("%s:%d", conf.Cfg.Redis.Host, conf.Cfg.Redis.Port)
 	rdb = redis.NewClient(&redis.Options{
@@ -19,8 +26,8 @@ func InitRedis() *redis.Client {
 		DB:       conf.Cfg.Redis.Database,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("redis 连接失败", err)
+		log.Fatalf("re 连接失败", err)
 	}
-	log.Println("redis 连接成功")
+	log.Println("re 连接成功")
 	return rdb
 }
