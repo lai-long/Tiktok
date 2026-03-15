@@ -26,7 +26,7 @@ type JwtConfig struct {
 }
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
-	Redis RedisConfig `mapstructure:"re"`
+	Redis RedisConfig `mapstructure:"redis"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
 }
 
