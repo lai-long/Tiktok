@@ -55,5 +55,7 @@ func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.Use
 	h.GET("/following/list", middleware.AuthMiddleware, socialHandler.FollowingList)
 	h.GET("/follower/list", middleware.AuthMiddleware, socialHandler.FollowerList)
 	h.GET("/friends/list", middleware.AuthMiddleware, socialHandler.FriendList)
+
+	h.GET("/ws", middleware.AuthMiddleware, handler.WebSocketHandler)
 	h.Spin()
 }
