@@ -15,6 +15,7 @@ import (
 )
 
 func main() {
+
 	cfg, err := conf.Load([]string{"./pkg/conf"})
 	if err != nil {
 		log.Fatal("加载config.yaml错误", err)
@@ -43,6 +44,8 @@ func main() {
 	socialSVC := service.NewSocialService(mysqlDb, mysqlDb)
 	socialHandler := handler.NewSocialHandler(socialSVC)
 	defer ddb.Close()
+	go service.Manager.Start(mysqlDb)
 
 	router.SetRouters(commentHandler, userHandler, videoHandler, socialHandler, likesHandler)
+
 }
