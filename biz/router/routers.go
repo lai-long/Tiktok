@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
-func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler, socialHandler *handler.SocialHandler, likesHandler *handler.LikesHandler) {
+func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler, socialHandler *handler.SocialHandler, likesHandler *handler.LikesHandler, websocketHandler *handler.WebsocketSever) {
 	h := server.Default(
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
@@ -56,6 +56,6 @@ func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.Use
 	h.GET("/follower/list", middleware.AuthMiddleware, socialHandler.FollowerList)
 	h.GET("/friends/list", middleware.AuthMiddleware, socialHandler.FriendList)
 
-	h.GET("/ws", middleware.AuthMiddleware, handler.WebSocketHandler)
+	h.GET("/ws", middleware.AuthMiddleware, websocketHandler.WebSocketHandler)
 	h.Spin()
 }
