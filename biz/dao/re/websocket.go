@@ -6,15 +6,24 @@ import (
 	"time"
 )
 
-func GetMsgCountsBYClientID(ctx context.Context, id string) string {
-	s, err := rdb.Get(ctx, id).Result()
-	if err != nil {
-		log.Println(err)
-		return ""
-	}
-	return s
+func SaveOfflineMsg(id, content string) {
+	ctx := context.Background()
+	key := "offline:" + id
+	rdb.RPush(ctx, key, content)
+	rdb.Expire(ctx, key, 72*time.Hour)
 }
-func MSgCountIncr(ctx context.Context, id string) {
-	rdb.Incr(ctx, id)
-	rdb.Expire(ctx, id, time.Hour*600)
+func FetchOfflineMsg(id string) ([]string, int) {
+	ctx := context.Background()
+	key := "offline:" + id
+	messages, err := rdb.LRange(ctx, key, 0, 100).Result()
+	if err != nil {
+		log.Println("redis FetchOfflineMsg err:", err)
+		return []string{}, 0
+	}
+	err = rdb.Del(ctx, key).Err()
+	if err != nil {
+		log.Println("redis FetchOfflineMsg del messages err:", err)
+		return []string{}, 0
+	}
+	return messages, len(messages)
 }
