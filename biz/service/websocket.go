@@ -40,7 +40,7 @@ type ClientManager struct {
 	Unregister chan *Client
 }
 
-func (c *Client) Read(ctx context.Context) {
+func (c *Client) Read(ctx context.Context, m *db.MySQLdb) {
 	defer func() {
 		Manager.Unregister <- c
 		c.Socket.Close()
@@ -57,6 +57,7 @@ func (c *Client) Read(ctx context.Context) {
 		}
 		//type 1 一对一
 		//type 2 获取未在线时的消息
+		//type 3 获取历史消息
 		if sendMsg.Type == "1" {
 			Manager.Broadcast <- &Broadcast{
 				Type:    "1",
@@ -71,6 +72,14 @@ func (c *Client) Read(ctx context.Context) {
 			}
 			Manager.Broadcast <- &Broadcast{
 				Type:    "2",
+				Clients: c,
+				Message: message,
+			}
+		} else if sendMsg.Type == "3" {
+			msg := m.GetWebsocketHistory(c.ID, c.SendID)
+			message, _ := json.Marshal(msg)
+			Manager.Broadcast <- &Broadcast{
+				Type:    "3",
 				Clients: c,
 				Message: message,
 			}
@@ -173,6 +182,14 @@ func (manager *ClientManager) Start(m *db.MySQLdb) {
 				_ = broadcast.Clients.Socket.WriteMessage(websocket.TextMessage, msg)
 				sender, receiver := utils.GetId(broadcast.Clients.SendID)
 				m.InsertMsg(broadcast.Clients.SendID, string(broadcast.Message), sender, receiver)
+			} else if broadcast.Type == "3" {
+				replyMSg := dto.ReplyMsg{
+					From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
+					Code:    consts.CodeSuccess,
+					Content: string(broadcast.Message),
+				}
+				msg, _ := json.Marshal(replyMSg)
+				_ = broadcast.Clients.Socket.WriteMessage(websocket.TextMessage, msg)
 			}
 		}
 	}

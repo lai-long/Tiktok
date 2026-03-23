@@ -95,7 +95,7 @@ func (s *UserService) Login(userDto dto.User, mfaCode string, ctx context.Contex
 	}
 	if enable != 0 {
 		if mfaCode == "" {
-			return consts.CodeMfaError, "GetMfaCode from front error", dto.User{}, "", ""
+			return consts.CodeMfaError, "GetMfaCode error 请输入mfa code", dto.User{}, "", ""
 		}
 		mfaSecret, err := s.mfaDb.GetMfaSecret(userDto.ID)
 		if err != nil {

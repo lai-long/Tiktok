@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Tiktok/biz/dao/db"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -13,7 +14,16 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func WebSocketHandler(ctx context.Context, c *app.RequestContext) {
+type WebsocketSever struct {
+	db *db.MySQLdb
+}
+
+func NewWebsocketSever(db *db.MySQLdb) *WebsocketSever {
+	return &WebsocketSever{
+		db: db,
+	}
+}
+func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
 	userid, exist := c.Get("user_id")
 	if !exist {
 		c.JSON(200, dto.Response{
@@ -43,7 +53,7 @@ func WebSocketHandler(ctx context.Context, c *app.RequestContext) {
 			Send:   make(chan []byte),
 		}
 		service.Manager.Register <- client
-		go client.Read(ctx)
+		go client.Read(ctx, m.db)
 		go client.Write()
 	})
 	wsAdaptor := adaptor.HertzHandler(stdHandler)
