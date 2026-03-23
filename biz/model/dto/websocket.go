@@ -1,4 +1,4 @@
-package websocketModel
+package dto
 
 type SendMsg struct {
 	Type    string `json:"type"`
@@ -6,7 +6,7 @@ type SendMsg struct {
 }
 type ReplyMsg struct {
 	From    string `json:"from"`
-	Code    string `json:"code"`
+	Code    int    `json:"code"`
 	Content string `json:"content"`
 }
 

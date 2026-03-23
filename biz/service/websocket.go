@@ -3,7 +3,8 @@ package service
 import (
 	"Tiktok/biz/dao/db"
 	"Tiktok/biz/dao/re"
-	"Tiktok/biz/model/websocketModel"
+	"Tiktok/biz/model/dto"
+	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
 	"fmt"
@@ -16,7 +17,6 @@ import (
 var Manager = ClientManager{
 	Clients:    make(map[string]*Client),
 	Broadcast:  make(chan *Broadcast),
-	Reply:      make(chan *Client),
 	Register:   make(chan *Client),
 	Unregister: make(chan *Client),
 }
@@ -33,14 +33,9 @@ type Broadcast struct {
 	Type    string
 }
 
-//新用户连接>>创建client>>放入register channel>>加入client map
-//用户发送消息>>解析消息>>放入Broadcast Channel>>从broadcast得到目标用户>>发送消息
-//用户断开>>放入unregister通道>>从clients map中删除
-
 type ClientManager struct {
 	Clients    map[string]*Client
 	Broadcast  chan *Broadcast
-	Reply      chan *Client
 	Register   chan *Client
 	Unregister chan *Client
 }
@@ -51,9 +46,8 @@ func (c *Client) Read(ctx context.Context) {
 		c.Socket.Close()
 	}()
 	for {
-		//检测活跃
 		c.Socket.PongHandler()
-		sendMsg := new(websocketModel.SendMsg)
+		sendMsg := new(dto.SendMsg)
 		err := c.Socket.ReadJSON(sendMsg)
 		if err != nil {
 			log.Println("client ReadJSON err", err)
@@ -61,15 +55,25 @@ func (c *Client) Read(ctx context.Context) {
 			c.Socket.Close()
 			break
 		}
-		//type 1 1->2
+		//type 1 一对一
+		//type 2 获取未在线时的消息
 		if sendMsg.Type == "1" {
-			//r1 := re.GetMsgCountsBYClientID(ctx, c.ID)
-			//r2 := re.GetMsgCountsBYClientID(ctx, c.SendID)
-			re.MSgCountIncr(ctx, c.ID)
-		}
-		Manager.Broadcast <- &Broadcast{
-			Clients: c,
-			Message: []byte(sendMsg.Content),
+			Manager.Broadcast <- &Broadcast{
+				Type:    "1",
+				Clients: c,
+				Message: []byte(sendMsg.Content),
+			}
+		} else if sendMsg.Type == "2" {
+			msg, _ := re.FetchOfflineMsg(c.ID)
+			message, err := json.Marshal(msg)
+			if err != nil {
+				log.Println("re.FetchOfflineMsg json.Marshal err", err)
+			}
+			Manager.Broadcast <- &Broadcast{
+				Type:    "2",
+				Clients: c,
+				Message: message,
+			}
 		}
 	}
 }
@@ -85,8 +89,9 @@ func (c *Client) Write() {
 				log.Println("client Write err")
 				return
 			}
-			replyMsg := websocketModel.ReplyMsg{
-				Code:    "100",
+			replyMsg := dto.ReplyMsg{
+				From:    c.ID,
+				Code:    consts.CodeSuccess,
 				Content: fmt.Sprintf("%s", string(message)),
 			}
 			msg, _ := json.Marshal(replyMsg)
@@ -96,13 +101,12 @@ func (c *Client) Write() {
 }
 func (manager *ClientManager) Start(m *db.MySQLdb) {
 	for {
-		log.Println("websocket 启动")
 		select {
 		case client := <-manager.Register:
 			log.Println("建立websocket连接", client.ID)
 			Manager.Clients[client.ID] = client
-			replyMSg := websocketModel.ReplyMsg{
-				Code:    "100",
+			replyMSg := dto.ReplyMsg{
+				Code:    consts.CodeSuccess,
 				Content: "连接成功",
 			}
 			msg, _ := json.Marshal(replyMSg)
@@ -110,8 +114,8 @@ func (manager *ClientManager) Start(m *db.MySQLdb) {
 		case client := <-manager.Unregister:
 			log.Println("断开websocket连接", client.ID)
 			if _, ok := Manager.Clients[client.ID]; ok {
-				replyMSg := websocketModel.ReplyMsg{
-					Code:    "100",
+				replyMSg := dto.ReplyMsg{
+					Code:    consts.CodeSuccess,
 					Content: "连接中断",
 				}
 				msg, _ := json.Marshal(replyMSg)
@@ -120,46 +124,56 @@ func (manager *ClientManager) Start(m *db.MySQLdb) {
 				delete(manager.Clients, client.ID)
 			}
 		case broadcast := <-manager.Broadcast:
-			log.Println("进行broadcast")
-			message := broadcast.Message
-			log.Println("[]byte message", message)
-			log.Println("string message", string(message))
-			sendId := broadcast.Clients.SendID
-			flag := false
-			for id, client := range Manager.Clients {
-				if id != sendId {
-					continue
+			if broadcast.Type == "1" {
+				log.Println("进行broadcast")
+				message := broadcast.Message
+				log.Println("string message", string(message))
+				sendId := broadcast.Clients.SendID
+				flag := false
+				for id, client := range Manager.Clients {
+					if id != sendId {
+						continue
+					}
+					select {
+					case client.Send <- message:
+						flag = true
+					default:
+						close(client.Send)
+						delete(manager.Clients, client.ID)
+					}
 				}
-				select {
-				case client.Send <- message:
-					flag = true
-				default:
-					close(client.Send)
-					delete(manager.Clients, client.ID)
+				id := broadcast.Clients.ID
+				if flag {
+					replyMSg := dto.ReplyMsg{
+						From:    broadcast.Clients.ID,
+						Code:    consts.CodeSuccess,
+						Content: "对方在线",
+					}
+					msg, _ := json.Marshal(replyMSg)
+					_ = broadcast.Clients.Socket.WriteMessage(websocket.TextMessage, msg)
+					sender, receiver := utils.GetId(id)
+					m.InsertMsg(id, string(message), sender, receiver)
+				} else {
+					replyMSg := dto.ReplyMsg{
+						From:    broadcast.Clients.ID,
+						Code:    consts.CodeSuccess,
+						Content: "对方不在线",
+					}
+					re.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
+					msg, _ := json.Marshal(replyMSg)
+					_ = broadcast.Clients.Socket.WriteMessage(websocket.TextMessage, msg)
 				}
-			}
-			id := broadcast.Clients.ID
-			if flag {
-				replyMSg := websocketModel.ReplyMsg{
-					Code:    "100",
-					Content: "在线",
+			} else if broadcast.Type == "2" {
+				replyMSg := dto.ReplyMsg{
+					From:    "未在线时收到消息",
+					Code:    consts.CodeSuccess,
+					Content: string(broadcast.Message),
 				}
 				msg, _ := json.Marshal(replyMSg)
 				_ = broadcast.Clients.Socket.WriteMessage(websocket.TextMessage, msg)
-				sender, receiver := utils.GetId(id)
-				m.InsertMsg(id, string(message), sender, receiver)
-			} else {
-				replyMSg := websocketModel.ReplyMsg{
-					Code:    "100",
-					Content: "对方不在线",
-				}
-				msg, _ := json.Marshal(replyMSg)
-				_ = broadcast.Clients.Socket.WriteMessage(websocket.TextMessage, msg)
-				sender, receiver := utils.GetId(id)
-				log.Println(sender, receiver, string(message), id)
-				m.InsertMsg(id, string(message), sender, receiver)
+				sender, receiver := utils.GetId(broadcast.Clients.SendID)
+				m.InsertMsg(broadcast.Clients.SendID, string(broadcast.Message), sender, receiver)
 			}
 		}
-
 	}
 }
