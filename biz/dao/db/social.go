@@ -1,6 +1,9 @@
 package db
 
-import "log"
+import (
+	"Tiktok/biz/model/entity"
+	"log"
+)
 
 func (m *MySQLdb) CreateFollowing(userId string, toUserId string) error {
 	sql := `INSERT INTO relations (user_id, following_id) VALUES (?,?)`
@@ -36,17 +39,18 @@ func (m *MySQLdb) FollowerIdList(userId string, pageNum int, pageSize int) ([]st
 	err := m.db.Select(&followerIds, sql, userId, pageSize, offset)
 	return followerIds, err
 }
-func (m *MySQLdb) FriendIdList(userId string, pageNum, pageSize int) (followingIds []string, followerIds []string, err1 error, err2 error) {
+func (m *MySQLdb) FriendList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, bool) {
 	offset := pageNum * pageSize
-	sqlFollowing := `SELECT follower_id FROM relations WHERE user_id = ? LIMIT ? OFFSET ?`
-	err1 = m.db.Select(&followingIds, sqlFollowing, userId, pageSize, offset)
-	sqlFollower := `SELECT user_id FROM relations WHERE follower_id = ? LIMIT ? OFFSET ?`
-	err2 = m.db.Select(&followerIds, sqlFollower, userId, pageSize, offset)
-	if err1 != nil && err2 != nil {
-		return followingIds, followerIds, err1, err2
+	sql := `SELECT * FROM users WHERE id IN(SELECT friend_id FROM friends WHERE user_id = ?) LIMIT ? OFFSET ?`
+	var users []entity.UserEntity
+	err := m.db.Select(&users, sql, userId, pageSize, offset)
+	if err != nil {
+		log.Println("Get FriendList err", err)
+		return nil, false
 	}
-	return followingIds, followerIds, nil, nil
+	return users, true
 }
+
 func (m *MySQLdb) CreateFriend(userId string, toUserId string) bool {
 	sql := `INSERT INTO friends (user_id, friend_id) VALUES (?,?)`
 	_, err := m.db.Exec(sql, userId, toUserId)
