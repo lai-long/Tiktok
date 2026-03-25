@@ -1,5 +1,7 @@
 package db
 
+import "log"
+
 func (m *MySQLdb) CreateFollowing(userId string, toUserId string) error {
 	sql := `INSERT INTO relations (user_id, following_id) VALUES (?,?)`
 	_, err := m.db.Exec(sql, userId, toUserId)
@@ -44,4 +46,13 @@ func (m *MySQLdb) FriendIdList(userId string, pageNum, pageSize int) (followingI
 		return followingIds, followerIds, err1, err2
 	}
 	return followingIds, followerIds, nil, nil
+}
+func (m *MySQLdb) CreateFriend(userId string, toUserId string) bool {
+	sql := `INSERT INTO friends (user_id, friend_id) VALUES (?,?)`
+	_, err := m.db.Exec(sql, userId, toUserId)
+	if err != nil {
+		log.Println("db CreateFriend err", err)
+		return false
+	}
+	return true
 }

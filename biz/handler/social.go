@@ -13,6 +13,7 @@ type SocialSever interface {
 	FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
 	FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
 	FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
+	AddFriend(userId, toUserId string) (int, string)
 }
 type SocialHandler struct {
 	socialService SocialSever
@@ -123,6 +124,25 @@ func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
 		Data: dto.Data{
 			Items: friend,
 			Total: len(friend),
+		},
+	})
+}
+func (h *SocialHandler) AddFriend(ctx context.Context, c *app.RequestContext) {
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(200, dto.Response{
+			Base: dto.Base{
+				Code: consts.CodeRelationError,
+				Msg:  "AddFriend userId exist not exist",
+			},
+		})
+	}
+	toUSerId := c.PostForm("to_user_id")
+	code, msg := h.socialService.AddFriend(userId.(string), toUSerId)
+	c.JSON(200, dto.Response{
+		Base: dto.Base{
+			Code: code,
+			Msg:  msg,
 		},
 	})
 }

@@ -16,6 +16,7 @@ type SocialDatabase interface {
 	FollowingIdList(userId string, pageNum int, pageSize int) ([]string, error)
 	FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error)
 	FriendIdList(userId string, pageNum, pageSize int) (followingIds []string, followerIds []string, err1 error, err2 error)
+	CreateFriend(userId string, toUserId string) bool
 }
 type SocialService struct {
 	social SocialDatabase
@@ -153,4 +154,11 @@ func (s *SocialService) FriendList(userId string, pageNum string, pageSize strin
 		dtoFollowers[i].AvatarURL = follow.Avatar_url
 	}
 	return consts.CodeSuccess, "FollowerList success", dtoFollowers, true
+}
+func (s *SocialService) AddFriend(userId, toUserId string) (int, string) {
+	ok := s.social.CreateFriend(userId, toUserId)
+	if !ok {
+		return consts.CodeDBCreateError, "db CreateFriend err"
+	}
+	return consts.CodeSuccess, "CreateFriend success"
 }
