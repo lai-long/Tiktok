@@ -10,7 +10,7 @@ func (m *MySQLdb) InsertMsg(session, content string) {
 	}
 }
 func (m *MySQLdb) GetWebsocketHistory(session1, session2 string) []string {
-	sql := `select content from message where session_id=? or sender_id=?`
+	sql := `select content from message where session_id=? or session_id=?`
 	var messages []string
 	err := m.db.Select(&messages, sql, session1, session2)
 	if err != nil {
