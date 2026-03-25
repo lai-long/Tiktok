@@ -17,6 +17,7 @@ type SocialDatabase interface {
 	FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error)
 	CreateFriend(userId string, toUserId string) bool
 	FriendList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, bool)
+	DeleteFriend(userId string, toUserId string) bool
 }
 type SocialService struct {
 	social SocialDatabase
@@ -145,4 +146,11 @@ func (s *SocialService) AddFriend(userId, toUserId string) (int, string) {
 		return consts.CodeDBCreateError, "db CreateFriend err"
 	}
 	return consts.CodeSuccess, "CreateFriend success"
+}
+func (s *SocialService) DeleteFriend(userId, toUserId string) (int, string) {
+	ok := s.social.DeleteFriend(userId, toUserId)
+	if !ok {
+		return consts.CodeDBDeleteError, "db DeleteFriend err"
+	}
+	return consts.CodeSuccess, "DeleteFriend success"
 }
