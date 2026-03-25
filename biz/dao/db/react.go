@@ -96,9 +96,9 @@ func (m *MySQLdb) GetComments(videoId string, pageNum int, pageSize int) (error,
 	err := m.db.Select(&comments, sql, videoId, pageSize, offset)
 	return err, comments
 }
-func (m *MySQLdb) CommentDelete(videoId string, commentId string) error {
-	sql := `DELETE FROM comments WHERE video_id = ? AND comment_id = ?`
-	_, err := m.db.Exec(sql, videoId, commentId)
+func (m *MySQLdb) CommentDelete(commentId string) error {
+	sql := `DELETE FROM comments WHERE  comment_id = ?`
+	_, err := m.db.Exec(sql, commentId)
 	return err
 }
 func (m *MySQLdb) GetCommentById(commentId string) (entity.CommentEntity, error) {
