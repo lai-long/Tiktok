@@ -11,7 +11,7 @@ import (
 
 type CommentDatabase interface {
 	GetComments(videoId string, pageNum int, pageSize int) (error, []entity.CommentEntity)
-	CommentDelete(videoId string, commentId string) error
+	CommentDelete(commentId string) error
 	GetCommentById(commentId string) (entity.CommentEntity, error)
 	CommentCountUp(videoId string) error
 	CommentCountDown(videoId string) error
@@ -74,7 +74,7 @@ func (s *CommentService) CommentDelete(commentId string, videoId string, userId 
 	if comment.UserId != userId {
 		return consts.CodeError, "CommentDelete GetUserId error,comment_userId != userId"
 	}
-	err = s.db.CommentDelete(videoId, commentId)
+	err = s.db.CommentDelete(commentId)
 	if err != nil {
 		log.Println("db CommentDelete err", err)
 		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"

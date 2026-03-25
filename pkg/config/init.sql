@@ -65,8 +65,6 @@ CREATE TABLE message
 (
     session_id VARCHAR(128),
     content TEXT,
-    sender_id VARCHAR(64),
-    receiver_id VARCHAR(64),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL
