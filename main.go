@@ -44,10 +44,10 @@ func main() {
 	socialSVC := service.NewSocialService(mysqlDb, mysqlDb)
 	socialHandler := handler.NewSocialHandler(socialSVC)
 
-	WebsocketHandler := handler.NewWebsocketSever(mysqlDb)
+	WebsocketHandler := handler.NewWebsocketSever(mysqlDb, re)
 
 	defer ddb.Close()
-	go service.Manager.Start(mysqlDb)
+	go service.Manager.Start(mysqlDb, re)
 
 	router.SetRouters(commentHandler, userHandler, videoHandler, socialHandler, likesHandler, WebsocketHandler)
 
