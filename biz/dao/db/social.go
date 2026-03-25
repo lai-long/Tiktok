@@ -60,3 +60,11 @@ func (m *MySQLdb) CreateFriend(userId string, toUserId string) bool {
 	}
 	return true
 }
+func (m *MySQLdb) DeleteFriend(userId string, toUserId string) bool {
+	sql := `DELETE FROM friends WHERE user_id = ? AND friend_id = ?`
+	_, err := m.db.Exec(sql, userId, toUserId)
+	if err != nil {
+		log.Println("db DeleteFriend err", err)
+	}
+	return true
+}
