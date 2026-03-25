@@ -15,8 +15,8 @@ type SocialDatabase interface {
 	DeleteFollower(userId string, toUserId string) error
 	FollowingIdList(userId string, pageNum int, pageSize int) ([]string, error)
 	FollowerIdList(userId string, pageNum int, pageSize int) ([]string, error)
-	FriendIdList(userId string, pageNum, pageSize int) (followingIds []string, followerIds []string, err1 error, err2 error)
 	CreateFriend(userId string, toUserId string) bool
+	FriendList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, bool)
 }
 type SocialService struct {
 	social SocialDatabase
@@ -127,33 +127,17 @@ func (s *SocialService) FriendList(userId string, pageNum string, pageSize strin
 		log.Printf("FriendList PageSize strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
 	}
-	followings, followers, err1, err2 := s.social.FriendIdList(userId, pageNumInt, pageSizeInt)
-	if err1 != nil || err2 != nil {
-		log.Printf("FriendList db.FriendIdList error: %v and %v", err1, err2)
-		return consts.CodeDBSelectError, "FollowerList db.FriendIdList error", []dto.User{}, false
+	entityFriend, ok := s.social.FriendList(userId, pageNumInt, pageSizeInt)
+	if !ok {
+		return consts.CodeDBSelectError, "FriendList db.FriendList error", []dto.User{}, false
 	}
-	dtoFollowers := make([]dto.User, len(followings)+len(followers))
-	for i := 0; i < len(followings); i++ {
-		follow, err := s.user.GetUserByUserId(followings[i])
-		if err != nil {
-			log.Printf("FriendList db.GetUserByUserId error: %v", err)
-			return consts.CodeDBSelectError, "FollowerList followings db.GetUserByUserId error", []dto.User{}, false
-		}
-		dtoFollowers[i].ID = follow.Id
-		dtoFollowers[i].Username = follow.Username
-		dtoFollowers[i].AvatarURL = follow.Avatar_url
+	friends := make([]dto.User, len(entityFriend))
+	for i, _ := range entityFriend {
+		friends[i].Username = entityFriend[i].Username
+		friends[i].AvatarURL = entityFriend[i].Avatar_url
+		friends[i].ID = entityFriend[i].Id
 	}
-	for i := 0; i < len(followers); i++ {
-		follow, err := s.user.GetUserByUserId(followers[i])
-		if err != nil {
-			log.Printf("FriendList db.GetUserByUserId error: %v", err)
-			return consts.CodeDBSelectError, "FollowerList followers db.GetUserByUserId error", []dto.User{}, false
-		}
-		dtoFollowers[i+len(followings)].ID = follow.Id
-		dtoFollowers[i+len(followings)].Username = follow.Username
-		dtoFollowers[i].AvatarURL = follow.Avatar_url
-	}
-	return consts.CodeSuccess, "FollowerList success", dtoFollowers, true
+	return consts.CodeSuccess, "FollowerList success", friends, true
 }
 func (s *SocialService) AddFriend(userId, toUserId string) (int, string) {
 	ok := s.social.CreateFriend(userId, toUserId)
