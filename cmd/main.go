@@ -9,14 +9,14 @@ import (
 
 	"Tiktok/biz/router"
 	"Tiktok/biz/service"
-	"Tiktok/pkg/conf"
+	"Tiktok/pkg/config"
 
 	"log"
 )
 
 func main() {
 
-	cfg, err := conf.Load([]string{"./pkg/conf"})
+	cfg, err := config.Load([]string{"./pkg/config"})
 	if err != nil {
 		log.Fatal("加载config.yaml错误", err)
 	}
