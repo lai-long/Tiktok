@@ -39,6 +39,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 	}
 	uid := userid.(string)
 	toUserId := c.Query("to_userid")
+	groupId := c.Query("group_id")
 	stdHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := (&websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -50,10 +51,11 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			return
 		}
 		client := &service.Client{
-			ID:     utils.CreateId(uid, toUserId),
-			SendID: utils.CreateId(toUserId, uid),
-			Socket: conn,
-			Send:   make(chan []byte),
+			ID:      utils.CreateId(uid, toUserId),
+			SendID:  utils.CreateId(toUserId, uid),
+			GroupId: groupId,
+			Socket:  conn,
+			Send:    make(chan []byte, 128),
 		}
 		service.Manager.Register <- client
 		go client.Read(m.re, m.db)

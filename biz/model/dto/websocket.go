@@ -3,6 +3,7 @@ package dto
 type SendMsg struct {
 	Type    string `json:"type"`
 	Content string `json:"content"`
+	GroupId string `json:"group_id"`
 }
 type ReplyMsg struct {
 	From    string `json:"from"`
