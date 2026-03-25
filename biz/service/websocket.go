@@ -6,7 +6,6 @@ import (
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
-	"context"
 	"fmt"
 	"log"
 
@@ -40,7 +39,7 @@ type ClientManager struct {
 	Unregister chan *Client
 }
 
-func (c *Client) Read(ctx context.Context, m *db.MySQLdb) {
+func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
 	defer func() {
 		Manager.Unregister <- c
 		c.Socket.Close()
@@ -108,7 +107,7 @@ func (c *Client) Write() {
 		}
 	}
 }
-func (manager *ClientManager) Start(m *db.MySQLdb) {
+func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 	for {
 		select {
 		case client := <-manager.Register:

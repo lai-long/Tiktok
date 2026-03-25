@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Tiktok/biz/dao/db"
+	"Tiktok/biz/dao/re"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -16,11 +17,13 @@ import (
 
 type WebsocketSever struct {
 	db *db.MySQLdb
+	re *re.Redis
 }
 
-func NewWebsocketSever(db *db.MySQLdb) *WebsocketSever {
+func NewWebsocketSever(db *db.MySQLdb, re *re.Redis) *WebsocketSever {
 	return &WebsocketSever{
 		db: db,
+		re: re,
 	}
 }
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
@@ -53,7 +56,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			Send:   make(chan []byte),
 		}
 		service.Manager.Register <- client
-		go client.Read(ctx, m.db)
+		go client.Read(m.re, m.db)
 		go client.Write()
 	})
 	wsAdaptor := adaptor.HertzHandler(stdHandler)
