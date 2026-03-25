@@ -2,7 +2,7 @@ package utils
 
 import (
 	"Tiktok/biz/model/dto"
-	"Tiktok/pkg/conf"
+	"Tiktok/pkg/config"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -44,12 +44,12 @@ func CheckPasswordHash(password, hash string) bool {
 func GenerateTokens(userDto dto.User) (string, string, bool) {
 	refreshTime := 288 * time.Hour
 	accessTime := 24 * time.Hour
-	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, conf.Cfg.Jwt.RefreshSecret)
+	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, config.Cfg.Jwt.RefreshSecret)
 	if err != nil {
 		log.Println(err)
 		return "生成refreshToken错误", "", false
 	}
-	accessToken, err := GetToken(userDto.Username, userDto.ID, accessTime, conf.Cfg.Jwt.AccessSecret)
+	accessToken, err := GetToken(userDto.Username, userDto.ID, accessTime, config.Cfg.Jwt.AccessSecret)
 	if err != nil {
 		log.Println(err)
 		return "生成accessToken错误", "", false

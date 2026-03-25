@@ -1,7 +1,7 @@
 package db
 
 import (
-	"Tiktok/pkg/conf"
+	"Tiktok/pkg/config"
 	"fmt"
 	"log"
 
@@ -12,7 +12,7 @@ import (
 func InitDb() *sqlx.DB {
 	var db *sqlx.DB
 	var err error
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset%v&parseTime=%v", conf.Cfg.MySQL.User, conf.Cfg.MySQL.Password, conf.Cfg.MySQL.Host, conf.Cfg.MySQL.Port, conf.Cfg.MySQL.Database, conf.Cfg.MySQL.Charset, conf.Cfg.MySQL.ParseTime)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset%v&parseTime=%v", config.Cfg.MySQL.User, config.Cfg.MySQL.Password, config.Cfg.MySQL.Host, config.Cfg.MySQL.Port, config.Cfg.MySQL.Database, config.Cfg.MySQL.Charset, config.Cfg.MySQL.ParseTime)
 	//	DSN       = "root:root@tcp(localhost:3306)/tiktok?charset=utf8&parseTime=True&loc=Local"
 	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {

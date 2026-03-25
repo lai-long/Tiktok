@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"Tiktok/biz/model/dto"
-	"Tiktok/pkg/conf"
+	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
@@ -41,7 +41,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return []byte(conf.Cfg.Jwt.AccessSecret), nil
+		return []byte(config.Cfg.Jwt.AccessSecret), nil
 	})
 	if err != nil {
 		log.Printf("JWT parse error: %v", err)

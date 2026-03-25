@@ -2,11 +2,13 @@ package re
 
 import (
 	"context"
+	"math/rand"
 	"time"
 )
 
 func (rdb *Redis) UserTokenSet(ctx context.Context, refreshToken string, userId string) error {
-	err := rdb.redis.Set(ctx, "refresh:"+refreshToken, userId, 7*24*time.Hour).Err()
+	duration := 168*time.Hour + time.Duration(rand.Intn(168))*time.Hour
+	err := rdb.redis.Set(ctx, "refresh:"+refreshToken, userId, duration).Err()
 	if err != nil {
 		return err
 	}
