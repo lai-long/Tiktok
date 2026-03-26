@@ -41,7 +41,8 @@ func (m *MySQLdb) FollowerIdList(userId string, pageNum int, pageSize int) ([]st
 }
 func (m *MySQLdb) FriendList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, bool) {
 	offset := pageNum * pageSize
-	sql := `SELECT * FROM users WHERE id IN(SELECT friend_id FROM friends WHERE user_id = ?) LIMIT ? OFFSET ?`
+	sql := `SELECT * FROM users WHERE id IN(SELECT following_id FROM relations WHERE user_id = ?) 
+                      AND id IN (SELECT user_id from relations where following_id=?) LIMIT ? OFFSET ?`
 	var users []entity.UserEntity
 	err := m.db.Select(&users, sql, userId, pageSize, offset)
 	if err != nil {
@@ -49,22 +50,4 @@ func (m *MySQLdb) FriendList(userId string, pageNum int, pageSize int) ([]entity
 		return nil, false
 	}
 	return users, true
-}
-
-func (m *MySQLdb) CreateFriend(userId string, toUserId string) bool {
-	sql := `INSERT INTO friends (user_id, friend_id) VALUES (?,?)`
-	_, err := m.db.Exec(sql, userId, toUserId)
-	if err != nil {
-		log.Println("db CreateFriend err", err)
-		return false
-	}
-	return true
-}
-func (m *MySQLdb) DeleteFriend(userId string, toUserId string) bool {
-	sql := `DELETE FROM friends WHERE user_id = ? AND friend_id = ?`
-	_, err := m.db.Exec(sql, userId, toUserId)
-	if err != nil {
-		log.Println("db DeleteFriend err", err)
-	}
-	return true
 }
