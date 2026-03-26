@@ -44,7 +44,7 @@ func (m *MySQLdb) FriendList(userId string, pageNum int, pageSize int) ([]entity
 	sql := `SELECT * FROM users WHERE id IN(SELECT following_id FROM relations WHERE user_id = ?) 
                       AND id IN (SELECT user_id from relations where following_id=?) LIMIT ? OFFSET ?`
 	var users []entity.UserEntity
-	err := m.db.Select(&users, sql, userId, pageSize, offset)
+	err := m.db.Select(&users, sql, userId, userId, pageSize, offset)
 	if err != nil {
 		log.Println("Get FriendList err", err)
 		return nil, false
