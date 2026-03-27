@@ -1,6 +1,6 @@
 syntax="proto3";
 package common;
-option go_package="./biz/model/dto";
+option go_package="/biz/model/dto";
 import "idl/api.proto";
 message Base{
   int32 Code =1[(api.go_tag)="json:\"code\""];
