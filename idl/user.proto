@@ -1,0 +1,19 @@
+syntax="proto3";
+package user;
+option go_package="./biz/model/dto";
+message User{
+  //go.tag:json:"id"
+  optional string ID = 1;
+  //go.tag:form:"username" json:"username" binding:"required"
+  optional string Username=2;
+  //go.tag:form:"password" json:"password" binding:"required"
+  optional string Password=3;
+  //go.tag:json:"avatar_url"
+   string AvatarURL=4;
+  //go.tag:json:"created_at"
+   string CreatedAt=5;
+  //go.tag:json:json:"updated_at"
+   string UpdatedAt=6;
+  //go.tag:json:"deleted_at"
+   string DeletedAt=7;
+}
