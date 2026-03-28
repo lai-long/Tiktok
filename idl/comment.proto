@@ -1,0 +1,24 @@
+//type Comment struct {
+//	UserId    string `json:"user_id" form:"user_id"`
+//	VideoId   string `json:"video_id" form:"video_id"`
+//	CommentId string `json:"comment_id" form:"comment_id"`
+//	Content   string `json:"content" form:"content"`
+//	LikeCount int64  `json:"like_count" form:"like_count"`
+//	CreatedAt string `json:"created_at" form:"created_at"`
+//	UpdatedAt string `json:"updated_at" form:"updated_at"`
+//	DeletedAt string `json:"deleted_at" form:"deleted_at"`
+//}
+syntax="proto3";
+package user;
+option go_package="/biz/model/dto";
+import "api.proto";
+message Comment{
+  string UserId=1[(api.go_tag)="json:\"user_id\" form:\"user_id\""];
+  string VideoId=2[(api.go_tag)="json:\"video_id\" form:\"video_id\""];
+  string CommentId=3[(api.go_tag)="json:\"comment_id\" form:\"comment_id\""];
+  string Content=4[(api.go_tag)="json:\"content\" form:\"content\""];
+  int64 LikeCount=5[(api.go_tag)="json:\"like_count\" form:\"like_count\""];
+  string CreatedAt=6[(api.go_tag)="json:\"created_at\" form:\"created_at\""];
+  string UpdatedAt=7[(api.go_tag)="json:\"updated_at\" form:\"updated_at\""];
+  string DeletedAt=8[(api.go_tag)="json:\"deleted_at\" form:\"deleted_at\""];
+}

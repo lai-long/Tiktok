@@ -1,0 +1,21 @@
+syntax="proto3";
+package common;
+option go_package="/biz/model/dto";
+import "idl/api.proto";
+message Base{
+  int32 Code =1[(api.go_tag)="json:\"code\""];
+  string Msg=2[(api.go_tag)="json:\"msg\""];
+}
+message Response{
+  Base Base=1[(api.go_tag)="json:\"base\""];
+  Data Data =2[(api.go_tag)="json:\"data\""];
+}
+message LoginResponse{
+  Response Response=1;
+  string RefreshToken=2[(api.go_tag)="\"refresh_token\""];
+  string AccessToken=3[(api.go_tag)="\"access_token\""];
+}
+message Data{
+ int32 Total =2[(api.go_tag)="json:\"total\""];
+ bytes Items=1[(api.go_tag)="json:\"items\""];
+}

@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/hertz-contrib/logger/accesslog"
 )
 
 func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.UserHandler, videoHandler *handler.VideoHandler, socialHandler *handler.SocialHandler, likesHandler *handler.LikesHandler, websocketHandler *handler.WebsocketSever) {
@@ -13,6 +14,7 @@ func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.Use
 		server.WithMaxRequestBodySize(10*1024*1024),
 	)
 	defer h.Close()
+	h.Use(accesslog.New())
 	user := h.Group("/user")
 	{
 		user.GET("/info", middleware.AuthMiddleware, userHandler.UserInfo)
@@ -51,8 +53,6 @@ func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.Use
 	h.GET("/following/list", middleware.AuthMiddleware, socialHandler.FollowingList)
 	h.GET("/follower/list", middleware.AuthMiddleware, socialHandler.FollowerList)
 	h.GET("/friends/list", middleware.AuthMiddleware, socialHandler.FriendList)
-	h.POST("/friend/add", middleware.AuthMiddleware, socialHandler.AddFriend)
-	h.DELETE("/friend/delete", middleware.AuthMiddleware, socialHandler.DeleteFriend)
 
 	h.GET("/ws", middleware.AuthMiddleware, websocketHandler.WebSocketHandler)
 	h.Spin()

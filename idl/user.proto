@@ -1,0 +1,13 @@
+syntax="proto3";
+package user;
+option go_package="/biz/model/dto";
+import "api.proto";
+message User{
+   string ID = 1[(api.go_tag)="json:\"id\""];
+   string Username=2[(api.go_tag)="form:\"username\" json:\"username\" binding:\"required\""];
+   string Password=3[(api.go_tag)="form:\"password\" json:\"password\" binding:\"required\""];
+   string AvatarURL=4[(api.go_tag)="json:\"avatar_url\""];
+   string CreatedAt=5[(api.go_tag)="json:\"created_at\""];
+   string UpdatedAt=6[(api.go_tag)="json:\"updated_at\""];
+   string DeletedAt=7[(api.go_tag)="json:\"deleted_at\""];
+}
