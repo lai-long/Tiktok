@@ -1,0 +1,15 @@
+
+syntax="proto3";
+package video;
+option go_package="/biz/model/dto";
+import "api.proto";
+message SendMsg{
+  string Type=1[(api.go_tag)="json:\"type\""];
+  string Content=2[(api.go_tag)="json:\"content\""];
+  string GroupId=3[(api.go_tag)="json:\"group_id\""];
+}
+message ReplyMsg{
+  string From=1 [(api.go_tag)="json:\"from\""];
+  int32 Code=2  [(api.go_tag)="json:\"code\""];
+  string Content=3[(api.go_tag)="json:\"content\""];
+}
