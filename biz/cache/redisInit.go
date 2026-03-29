@@ -1,4 +1,4 @@
-package re
+package cache
 
 import (
 	"Tiktok/pkg/config"

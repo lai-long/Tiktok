@@ -1,4 +1,4 @@
-package db
+package dao
 
 func (m *MySQLdb) SaveMfaSecret(mfa string, userId string) error {
 	sql := `UPDATE users SET mfa_secret = ? WHERE id = ?`

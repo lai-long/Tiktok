@@ -1,8 +1,8 @@
 package service
 
 import (
-	"Tiktok/biz/dao/db"
-	"Tiktok/biz/dao/re"
+	"Tiktok/biz/cache"
+	"Tiktok/biz/dao"
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/consts"
 	"log"
@@ -49,7 +49,7 @@ type ClientManager struct {
 	mu             sync.RWMutex
 }
 
-func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
+func (c *Client) Read(re *cache.Redis, m *dao.MySQLdb) {
 	defer func() {
 		Manager.Unregister <- c
 		_ = c.Socket.Close()
@@ -125,7 +125,7 @@ func (c *Client) Write() {
 		}
 	}
 }
-func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
+func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 	for {
 		select {
 		case client := <-manager.Register:
