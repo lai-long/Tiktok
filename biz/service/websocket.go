@@ -11,6 +11,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var Manager = ClientManager{
@@ -52,7 +53,7 @@ type ClientManager struct {
 func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
 	defer func() {
 		Manager.Unregister <- c
-		c.Socket.Close()
+		_ = c.Socket.Close()
 	}()
 	for {
 		c.Socket.PongHandler()
@@ -61,7 +62,7 @@ func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
 		if err != nil {
 			log.Println("client ReadJSON err", err)
 			Manager.Unregister <- c
-			c.Socket.Close()
+			_ = c.Socket.Close()
 			break
 		}
 		//type 1 一对一聊天
@@ -107,14 +108,17 @@ func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
 }
 func (c *Client) Write() {
 	defer func() {
-		c.Socket.Close()
+		_ = c.Socket.Close()
 	}()
 	for {
 		select {
 		case message, ok := <-c.Send:
 			if !ok {
 				closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "websocket connection closed")
-				c.Socket.WriteMessage(websocket.CloseMessage, closeMsg)
+				err := c.Socket.WriteMessage(websocket.CloseMessage, closeMsg)
+				if err != nil {
+					log.Println("write closeMsg err", err)
+				}
 				log.Println("client Write err")
 				return
 			}
@@ -123,7 +127,7 @@ func (c *Client) Write() {
 				Code:    consts.CodeSuccess,
 				Content: fmt.Sprintf("%s", string(message)),
 			}
-			msg, _ := json.Marshal(replyMsg)
+			msg, _ := protojson.Marshal(&replyMsg)
 			_ = c.Socket.WriteMessage(websocket.TextMessage, msg)
 		}
 	}
@@ -140,10 +144,11 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 			}
 			Manager.Clients[client.ID] = client
 			replyMSg := dto.ReplyMsg{
+				From:    client.ID,
 				Code:    consts.CodeSuccess,
 				Content: "连接成功",
 			}
-			msg, _ := json.Marshal(replyMSg)
+			msg, _ := protojson.Marshal(&replyMSg)
 			client.Send <- msg
 		case client := <-manager.Unregister:
 			log.Println("断开websocket连接", client.ID)
@@ -163,7 +168,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 					Code:    consts.CodeSuccess,
 					Content: "连接中断",
 				}
-				msg, _ := json.Marshal(replyMSg)
+				msg, _ := protojson.Marshal(&replyMSg)
 				client.Send <- msg
 				close(client.Send)
 				delete(manager.Clients, client.ID)
@@ -194,7 +199,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 						Code:    consts.CodeSuccess,
 						Content: "对方在线",
 					}
-					msg, _ := json.Marshal(replyMSg)
+					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
 					m.InsertMsg(id, string(message))
 				} else {
