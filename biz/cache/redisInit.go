@@ -9,8 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var rdb *redis.Client
-
 type Redis struct {
 	redis *redis.Client
 }
@@ -19,6 +17,7 @@ func NewRedis(client *redis.Client) *Redis {
 	return &Redis{redis: client}
 }
 func InitRedis() *redis.Client {
+	var rdb *redis.Client
 	redisAddr := fmt.Sprintf("%s:%d", config.Cfg.Redis.Host, config.Cfg.Redis.Port)
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
