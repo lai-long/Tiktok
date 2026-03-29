@@ -1,16 +1,16 @@
 package service
 
 import (
-	"Tiktok/biz/dao/db"
-	"Tiktok/biz/dao/re"
+	"Tiktok/biz/cache"
+	"Tiktok/biz/dao"
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/consts"
-	"fmt"
 	"log"
 	"sync"
 
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var Manager = ClientManager{
@@ -49,10 +49,10 @@ type ClientManager struct {
 	mu             sync.RWMutex
 }
 
-func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
+func (c *Client) Read(re *cache.Redis, m *dao.MySQLdb) {
 	defer func() {
 		Manager.Unregister <- c
-		c.Socket.Close()
+		_ = c.Socket.Close()
 	}()
 	for {
 		c.Socket.PongHandler()
@@ -61,7 +61,7 @@ func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
 		if err != nil {
 			log.Println("client ReadJSON err", err)
 			Manager.Unregister <- c
-			c.Socket.Close()
+			_ = c.Socket.Close()
 			break
 		}
 		//type 1 一对一聊天
@@ -107,28 +107,25 @@ func (c *Client) Read(re *re.Redis, m *db.MySQLdb) {
 }
 func (c *Client) Write() {
 	defer func() {
-		c.Socket.Close()
+		_ = c.Socket.Close()
 	}()
 	for {
 		select {
 		case message, ok := <-c.Send:
 			if !ok {
 				closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "websocket connection closed")
-				c.Socket.WriteMessage(websocket.CloseMessage, closeMsg)
+				err := c.Socket.WriteMessage(websocket.CloseMessage, closeMsg)
+				if err != nil {
+					log.Println("write closeMsg err", err)
+				}
 				log.Println("client Write err")
 				return
 			}
-			replyMsg := dto.ReplyMsg{
-				From:    c.ID,
-				Code:    consts.CodeSuccess,
-				Content: fmt.Sprintf("%s", string(message)),
-			}
-			msg, _ := json.Marshal(replyMsg)
-			_ = c.Socket.WriteMessage(websocket.TextMessage, msg)
+			_ = c.Socket.WriteMessage(websocket.TextMessage, message)
 		}
 	}
 }
-func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
+func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 	for {
 		select {
 		case client := <-manager.Register:
@@ -140,16 +137,16 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 			}
 			Manager.Clients[client.ID] = client
 			replyMSg := dto.ReplyMsg{
+				From:    client.ID,
 				Code:    consts.CodeSuccess,
 				Content: "连接成功",
 			}
-			msg, _ := json.Marshal(replyMSg)
+			msg, _ := protojson.Marshal(&replyMSg)
 			client.Send <- msg
 		case client := <-manager.Unregister:
 			log.Println("断开websocket连接", client.ID)
 			if client.GroupId != "" {
 				manager.mu.Lock()
-				defer manager.mu.Unlock()
 				for i, v := range manager.Groups[client.GroupId] {
 					if v.ID == client.ID {
 						manager.Groups[client.GroupId] = append(manager.Groups[client.GroupId][:i], manager.Groups[client.GroupId][i+1:]...)
@@ -160,10 +157,11 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 			}
 			if _, ok := Manager.Clients[client.ID]; ok {
 				replyMSg := dto.ReplyMsg{
+					From:    client.ID,
 					Code:    consts.CodeSuccess,
 					Content: "连接中断",
 				}
-				msg, _ := json.Marshal(replyMSg)
+				msg, _ := protojson.Marshal(&replyMSg)
 				client.Send <- msg
 				close(client.Send)
 				delete(manager.Clients, client.ID)
@@ -175,18 +173,26 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 				log.Println("string message", string(message))
 				sendId := broadcast.Clients.SendID
 				flag := false
+				manager.mu.RLock()
 				for id, client := range Manager.Clients {
 					if id != sendId {
 						continue
 					}
+					replyMSg := dto.ReplyMsg{
+						From:    client.ID,
+						Code:    consts.CodeSuccess,
+						Content: string(message),
+					}
+					msg, _ := protojson.Marshal(&replyMSg)
 					select {
-					case client.Send <- message:
+					case client.Send <- msg:
 						flag = true
 					default:
 						close(client.Send)
 						delete(manager.Clients, client.ID)
 					}
 				}
+				manager.mu.RUnlock()
 				id := broadcast.Clients.ID
 				if flag {
 					replyMSg := dto.ReplyMsg{
@@ -194,7 +200,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 						Code:    consts.CodeSuccess,
 						Content: "对方在线",
 					}
-					msg, _ := json.Marshal(replyMSg)
+					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
 					m.InsertMsg(id, string(message))
 				} else {
@@ -204,7 +210,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 						Content: "对方不在线",
 					}
 					re.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
-					msg, _ := json.Marshal(replyMSg)
+					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
 				}
 			} else if broadcast.Type == "2" {
@@ -213,7 +219,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 					Code:    consts.CodeSuccess,
 					Content: string(broadcast.Message),
 				}
-				msg, _ := json.Marshal(replyMSg)
+				msg, _ := protojson.Marshal(&replyMSg)
 				broadcast.Clients.Send <- msg
 				m.InsertMsg(broadcast.Clients.SendID, string(broadcast.Message))
 			} else if broadcast.Type == "3" {
@@ -222,7 +228,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 					Code:    consts.CodeSuccess,
 					Content: string(broadcast.Message),
 				}
-				msg, _ := json.Marshal(replyMSg)
+				msg, _ := protojson.Marshal(&replyMSg)
 				broadcast.Clients.Send <- msg
 			}
 		case groupBroadcast := <-manager.GroupBroadcast:
@@ -232,7 +238,7 @@ func (manager *ClientManager) Start(m *db.MySQLdb, re *re.Redis) {
 					Code:    consts.CodeSuccess,
 					Content: string(groupBroadcast.Message),
 				}
-				msg, _ := json.Marshal(replyMSg)
+				msg, _ := protojson.Marshal(&replyMSg)
 				client.Send <- msg
 			}
 		}
