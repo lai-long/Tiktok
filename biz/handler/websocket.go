@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"Tiktok/biz/dao/db"
-	"Tiktok/biz/dao/re"
+	"Tiktok/biz/cache"
+	"Tiktok/biz/dao"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -16,11 +16,11 @@ import (
 )
 
 type WebsocketSever struct {
-	db *db.MySQLdb
-	re *re.Redis
+	db *dao.MySQLdb
+	re *cache.Redis
 }
 
-func NewWebsocketSever(db *db.MySQLdb, re *re.Redis) *WebsocketSever {
+func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis) *WebsocketSever {
 	return &WebsocketSever{
 		db: db,
 		re: re,

@@ -3,8 +3,8 @@
 package main
 
 import (
-	"Tiktok/biz/dao/db"
-	"Tiktok/biz/dao/re"
+	"Tiktok/biz/cache"
+	"Tiktok/biz/dao"
 	"Tiktok/biz/handler"
 
 	"Tiktok/biz/router"
@@ -22,12 +22,12 @@ func main() {
 	}
 	log.Println(cfg)
 
-	rdb := re.InitRedis()
-	re := re.NewRedis(rdb)
+	rdb := cache.InitRedis()
+	re := cache.NewRedis(rdb)
 	defer rdb.Close()
 
-	ddb := db.InitDb()
-	mysqlDb := db.NewMySQLdb(ddb)
+	ddb := dao.InitDb()
+	mysqlDb := dao.NewMySQLdb(ddb)
 
 	likeSVC := service.NewLikeVideoService(mysqlDb, mysqlDb)
 	likesHandler := handler.NewLikesHandler(likeSVC, likeSVC)
