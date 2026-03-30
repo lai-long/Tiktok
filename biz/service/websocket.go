@@ -5,10 +5,12 @@ import (
 	"Tiktok/biz/dao"
 	"Tiktok/biz/model/dto"
 	"Tiktok/pkg/consts"
+	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"sync"
 
-	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -30,9 +32,11 @@ type Client struct {
 	Send    chan []byte
 }
 type Broadcast struct {
-	Clients *Client
-	Message []byte
-	Type    string
+	Clients  *Client
+	Message  []byte
+	Type     string
+	PageNum  string
+	PageSize string
 }
 type GroupBroadcast struct {
 	Clients []*Client
@@ -75,23 +79,16 @@ func (c *Client) Read(re *cache.Redis, m *dao.MySQLdb) {
 				Message: []byte(sendMsg.Content),
 			}
 		} else if sendMsg.Type == "2" {
-			msg, _ := re.FetchOfflineMsg(c.ID)
-			message, err := json.Marshal(msg)
-			if err != nil {
-				log.Println("re.FetchOfflineMsg json.Marshal err", err)
-			}
 			Manager.Broadcast <- &Broadcast{
 				Type:    "2",
 				Clients: c,
-				Message: message,
 			}
 		} else if sendMsg.Type == "3" {
-			msg := m.GetWebsocketHistory(c.ID, c.SendID)
-			message, _ := json.Marshal(msg)
 			Manager.Broadcast <- &Broadcast{
-				Type:    "3",
-				Clients: c,
-				Message: message,
+				Type:     "3",
+				Clients:  c,
+				PageNum:  sendMsg.PageNum,
+				PageSize: sendMsg.PageSize,
 			}
 		} else if sendMsg.Type == "4" {
 			Manager.mu.Lock()
@@ -126,6 +123,7 @@ func (c *Client) Write() {
 	}
 }
 func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
+
 	for {
 		select {
 		case client := <-manager.Register:
@@ -168,9 +166,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			}
 		case broadcast := <-manager.Broadcast:
 			if broadcast.Type == "1" {
-				log.Println("进行broadcast")
 				message := broadcast.Message
-				log.Println("string message", string(message))
 				sendId := broadcast.Clients.SendID
 				flag := false
 				manager.mu.RLock()
@@ -215,18 +211,41 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					broadcast.Clients.Send <- msg
 				}
 			} else if broadcast.Type == "2" {
+				message, err := re.FetchOfflineMsg(broadcast.Clients.SendID)
+				if err != nil {
+					log.Println(err)
+				}
+				str := strings.Join(message, ",\n ")
+				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(str))
 				replyMSg := dto.ReplyMsg{
 					From:    "未在线时收到消息",
 					Code:    consts.CodeSuccess,
-					Content: string(broadcast.Message),
+					Content: finalInfo,
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
 				broadcast.Clients.Send <- msg
 			} else if broadcast.Type == "3" {
+				pageNum := 0
+				pageSize := 10
+				pageNum, err := strconv.Atoi(broadcast.PageNum)
+				if err != nil {
+					log.Println(err)
+				}
+				pageSize, err = strconv.Atoi(broadcast.PageSize)
+				if err != nil {
+					log.Println(err)
+				}
+
+				msgs := m.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
+				str := strings.Join(msgs, ",\n ")
+				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(msgs))
+				if err != nil {
+					log.Println(err)
+				}
 				replyMSg := dto.ReplyMsg{
 					From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
 					Code:    consts.CodeSuccess,
-					Content: string(broadcast.Message),
+					Content: finalInfo,
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
 				broadcast.Clients.Send <- msg
