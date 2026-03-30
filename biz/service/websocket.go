@@ -209,6 +209,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 						Code:    consts.CodeSuccess,
 						Content: "对方不在线",
 					}
+					m.InsertMsg(id, string(message))
 					re.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
 					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
@@ -221,7 +222,6 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
 				broadcast.Clients.Send <- msg
-				m.InsertMsg(broadcast.Clients.SendID, string(broadcast.Message))
 			} else if broadcast.Type == "3" {
 				replyMSg := dto.ReplyMsg{
 					From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
