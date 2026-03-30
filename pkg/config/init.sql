@@ -35,6 +35,10 @@ CREATE TABLE following
     user_id      VARCHAR(64) NOT NULL,
     following_id VARCHAR(64) NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at    TIMESTAMP NULL,
+    INDEX  idx_following_user (user_id),
+    INDEX  idx_following_following (following_id),
     UNIQUE INDEX uk_user_following (user_id, following_id)
 );
 CREATE TABLE likes

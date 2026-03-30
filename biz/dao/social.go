@@ -31,8 +31,8 @@ func (m *MySQLdb) FollowerList(userId string, pageNum int, pageSize int) ([]enti
 }
 func (m *MySQLdb) FriendList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, bool) {
 	offset := pageNum * pageSize
-	sql := `SELECT * FROM users WHERE id IN(SELECT following_id FROM relations WHERE user_id = ?) 
-                      AND id IN (SELECT user_id from relations where following_id=?) LIMIT ? OFFSET ?`
+	sql := `SELECT * FROM users WHERE id IN(SELECT following_id FROM following WHERE user_id = ?) 
+                      AND id IN (SELECT user_id from following where following_id=?) LIMIT ? OFFSET ?`
 	var users []entity.UserEntity
 	err := m.db.Select(&users, sql, userId, userId, pageSize, offset)
 	if err != nil {

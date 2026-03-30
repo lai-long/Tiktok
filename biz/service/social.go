@@ -45,11 +45,13 @@ func (s *SocialService) RelationAction(toUserId string, actionType string, userI
 	return consts.CodeRelationError, "RelationAction actionType error"
 }
 func (s *SocialService) FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
+	pageNumInt := 0
+	pageSizeInt := 10
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
 		return consts.CodeError, "FollowingList PageNum strconv error", []dto.User{}, false
 	}
-	pageSizeInt, err := strconv.Atoi(pageSize)
+	pageSizeInt, err = strconv.Atoi(pageSize)
 	if err != nil {
 		return consts.CodeError, "FollowingList PageSize strconv error", []dto.User{}, false
 	}
@@ -67,12 +69,14 @@ func (s *SocialService) FollowingList(userId string, pageNum string, pageSize st
 	return consts.CodeSuccess, "FollowingList success", dtoFollowings, true
 }
 func (s *SocialService) FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
+	pageNumInt := 0
+	pageSizeInt := 10
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
 		log.Printf("FollowerList PageNum strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
 	}
-	pageSizeInt, err := strconv.Atoi(pageSize)
+	pageSizeInt, err = strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("FollowerList PageSize strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
@@ -92,12 +96,14 @@ func (s *SocialService) FollowerList(userId string, pageNum string, pageSize str
 	return consts.CodeSuccess, "FollowerList success", dtoFollowers, true
 }
 func (s *SocialService) FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
+	pageNumInt := 0
+	pageSizeInt := 10
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
 		log.Printf("FriendList PageNum strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
 	}
-	pageSizeInt, err := strconv.Atoi(pageSize)
+	pageSizeInt, err = strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("FriendList PageSize strconv error: %v", err)
 		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
