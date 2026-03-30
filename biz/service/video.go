@@ -78,12 +78,14 @@ func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader,
 }
 
 func (s *VideoService) VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool) {
+	pageNumInt := 0
+	pageSizeInt := 10
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeError, "VideoList pageSize strconv error", []dto.Video{}, false
 	}
-	pageNumInt, err := strconv.Atoi(pageNum)
+	pageNumInt, err = strconv.Atoi(pageNum)
 	if err != nil {
 		log.Printf("strconv.Atoi error: %v", err)
 		return consts.CodeError, "VideoList pageNum error", []dto.Video{}, false
