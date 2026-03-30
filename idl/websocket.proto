@@ -1,6 +1,6 @@
 
 syntax="proto3";
-package video;
+package websocket;
 option go_package="/biz/model/dto";
 import "api.proto";
 message SendMsg{
