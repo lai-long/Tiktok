@@ -53,7 +53,7 @@ type ClientManager struct {
 	mu             sync.RWMutex
 }
 
-func (c *Client) Read(re *cache.Redis, m *dao.MySQLdb) {
+func (c *Client) Read() {
 	defer func() {
 		Manager.Unregister <- c
 		_ = c.Socket.Close()
