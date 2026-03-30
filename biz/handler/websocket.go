@@ -58,7 +58,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			Send:    make(chan []byte, 128),
 		}
 		service.Manager.Register <- client
-		go client.Read(m.re, m.db)
+		go client.Read()
 		go client.Write()
 	})
 	wsAdaptor := adaptor.HertzHandler(stdHandler)
