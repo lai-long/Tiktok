@@ -40,7 +40,7 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 			Code: consts.CodeCommentError,
 			Msg:  "CommentPublish userId exists error",
 		}})
-		log.Fatalf("CommentPublish userId exists error: %v", err)
+		log.Println("CommentPublish userId exists error: %v", err)
 		return
 	}
 	comment.UserId = userId.(string)

@@ -71,7 +71,7 @@ func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader,
 	}
 	err = s.videoDb.CreatVideo(videoEntity)
 	if err != nil {
-		log.Fatalf("VideoPublish db.CreateVideo err: %v", err)
+		log.Println("VideoPublish db.CreateVideo err: %v", err)
 		return consts.CodeDBCreateError, "VideoPublish db.Create err"
 	}
 	return consts.CodeSuccess, "success"

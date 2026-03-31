@@ -53,7 +53,7 @@ func (s *UserService) Register(userinfo dto.User) (int, string) {
 	var err error
 	exists, err := s.IsUsernameExists(userinfo.Username)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return consts.CodeUserError, "register  IsUsernameExists error"
 	}
 	if exists {
