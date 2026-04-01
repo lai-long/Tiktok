@@ -29,7 +29,7 @@ func main() {
 	ddb := dao.InitDb()
 	mysqlDb := dao.NewMySQLdb(ddb)
 
-	likeSVC := service.NewLikeVideoService(mysqlDb, mysqlDb)
+	likeSVC := service.NewLikeVideoService(mysqlDb, mysqlDb, mysqlDb)
 	likesHandler := handler.NewLikesHandler(likeSVC)
 
 	commentSVC := service.NewCommentService(mysqlDb)
