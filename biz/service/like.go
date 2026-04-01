@@ -10,34 +10,36 @@ import (
 
 type LikeCommentDatabase interface {
 	CommentLikeCountUp(commentId string) error
-	LikeCreate(userId string, targetId string, targetType string) error
 	CommentLikeCountDown(commentId string) error
-	LikeDelete(userId, targetId string) error
 }
 type LikeVideoDatabase interface {
 	VideoLikeCountUp(videoId string) error
-	LikeCreate(userId string, targetId string, targetType string) error
 	VideoLikeCountDown(videoId string) error
-	LikeDelete(userId string, targetID string) error
 	LikeVideoIds(userId string, pageNum int, pageSize int) (error, []string)
 	LikeVideos(videoId []string) (bool, []entity.VideoEntity)
+}
+type LikeDatabase interface {
+	LikeCreate(userId string, targetId string, targetType string) error
+	LikeDelete(userId, targetId, targetType string) error
 }
 type LikeService struct {
 	videoDb   LikeVideoDatabase
 	commentDb LikeCommentDatabase
+	likeDb    LikeDatabase
 }
 
-func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabase) *LikeService {
+func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabase, likeDb LikeDatabase) *LikeService {
 	return &LikeService{
 		videoDb:   videoDb,
 		commentDb: commentDb,
+		likeDb:    likeDb,
 	}
 }
 func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int, string) {
 	//target type 1视频 2评论
 	if targetType == "1" {
 		if action == "1" {
-			err := s.videoDb.LikeCreate(userId, targetId, targetType)
+			err := s.likeDb.LikeCreate(userId, targetId, targetType)
 			if err != nil {
 				return consts.CodeDBCreateError, "LikeAction LikeCreate error"
 			}
@@ -48,7 +50,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 			return consts.CodeSuccess, "LikeAction success"
 		}
 		if action == "2" {
-			err := s.videoDb.LikeDelete(userId, targetId)
+			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
 				log.Println(err)
 				return consts.CodeDBDeleteError, "VideoLikeAction LikeDelete error"
@@ -63,7 +65,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 		return consts.CodeLikeError, "VideoLikeAction action num error"
 	} else if targetType == "2" {
 		if action == "1" {
-			err := s.commentDb.LikeCreate(userId, targetId, targetType)
+			err := s.likeDb.LikeCreate(userId, targetId, targetType)
 			if err != nil {
 				log.Println("CommentLikeAction LikeCreate error", err)
 				return consts.CodeDBCreateError, "CommentLikeAction CommentCreate error"
@@ -75,7 +77,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 			}
 		}
 		if action == "2" {
-			err := s.commentDb.LikeDelete(userId, targetId)
+			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
 				log.Println("CommentLikeAction CommentDelete error", err)
 				return consts.CodeDBDeleteError, "CommentLikeAction CommentDelete error"
