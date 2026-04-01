@@ -56,7 +56,7 @@ func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
 	userId := c.Query("user_id")
-	code, msg, videos, ok := h.video.LikeList(userId, pageNum, pageSize)
+	code, msg, videos, ok := h.likeService.LikeList(userId, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,

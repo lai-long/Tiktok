@@ -12,13 +12,13 @@ type LikeCommentDatabase interface {
 	CommentLikeCountUp(commentId string) error
 	LikeCreate(userId string, targetId string, targetType string) error
 	CommentLikeCountDown(commentId string) error
-	CommentLikeDelete(userId string, commentId string) error
+	LikeDelete(userId, targetId string) error
 }
 type LikeVideoDatabase interface {
 	VideoLikeCountUp(videoId string) error
 	LikeCreate(userId string, targetId string, targetType string) error
 	VideoLikeCountDown(videoId string) error
-	VideoLikeDelete(userId string, videoId string) error
+	LikeDelete(userId string, targetID string) error
 	LikeVideoIds(userId string, pageNum int, pageSize int) (error, []string)
 	LikeVideos(videoId []string) (bool, []entity.VideoEntity)
 }
@@ -34,6 +34,7 @@ func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabas
 	}
 }
 func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int, string) {
+	//target type 1视频 2评论
 	if targetType == "1" {
 		if action == "1" {
 			err := s.videoDb.LikeCreate(userId, targetId, targetType)
@@ -47,7 +48,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 			return consts.CodeSuccess, "LikeAction success"
 		}
 		if action == "2" {
-			err := s.videoDb.VideoLikeDelete(userId, targetId)
+			err := s.videoDb.LikeDelete(userId, targetId)
 			if err != nil {
 				log.Println(err)
 				return consts.CodeDBDeleteError, "VideoLikeAction LikeDelete error"
@@ -74,7 +75,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 			}
 		}
 		if action == "2" {
-			err := s.commentDb.CommentLikeDelete(userId, targetId)
+			err := s.commentDb.LikeDelete(userId, targetId)
 			if err != nil {
 				log.Println("CommentLikeAction CommentDelete error", err)
 				return consts.CodeDBDeleteError, "CommentLikeAction CommentDelete error"
@@ -126,32 +127,4 @@ func (s *LikeService) LikeList(userId string, pageNum string, pageSize string) (
 		}
 	}
 	return consts.CodeSuccess, "LikeList success", videoDTOs, true
-}
-
-func (s *LikeService) CommentLikeAction(userId string, commentId string, action string) (int, string) {
-	if action == "1" {
-		err := s.commentDb.LikeCreate(userId, commentId)
-		if err != nil {
-			log.Println("CommentLikeAction LikeCreate error", err)
-			return consts.CodeDBCreateError, "CommentLikeAction CommentCreate error"
-		}
-		err = s.commentDb.CommentLikeCountUp(commentId)
-		if err != nil {
-			log.Println("CommentLikeAction CommentCountUp error", err)
-			return consts.CodeDBUpdateError, "CommentLikeAction CommentCountUp error"
-		}
-	}
-	if action == "2" {
-		err := s.commentDb.CommentLikeDelete(userId, commentId)
-		if err != nil {
-			log.Println("CommentLikeAction CommentDelete error", err)
-			return consts.CodeDBDeleteError, "CommentLikeAction CommentDelete error"
-		}
-		err = s.commentDb.CommentLikeCountDown(commentId)
-		if err != nil {
-			log.Println("CommentLikeAction CommentCountDown error", err)
-			return consts.CodeDBUpdateError, "CommentLikeAction CommentCountDown error"
-		}
-	}
-	return consts.CodeSuccess, "CommentLikeAction action num error"
 }
