@@ -30,7 +30,7 @@ func main() {
 	mysqlDb := dao.NewMySQLdb(ddb)
 
 	likeSVC := service.NewLikeVideoService(mysqlDb, mysqlDb)
-	likesHandler := handler.NewLikesHandler(likeSVC, likeSVC)
+	likesHandler := handler.NewLikesHandler(likeSVC)
 
 	commentSVC := service.NewCommentService(mysqlDb)
 	commentHandler := handler.NewCommentHandler(commentSVC)

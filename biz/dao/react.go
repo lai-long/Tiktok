@@ -21,11 +21,6 @@ func (m *MySQLdb) LikeCreate(userId string, targetId string, targetType string) 
 	_, err := m.db.Exec(sql, targetId, userId, targetType)
 	return err
 }
-func (m *MySQLdb) CommentLikeCreate(userId string, commentId string) error {
-	sql := `INSERT INTO likes (to_comment_id, user_id) VALUES (?, ?)`
-	_, err := m.db.Exec(sql, commentId, userId)
-	return err
-}
 func (m *MySQLdb) VideoLikeCountDown(videoId string) error {
 	sql := `UPDATE videos SET like_count=like_count - 1 WHERE id = ?`
 	_, err := m.db.Exec(sql, videoId)
@@ -36,9 +31,9 @@ func (m *MySQLdb) CommentLikeCountDown(commentId string) error {
 	_, err := m.db.Exec(sql, commentId)
 	return err
 }
-func (m *MySQLdb) VideoLikeDelete(userId string, videoId string) error {
-	sql := `DELETE FROM likes WHERE to_video_id = ? AND user_id = ?`
-	result, err := m.db.Exec(sql, videoId, userId)
+func (m *MySQLdb) LikeDelete(userId, targetID string, targetType string) error {
+	sql := `DELETE FROM likes WHERE user_id=? AND target_id = ? AND target_type = ? LIMIT 1`
+	result, err := m.db.Exec(sql, userId, targetID, targetType)
 	if err != nil {
 		return err
 	}
@@ -48,18 +43,7 @@ func (m *MySQLdb) VideoLikeDelete(userId string, videoId string) error {
 	}
 	return nil
 }
-func (m *MySQLdb) CommentLikeDelete(userId string, commentId string) error {
-	sql := `DELETE FROM likes WHERE to_comment_id = ? AND user_id = ?`
-	result, err := m.db.Exec(sql, commentId, userId)
-	if err != nil {
-		return err
-	}
-	rows, _ := result.RowsAffected()
-	if rows == 0 {
-		return fmt.Errorf("no like found to delete")
-	}
-	return nil
-}
+
 func (m *MySQLdb) LikeVideoIds(userId string, pageNum int, pageSize int) (error, []string) {
 	sql := `SELECT to_video_id FROM likes WHERE to_video_id IS NOT NULL AND user_id = ?  ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var videoId []string
