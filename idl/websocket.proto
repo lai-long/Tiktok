@@ -1,12 +1,14 @@
 
 syntax="proto3";
-package video;
+package websocket;
 option go_package="/biz/model/dto";
 import "api.proto";
 message SendMsg{
   string Type=1[(api.go_tag)="json:\"type\""];
   string Content=2[(api.go_tag)="json:\"content\""];
   string GroupId=3[(api.go_tag)="json:\"group_id\""];
+  string PageNum=4[(api.go_tag)="json:\"page_num\""];
+  string PageSize=5[(api.go_tag)="json:\"page_size\""];
 }
 message ReplyMsg{
   string From=1 [(api.go_tag)="json:\"from\""];

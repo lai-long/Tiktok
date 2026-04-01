@@ -40,12 +40,14 @@ func (s *CommentService) CommentPublish(videoId string, userId string, content s
 	return consts.CodeSuccess, "CommentPublish success"
 }
 func (s *CommentService) CommentList(videoId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool) {
+	pageNumInt := 0
+	pageSizeInt := 10
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
 		log.Printf("pageNumInt, err := strconv.Atoi(pageNum) error: %v", err)
 		return consts.CodeError, "CommentList pageNumInt strconv error", []dto.Comment{}, false
 	}
-	pageSizeInt, err := strconv.Atoi(pageSize)
+	pageSizeInt, err = strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("pageSizeInt, err := strconv.Atoi(pageSize) error: %v", err)
 		return consts.CodeError, "CommentList pageSize strconv error", []dto.Comment{}, false

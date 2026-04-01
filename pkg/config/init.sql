@@ -30,13 +30,15 @@ CREATE TABLE videos
     deleted_at    TIMESTAMP NULL,
     INDEX idx_videos_userid (user_id)
 );
-CREATE TABLE relations
+CREATE TABLE following
 (
     user_id      VARCHAR(64) NOT NULL,
-    follower_id  VARCHAR(64) NULL,
     following_id VARCHAR(64) NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL,
-    UNIQUE INDEX uk_user_follower (user_id, follower_id),
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at    TIMESTAMP NULL,
+    INDEX  idx_following_user (user_id),
+    INDEX  idx_following_following (following_id),
     UNIQUE INDEX uk_user_following (user_id, following_id)
 );
 CREATE TABLE likes
@@ -69,11 +71,3 @@ CREATE TABLE message
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL
 );
-CREATE TABLE friends
-(
-    user_id varchar(64),
-    friend_id varchar(64),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL
-)
