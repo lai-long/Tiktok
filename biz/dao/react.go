@@ -16,9 +16,9 @@ func (m *MySQLdb) CommentLikeCountUp(commentId string) error {
 	_, err := m.db.Exec(sql, commentId)
 	return err
 }
-func (m *MySQLdb) VideoLikeCreate(userId string, videoId string) error {
-	sql := `INSERT INTO likes (to_video_id, user_id) VALUES (?, ?)`
-	_, err := m.db.Exec(sql, videoId, userId)
+func (m *MySQLdb) LikeCreate(userId string, targetId string, targetType string) error {
+	sql := `INSERT INTO likes (target_id, user_id,target_type) VALUES (?, ?)`
+	_, err := m.db.Exec(sql, targetId, userId, targetType)
 	return err
 }
 func (m *MySQLdb) CommentLikeCreate(userId string, commentId string) error {

@@ -41,14 +41,14 @@ CREATE TABLE following
     INDEX  idx_following_following (following_id),
     UNIQUE INDEX uk_user_following (user_id, following_id)
 );
+
 CREATE TABLE likes
 (
     user_id       VARCHAR(64) NOT NULL,
-    to_video_id   VARCHAR(64) NULL,
+    target_id   VARCHAR(64) NOT NULL,
+    target_type TINYINT NOT NULL DEFAULT 1,
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
-    to_comment_id VARCHAR(64) NULL,
-    UNIQUE INDEX uk_comment_user (user_id, to_comment_id),
-    UNIQUE INDEX uk_video_user (to_video_id, user_id)
+    UNIQUE INDEX uk_target_user (user_id,target_type,target_id)
 );
 CREATE TABLE comments
 (
