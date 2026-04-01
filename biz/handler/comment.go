@@ -10,8 +10,8 @@ import (
 )
 
 type CommentSever interface {
-	CommentPublish(videoId string, userId string, content string) (int, string)
-	CommentList(videoId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool)
+	CommentPublish(targetId string, userId string, content string, targetType string) (int, string)
+	CommentList(targetId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool)
 	CommentDelete(commentId string, videoId string, userId string) (int, string)
 }
 
@@ -24,6 +24,7 @@ func NewCommentHandler(service CommentSever) *CommentHandler {
 		service: service,
 	}
 }
+
 func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestContext) {
 	var comment dto.Comment
 	err := c.Bind(&comment)
@@ -44,18 +45,19 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 		return
 	}
 	comment.UserId = userId.(string)
-	code, msg := h.service.CommentPublish(comment.VideoId, comment.UserId, comment.Content)
+	code, msg := h.service.CommentPublish(comment.TargetId, comment.UserId, comment.Content, comment.TargetType)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,
 	}})
 
 }
+
 func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext) {
-	videoId := c.Query("video_id")
+	targetId := c.Query("target_id")
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
-	code, msg, comments, ok := h.service.CommentList(videoId, pageSize, pageNum)
+	code, msg, comments, ok := h.service.CommentList(targetId, pageSize, pageNum)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
