@@ -15,7 +15,8 @@ type CommentDatabase interface {
 	GetCommentById(commentId string) (entity.CommentEntity, error)
 	VideoCommentCountUp(videoId string) error
 	CommentCommentCountUp(commentId string) error
-	CommentCountDown(videoId string) error
+	VideoCommentCountDown(videoId string) error
+	CommentCommentCountDown(commentId string) error
 	CreateComment(commentId string, videoId string, userId string, content string, targetType string) error
 }
 
@@ -82,7 +83,7 @@ func (s *CommentService) CommentList(targetId string, pageSize string, pageNum s
 	return consts.CodeSuccess, "CommentList success", comments, true
 }
 
-func (s *CommentService) CommentDelete(commentId string, videoId string, userId string) (int, string) {
+func (s *CommentService) CommentDelete(commentId string, targetId string, userId string, targetType string) (int, string) {
 	comment, err := s.db.GetCommentById(commentId)
 	if err != nil {
 		log.Println("db GetComment err", err)
@@ -96,10 +97,19 @@ func (s *CommentService) CommentDelete(commentId string, videoId string, userId 
 		log.Println("db CommentDelete err", err)
 		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"
 	}
-	err = s.db.CommentCountDown(videoId)
-	if err != nil {
-		log.Println("db CommentCountDown err", err)
-		return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+	if targetType == "1" {
+		err = s.db.VideoCommentCountDown(targetId)
+		if err != nil {
+			log.Println("db CommentCountDown err", err)
+			return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+		}
+		return consts.CodeSuccess, commentId
+	} else if targetType == "2" {
+		err = s.db.CommentCommentCountDown(targetId)
+		if err != nil {
+			log.Println("db CommentCommentCountDown err", err)
+			return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+		}
 	}
-	return consts.CodeSuccess, commentId
+	return consts.CodeDBDeleteError, "CommentDelete Delete comment error"
 }

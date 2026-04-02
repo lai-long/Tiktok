@@ -118,3 +118,9 @@ func (m *MySQLdb) CommentCountDown(videoId string) error {
 	_, err := m.db.Exec(sql, videoId)
 	return err
 }
+
+func (m *MySQLdb) CommentCommentCountDown(commentId string) error {
+	sql := `UPDATE comments SET comment_count = comment_count - 1 WHERE comment_id = ?`
+	_, err := m.db.Exec(sql, commentId)
+	return err
+}
