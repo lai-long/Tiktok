@@ -22,3 +22,5 @@ func (m *MySQLdb) CheckMfaBind(userId string) (error, int) {
 	err := m.db.Get(&ok, sql, userId)
 	return err, ok
 }
+
+//
