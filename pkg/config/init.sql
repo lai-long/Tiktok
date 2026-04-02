@@ -41,14 +41,14 @@ CREATE TABLE following
     INDEX  idx_following_following (following_id),
     UNIQUE INDEX uk_user_following (user_id, following_id)
 );
+
 CREATE TABLE likes
 (
     user_id       VARCHAR(64) NOT NULL,
-    to_video_id   VARCHAR(64) NULL,
+    target_id   VARCHAR(64) NOT NULL,
+    target_type TINYINT NOT NULL DEFAULT 1,
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
-    to_comment_id VARCHAR(64) NULL,
-    UNIQUE INDEX uk_comment_user (user_id, to_comment_id),
-    UNIQUE INDEX uk_video_user (to_video_id, user_id)
+    UNIQUE INDEX uk_target_user (user_id,target_type,target_id)
 );
 CREATE TABLE comments
 (
@@ -70,4 +70,19 @@ CREATE TABLE message
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL
+);
+CREATE TABLE comments
+(
+    comment_id VARCHAR(64) PRIMARY KEY NOT NULL,
+    user_id    VARCHAR(64) NOT NULL,
+    target_id   VARCHAR(64) NOT NULL,
+    target_type TINYINT NOT NULL ,
+    content    TEXT NOT NULL,
+    like_count INT DEFAULT 0 NULL,
+    comment_count INT DEFAULT 0 NULL ,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_target_id (target_id)
 );

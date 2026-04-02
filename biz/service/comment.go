@@ -13,9 +13,11 @@ type CommentDatabase interface {
 	GetComments(videoId string, pageNum int, pageSize int) (error, []entity.CommentEntity)
 	CommentDelete(commentId string) error
 	GetCommentById(commentId string) (entity.CommentEntity, error)
-	CommentCountUp(videoId string) error
-	CommentCountDown(videoId string) error
-	CreateComment(commentId string, videoId string, userId string, content string) error
+	VideoCommentCountUp(videoId string) error
+	CommentCommentCountUp(commentId string) error
+	VideoCommentCountDown(videoId string) error
+	CommentCommentCountDown(commentId string) error
+	CreateComment(commentId string, videoId string, userId string, content string, targetType string) error
 }
 
 type CommentService struct {
@@ -25,21 +27,34 @@ type CommentService struct {
 func NewCommentService(db CommentDatabase) *CommentService {
 	return &CommentService{db: db}
 }
-func (s *CommentService) CommentPublish(videoId string, userId string, content string) (int, string) {
-	commentId := utils.IdGenerate()
-	err := s.db.CreateComment(commentId, videoId, userId, content)
-	if err != nil {
-		log.Println("db CreateComment err", err)
-		return consts.CodeDBCreateError, "CommentPublish CreateComment error"
+
+func (s *CommentService) CommentPublish(targetId, userId, content, targetType string) (int, string) {
+	if targetType == "1" {
+		commentId := utils.IdGenerate()
+		err := s.db.CreateComment(commentId, targetId, userId, content, targetType)
+		if err != nil {
+			log.Println("Video db CreateComment err", err)
+			return consts.CodeDBCreateError, "Video CommentPublish CreateComment error"
+		}
+		err = s.db.VideoCommentCountUp(targetId)
+		if err != nil {
+			log.Println("db CommentCountUp err", err)
+			return consts.CodeDBUpdateError, "Video CommentPublish CommentCountUp error"
+		}
+		return consts.CodeSuccess, "Video CommentPublish success"
+	} else if targetType == "2" {
+		commentId := utils.IdGenerate()
+		err := s.db.CreateComment(commentId, targetId, userId, content, targetType)
+		if err != nil {
+			log.Println("Comment db CreateComment err", err)
+			return consts.CodeDBCreateError, "Comment CommentPublish CreateComment error"
+		}
+		err = s.db.CommentCommentCountUp(targetId)
 	}
-	err = s.db.CommentCountUp(videoId)
-	if err != nil {
-		log.Println("db CommentCountUp err", err)
-		return consts.CodeDBUpdateError, "CommentPublish CommentCountUp error"
-	}
-	return consts.CodeSuccess, "CommentPublish success"
+	return consts.CodeDBCreateError, "CommentPublish CreateComment error"
 }
-func (s *CommentService) CommentList(videoId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool) {
+
+func (s *CommentService) CommentList(targetId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool) {
 	pageNumInt := 0
 	pageSizeInt := 10
 	pageNumInt, err := strconv.Atoi(pageNum)
@@ -52,7 +67,7 @@ func (s *CommentService) CommentList(videoId string, pageSize string, pageNum st
 		log.Printf("pageSizeInt, err := strconv.Atoi(pageSize) error: %v", err)
 		return consts.CodeError, "CommentList pageSize strconv error", []dto.Comment{}, false
 	}
-	err, commentEntity := s.db.GetComments(videoId, pageNumInt, pageSizeInt)
+	err, commentEntity := s.db.GetComments(targetId, pageNumInt, pageSizeInt)
 	if err != nil {
 		log.Printf("db GetComments err: %v", err)
 		return consts.CodeDBSelectError, "service CommentList GetComments error", []dto.Comment{}, false
@@ -62,12 +77,13 @@ func (s *CommentService) CommentList(videoId string, pageSize string, pageNum st
 		comments[i].CommentId = commentEntity[i].CommentId
 		comments[i].UserId = commentEntity[i].UserId
 		comments[i].Content = commentEntity[i].Content
-		comments[i].VideoId = commentEntity[i].VideoId
+		comments[i].TargetId = commentEntity[i].TargetId
 		comments[i].CreatedAt = commentEntity[i].CreatedAt
 	}
 	return consts.CodeSuccess, "CommentList success", comments, true
 }
-func (s *CommentService) CommentDelete(commentId string, videoId string, userId string) (int, string) {
+
+func (s *CommentService) CommentDelete(commentId string, targetId string, userId string, targetType string) (int, string) {
 	comment, err := s.db.GetCommentById(commentId)
 	if err != nil {
 		log.Println("db GetComment err", err)
@@ -81,10 +97,19 @@ func (s *CommentService) CommentDelete(commentId string, videoId string, userId 
 		log.Println("db CommentDelete err", err)
 		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"
 	}
-	err = s.db.CommentCountDown(videoId)
-	if err != nil {
-		log.Println("db CommentCountDown err", err)
-		return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+	if targetType == "1" {
+		err = s.db.VideoCommentCountDown(targetId)
+		if err != nil {
+			log.Println("db CommentCountDown err", err)
+			return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+		}
+		return consts.CodeSuccess, commentId
+	} else if targetType == "2" {
+		err = s.db.CommentCommentCountDown(targetId)
+		if err != nil {
+			log.Println("db CommentCommentCountDown err", err)
+			return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+		}
 	}
-	return consts.CodeSuccess, commentId
+	return consts.CodeDBDeleteError, "CommentDelete Delete comment error"
 }

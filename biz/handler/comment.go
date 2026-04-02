@@ -10,9 +10,9 @@ import (
 )
 
 type CommentSever interface {
-	CommentPublish(videoId string, userId string, content string) (int, string)
-	CommentList(videoId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool)
-	CommentDelete(commentId string, videoId string, userId string) (int, string)
+	CommentPublish(targetId string, userId string, content string, targetType string) (int, string)
+	CommentList(targetId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool)
+	CommentDelete(commentId string, target string, userId string, targetType string) (int, string)
 }
 
 type CommentHandler struct {
@@ -24,6 +24,7 @@ func NewCommentHandler(service CommentSever) *CommentHandler {
 		service: service,
 	}
 }
+
 func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestContext) {
 	var comment dto.Comment
 	err := c.Bind(&comment)
@@ -40,22 +41,23 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 			Code: consts.CodeCommentError,
 			Msg:  "CommentPublish userId exists error",
 		}})
-		log.Fatalf("CommentPublish userId exists error: %v", err)
+		log.Println("CommentPublish userId exists error: %v", err)
 		return
 	}
 	comment.UserId = userId.(string)
-	code, msg := h.service.CommentPublish(comment.VideoId, comment.UserId, comment.Content)
+	code, msg := h.service.CommentPublish(comment.TargetId, comment.UserId, comment.Content, comment.TargetType)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,
 	}})
 
 }
+
 func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext) {
-	videoId := c.Query("video_id")
+	targetId := c.Query("target_id")
 	pageSize := c.Query("page_size")
 	pageNum := c.Query("page_num")
-	code, msg, comments, ok := h.service.CommentList(videoId, pageSize, pageNum)
+	code, msg, comments, ok := h.service.CommentList(targetId, pageSize, pageNum)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: code,
@@ -74,8 +76,9 @@ func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext)
 }
 
 func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContext) {
-	videoId := c.PostForm("video_id")
 	commentId := c.PostForm("comment_id")
+	targetType := c.PostForm("target_type")
+	targetId := c.PostForm("target_id")
 	userId, exist := c.Get("user_id")
 	if !exist {
 		c.JSON(200, dto.Response{Base: dto.Base{
@@ -83,7 +86,7 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 			Msg:  "commentDelete Get userId error",
 		}})
 	}
-	code, msg := h.service.CommentDelete(commentId, videoId, userId.(string))
+	code, msg := h.service.CommentDelete(commentId, targetId, userId.(string), targetType)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,
