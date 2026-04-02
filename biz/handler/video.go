@@ -15,6 +15,7 @@ type VideoSever interface {
 	VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool)
 	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool)
 	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool)
+	VideoStream() (int, string, []dto.Video)
 }
 type VideoHandler struct {
 	videoService VideoSever
@@ -49,6 +50,7 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 	code, msg := h.videoService.VideoPublish(video, data, ctx)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
+
 func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	pageSize := c.Query("page_size")
@@ -63,6 +65,7 @@ func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
 		Total: len(video),
 	}})
 }
+
 func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 	keywords := c.PostForm("keywords")
 	pageSize := c.PostForm("page_size")
@@ -77,6 +80,7 @@ func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 		Total: len(video),
 	}})
 }
+
 func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) {
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
@@ -86,4 +90,9 @@ func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) 
 		return
 	}
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: videos})
+}
+
+func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
+	code, msg, video := h.videoService.VideoStream()
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{Items: video, Total: len(video)}})
 }

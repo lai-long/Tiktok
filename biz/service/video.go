@@ -26,6 +26,7 @@ type VideoDatabase interface {
 	GetVideoByUserID(userId string, pageSize int, pageNum int) ([]entity.VideoEntity, error)
 	GetVideoByKeyWord(keyword string, pageNum int, pageSize int) ([]entity.VideoEntity, error)
 	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
+	GetVideoStream() ([]entity.VideoEntity, error)
 }
 type VideoService struct {
 	videoDb    VideoDatabase
@@ -181,4 +182,24 @@ func (s *VideoService) VideoPopular(ctx context.Context, pageNum string, pageSiz
 		videoDTOs[i].VisitCount = int64(videoEntity[i].VisitCount)
 	}
 	return consts.CodeSuccess, "success", videoDTOs, true
+}
+
+func (s *VideoService) VideoStream() (int, string, []dto.Video) {
+	videoEntity, err := s.videoDb.GetVideoStream()
+	if err != nil {
+		log.Printf("videoDb.GetVideoStream err: %v", err)
+		return consts.CodeDBSelectError, "videoDb.GetVideoStream err", nil
+	}
+	video := make([]dto.Video, len(videoEntity))
+	for i, v := range videoEntity {
+		video[i].CreatedAt = v.CreatedAt
+		video[i].UpdatedAt = v.UpdatedAt
+		video[i].VideoURL = v.VideoURL
+		video[i].CoverURL = v.CoverURL
+		video[i].Title = v.Title
+		video[i].Description = v.Description
+		video[i].LikeCount = int64(v.LikeCount)
+		video[i].CommentCount = int64(v.CommentCount)
+	}
+	return consts.CodeSuccess, "success", video
 }
