@@ -1,6 +1,5 @@
-
 syntax="proto3";
-package websocket;
+package chat;
 option go_package="chat";
 import "api.proto";
 import "common.proto";

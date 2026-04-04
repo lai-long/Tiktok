@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/common"
+	"Tiktok/biz/model/mfa"
 	"Tiktok/pkg/consts"
 	"context"
 
@@ -17,60 +18,64 @@ type MfaServer interface {
 func (h *UserHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Base{
+		c.JSON(200, mfa.MfaQrcodeResp{Base: &common.Base{
 			Code: consts.CodeError,
-			Msg:  "GET USER ID not found",
-		})
+			Msg:  "mfa qrcode get user name err",
+		}})
 		return
 	}
 	userName, ok := ctx.Value("username").(string)
 	if !ok {
-		c.JSON(200, dto.Base{
-			Code: consts.CodeError,
-			Msg:  "GET USER USERNAME not found",
+		c.JSON(200, mfa.MfaQrcodeResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "GET USER USERNAME not found",
+			},
 		})
 		return
 	}
-	ok, key, secret, code, msg := h.MfaServer.GenerateMfa(userName, userId)
-	if !ok {
-		c.JSON(200, dto.Base{
-			Code: code,
-			Msg:  msg,
-		})
-		return
-	}
-	c.JSON(200, dto.Response{
-		Base: dto.Base{
-			Code: code,
+	_, key, secret, code, msg := h.MfaServer.GenerateMfa(userName, userId)
+	c.JSON(200, mfa.MfaQrcodeResp{
+		Base: &common.Base{
+			Code: int32(code),
 			Msg:  msg,
 		},
-		Data: map[string]string{
-			"secret": secret,
-			"qrcode": key,
+		Data: &mfa.MfaData{
+			Secret: secret,
+			Qrcode: key,
 		},
 	})
 }
 func (h *UserHandler) MfaBind(ctx context.Context, c *app.RequestContext) {
-	mfaCode := c.PostForm("code")
-	secret := c.PostForm("secret")
-	if secret != "" {
-		h.MfaServer.MfaBindBySecret(mfaCode, secret)
-		c.JSON(200, dto.Base{
+	req := new(mfa.MfaBindReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		c.JSON(200, mfa.MfaBindResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "mfa BindAndValidate err",
+		}})
+		return
+	}
+	if req.Secret != "" {
+		h.MfaServer.MfaBindBySecret(req.Code, req.Secret)
+		c.JSON(200, mfa.MfaBindResp{Base: &common.Base{
 			Code: consts.CodeSuccess,
-			Msg:  "mfa bind success",
-		})
+			Msg:  "mfa BindBySecret success",
+		}})
 		return
 	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Base{
+		c.JSON(200, mfa.MfaBindResp{Base: &common.Base{
 			Code: consts.CodeError,
-			Msg:  "GET USER ID not found",
-		})
+			Msg:  "mfa BindBySecret get user id err",
+		}})
 	}
-	code, msg := h.MfaServer.MfaBindByCode(mfaCode, userId)
-	c.JSON(200, dto.Base{
-		Code: code,
-		Msg:  msg,
+	code, msg := h.MfaServer.MfaBindByCode(req.Code, userId)
+	c.JSON(200, mfa.MfaBindResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
 	})
 }

@@ -1,0 +1,24 @@
+syntax="proto3";
+package mfa;
+option go_package="mfa";
+import "api.proto";
+import "common.proto";
+
+message MfaData{
+  string Secret=1[(api.go_tag)="json:\"secret\""];
+  string Qrcode=2[(api.go_tag)="json:\"qrcode\""];
+}
+
+message MfaQrcodeReq{}
+message MfaQrcodeResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  MfaData Data=2[(api.go_tag)="json:\"data\""];
+}
+
+message MfaBindReq{
+  string Code=1[(api.body)="code"];
+  string Secret=2[(api.body)="secret"];
+}
+message MfaBindResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+}

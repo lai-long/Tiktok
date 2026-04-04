@@ -1,6 +1,6 @@
 
 syntax="proto3";
-package comment;
+package react;
 option go_package="react";
 import "api.proto";
 import "common.proto";
