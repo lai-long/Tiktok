@@ -17,7 +17,7 @@ type VideoSever interface {
 	VideoList(userId string, pageSize int64, pageNum int64) (int, string, []*video.VideoInfo, bool)
 	VideoSearch(keyword string, pageNun, pageSize int64) (int, string, []*video.VideoInfo, bool)
 	VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int, string, []*video.VideoInfo, bool)
-	VideoStream() (int, string, []video.VideoInfo)
+	VideoStream() (int, string, []*video.VideoInfo)
 }
 type VideoHandler struct {
 	videoService VideoSever
@@ -138,6 +138,6 @@ func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) 
 }
 
 func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
-	code, msg, video := h.videoService.VideoStream()
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{Items: video, Total: len(video)}})
+	code, msg, videoInfos := h.videoService.VideoStream()
+	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{Items: videoInfos, Total: len(videoInfos)}})
 }

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/react"
 	"Tiktok/pkg/consts"
 	"context"
@@ -94,9 +93,9 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{
-			Code: consts.CodeCommentError,
-			Msg:  "commentDelete Get userId error",
+		c.JSON(200, react.CommentDeleteResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "ctx.Value err",
 		}})
 	}
 	code, msg := h.service.CommentDelete(commentDeleteReq.CommentId, commentDeleteReq.TargetAt, userId, commentDeleteReq.TargetType)
