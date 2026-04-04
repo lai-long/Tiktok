@@ -120,16 +120,14 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 
 func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 	refreshToken := c.PostForm("refresh_token")
-	code, msg, reToken, acToken, ok := h.userService.RefreshToken(ctx, refreshToken)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
-	}
-	c.JSON(200, dto.LoginResponse{
-		Response: dto.Response{
-			Base: dto.Base{Code: code, Msg: msg},
+	code, msg, reToken, acToken, _ := h.userService.RefreshToken(ctx, refreshToken)
+	resp := &user.RefreshTokenResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
 		},
 		RefreshToken: reToken,
 		AccessToken:  acToken,
-	})
+	}
+	c.JSON(200, resp)
 }

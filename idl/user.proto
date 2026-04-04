@@ -48,3 +48,12 @@ message UserAvatarResp{
    common.Base Base=1[(api.go_tag)="json:\"base\""];
    UserInfo data=2[(api.go_tag)="json:\"data\""];
 }
+
+message RefreshTokenReq{
+   string RefreshToken=1[(api.body)="refresh_token"];
+}
+message RefreshTokenResp{
+   common.Base Base=1[(api.go_tag)="json:\"base\""];
+   string RefreshToken=2[(api.go_tag)="json:\"refresh_token\""];
+   string AccessToken=3[(api.go_tag)="json:\"access_token\""];
+}
