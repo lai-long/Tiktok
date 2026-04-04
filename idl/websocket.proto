@@ -1,8 +1,8 @@
-
 syntax="proto3";
-package websocket;
-option go_package="/biz/model/dto";
+package chat;
+option go_package="chat";
 import "api.proto";
+import "common.proto";
 message SendMsg{
   string Type=1[(api.go_tag)="json:\"type\""];
   string Content=2[(api.go_tag)="json:\"content\""];
@@ -14,4 +14,14 @@ message ReplyMsg{
   string From=1 [(api.go_tag)="json:\"from\""];
   int32 Code=2  [(api.go_tag)="json:\"code\""];
   string Content=3[(api.go_tag)="json:\"content\""];
+}
+
+message WebsocketReq{
+  string ToUserId=1[(api.body)="to_user_id"];
+  string GroupId=2[(api.body)="group_id"];
+  int64 PageNum=3[(api.body)="page_num"];
+  int64 PageSize=4[(api.body)="page_size"];
+}
+message WebsocketResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
 }

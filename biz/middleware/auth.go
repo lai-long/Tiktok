@@ -1,7 +1,8 @@
 package middleware
 
 import (
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/common"
+	"Tiktok/biz/model/user"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"context"
@@ -13,26 +14,22 @@ import (
 )
 
 func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
-	authHeader := c.Request.Header.Get("Access-Token")
-	log.Printf("%v", authHeader)
-	if authHeader == "" {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeTokenError,
-				Msg:  "get tokenHeader failed",
-			},
-		})
+	req := new(user.AuthReq)
+	err := c.BindAndValidate(req)
+	if req.AccessToken == "" {
+		c.JSON(200, user.AuthResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "AccessToken 为空",
+		}})
 		c.Abort()
 		return
 	}
-	tokenString := strings.TrimSpace(authHeader)
+	tokenString := strings.TrimSpace(req.AccessToken)
 	if tokenString == "" {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeTokenError,
-				Msg:  "get tokenString failed",
-			},
-		})
+		c.JSON(200, user.AuthResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "tokenString TrimSpace error",
+		}})
 		c.Abort()
 		return
 	}
@@ -45,28 +42,24 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	})
 	if err != nil {
 		log.Printf("JWT parse error: %v", err)
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeTokenError,
-				Msg:  "token ParseWithClaims failed",
-			},
-		})
+		c.JSON(200, user.AuthResp{Base: &common.Base{
+			Code: consts.CodeTokenError,
+			Msg:  "JWT parse error",
+		}})
 		c.Abort()
 		return
 	}
 	if !token.Valid {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeTokenError,
-				Msg:  "token invalid",
-			},
-		})
+		c.JSON(200, user.AuthResp{Base: &common.Base{
+			Code: consts.CodeTokenError,
+			Msg:  "JWT Valid error",
+		}})
 		c.Abort()
 		return
 	}
-	username, _ := (*claims)["username"].(string)
 	userid, _ := (*claims)["userid"].(string)
-	c.Set("username", username)
-	c.Set("user_id", userid)
-	c.Next(ctx)
+	username, _ := (*claims)["username"].(string)
+	newCtx := context.WithValue(ctx, "user_id", userid)
+	newCtx = context.WithValue(newCtx, "username", username)
+	c.Next(newCtx)
 }

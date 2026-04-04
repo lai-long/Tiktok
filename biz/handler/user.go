@@ -1,21 +1,23 @@
 package handler
 
 import (
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/common"
+	"Tiktok/biz/model/user"
+	"mime/multipart"
+
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
-	"mime/multipart"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
 type UserSever interface {
-	Register(userinfo dto.User) (int, string)
-	Login(userDto dto.User, mfaCode string, ctx context.Context) (int, string, dto.User, string, string)
-	UserInfo(userId string) (dto.User, int, string, bool)
-	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
+	Register(registerReq *user.RegisterReq) (int, string)
+	Login(username, password, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string)
+	UserInfo(userId string) (*user.UserInfo, int, string, bool)
+	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int, string, bool, *user.UserInfo)
 	RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool)
 }
 type UserHandler struct {
@@ -30,79 +32,107 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
-	var userinfo dto.User
+	registerReq := new(user.RegisterReq)
 	var err error
-	if err = c.BindAndValidate(&userinfo); err != nil {
+	if err = c.BindAndValidate(registerReq); err != nil {
 		log.Println("UserRegister.BindAndValidate error:", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserRegister BindAndValidate error"}})
+		c.JSON(200, user.RegisterResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "UserRegister BindAndValidate error",
+		}})
 		c.Abort()
 		return
 	}
-	code, msg := h.userService.Register(userinfo)
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+	code, msg := h.userService.Register(registerReq)
+	RegisterResp := &user.RegisterResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+	}
+	c.JSON(200, RegisterResp)
 }
 
 func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
-	var userDto dto.User
-	if err := c.BindAndValidate(&userDto); err != nil {
+	loginReq := new(user.LoginReq)
+	if err := c.BindAndValidate(loginReq); err != nil {
 		log.Println("UserLogin.bindAndValidate error:", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserLogin BindAndValidate error"}})
+		loginResp := &user.LoginResp{
+			Base: &common.Base{
+				Code: consts.CodeUserError,
+				Msg:  "UserLogin.bindAndValidate error",
+			},
+		}
+		c.JSON(200, loginResp)
 		c.Abort()
 		return
 	}
-	mfcCode := c.PostForm("code")
-	code, msg, user, reToken, acToken := h.userService.Login(userDto, mfcCode, ctx)
-	res := dto.LoginResponse{
-		Response: dto.Response{
-			Base: dto.Base{
-				Code: code,
-				Msg:  msg,
-			},
-			Data: user,
+	code, msg, userInfo, reToken, acToken := h.userService.Login(loginReq.UserName, loginReq.Password, loginReq.Code, ctx)
+	loginResp := &user.LoginResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
 		},
+		Data:         userInfo,
 		AccessToken:  acToken,
 		RefreshToken: reToken,
 	}
-
-	c.JSON(200, res)
+	c.JSON(200, loginResp)
 }
 
 func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
-	userId := c.Query("user_id")
-	user, code, msg, ok := h.userService.UserInfo(userId)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		c.Abort()
-		return
+	userInfoReq := new(user.UserInfoReq)
+	err := c.BindAndValidate(userInfoReq)
+	if err != nil {
+		log.Println("UserInfoReq.bindAndValidate error:", err)
+		c.JSON(200, map[string]interface{}{
+			"code": consts.CodeUserError,
+			"msg":  "UserInfoReq.bindAndValidate error",
+		})
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: 10000, Msg: "success"}, Data: user})
+	userInfo, code, msg, _ := h.userService.UserInfo(userInfoReq.UserId)
+	userInfoResp := &user.UserInfoResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: userInfo,
+	}
+	c.JSON(200, userInfoResp)
 }
 
 func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
-	data, _ := c.FormFile("data")
-	userId, exist := c.Get("user_id")
-	if !exist {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
+	userAvatarReq, err := c.FormFile("data")
+	if err != nil {
 	}
-	code, msg, ok, user := h.userService.UserAvatar(data, userId)
+	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
+		c.JSON(200, user.UserAvatarResp{Base: &common.Base{
+			Code: consts.CodeUserError,
+			Msg:  "UserAvatar ctx.Value error",
+		}})
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: user})
+	code, msg, _, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
+	resp := &user.UserAvatarResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: userInfo,
+	}
+	c.JSON(200, resp)
 }
+
 func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 	refreshToken := c.PostForm("refresh_token")
-	code, msg, reToken, acToken, ok := h.userService.RefreshToken(ctx, refreshToken)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
-	}
-	c.JSON(200, dto.LoginResponse{
-		Response: dto.Response{
-			Base: dto.Base{Code: code, Msg: msg},
+	code, msg, reToken, acToken, _ := h.userService.RefreshToken(ctx, refreshToken)
+	resp := &user.RefreshTokenResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
 		},
 		RefreshToken: reToken,
 		AccessToken:  acToken,
-	})
+	}
+	c.JSON(200, resp)
 }

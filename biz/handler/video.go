@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/common"
+	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
@@ -11,10 +12,11 @@ import (
 )
 
 type VideoSever interface {
-	VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string)
-	VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool)
-	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool)
-	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool)
+	VideoPublish(video *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string)
+	VideoList(userId string, pageSize int64, pageNum int64) (int, string, []*video.VideoInfo, bool)
+	VideoSearch(keyword string, pageNun, pageSize int64) (int, string, []*video.VideoInfo, bool)
+	VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int, string, []*video.VideoInfo, bool)
+	VideoStream() (int, string, []*video.VideoInfo)
 }
 type VideoHandler struct {
 	videoService VideoSever
@@ -25,65 +27,130 @@ func NewVideoHandler(videoService VideoSever) *VideoHandler {
 }
 
 func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) {
-	var video dto.Video
-	if err := c.Bind(&video); err != nil {
+	req := new(video.VideoPublishReq)
+	if err := c.BindAndValidate(req); err != nil {
 		log.Printf("c.Bind: %v", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish Bind Error"}})
+		c.JSON(200, video.VideoPublishResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoPublish BindAndValidate error",
+			},
+		})
 		return
 	}
 	data, err := c.FormFile("data")
 	if err != nil {
 		log.Printf("c.FormFile: %v", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish FormFile Error"}})
+		c.JSON(200, video.VideoPublishResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoPublish FormFile error",
+			},
+		})
 	}
-	userId, exist := c.Get("user_id")
-	if !exist {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
+	userId, ok := c.Value("user_id").(string)
+	if !ok {
+		c.JSON(200, video.VideoPublishResp{
+			Base: &common.Base{
 				Code: consts.CodeVideoError,
 				Msg:  "VideoPublish Get User Error",
 			},
 		})
 	}
-	video.UserID = userId.(string)
-	code, msg := h.videoService.VideoPublish(video, data, ctx)
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+	videoInfo := &video.VideoInfo{
+		UserID:      userId,
+		Title:       req.Title,
+		Description: req.Description,
+	}
+	code, msg := h.videoService.VideoPublish(videoInfo, data, ctx)
+	c.JSON(200, video.VideoPublishResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+	})
 }
+
 func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
-	userId := c.Query("user_id")
-	pageSize := c.Query("page_size")
-	pageNum := c.Query("page_num")
-	code, msg, video, ok := h.videoService.VideoList(userId, pageSize, pageNum)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
+	req := new(video.VideoListReq)
+	if err := c.BindAndValidate(req); err != nil {
+		log.Printf("c.Bind err: %v", err)
+		c.JSON(200, video.VideoListResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoList BindAndValidate error",
+			},
+		})
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{
-		Items: video,
-		Total: len(video),
-	}})
+	code, msg, videoInfos, _ := h.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
+	c.JSON(200, video.VideoListResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: &video.VideoData{
+			Items: videoInfos,
+			Total: int64(len(videoInfos)),
+		},
+	})
 }
+
 func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
-	keywords := c.PostForm("keywords")
-	pageSize := c.PostForm("page_size")
-	pageNum := c.PostForm("page_num")
-	code, msg, video, ok := h.videoService.VideoSearch(keywords, pageNum, pageSize)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
+	req := new(video.VideoSearchReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(200, video.VideoSearchResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoSearch BindAndValidate error",
+			},
+		})
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{
-		Items: video,
-		Total: len(video),
-	}})
+	code, msg, videoInfos, _ := h.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
+	c.JSON(200, video.VideoSearchResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: &video.VideoData{
+			Items: videoInfos,
+			Total: int64(len(videoInfos)),
+		},
+	})
 }
+
 func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) {
-	pageNum := c.Query("page_num")
-	pageSize := c.Query("page_size")
-	code, msg, videos, ok := h.videoService.VideoPopular(ctx, pageNum, pageSize)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
+	req := new(video.VideoHotReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(200, video.VideoHotResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoPopular BindAndValidate error",
+			},
+		})
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: videos})
+	code, msg, videoInfos, _ := h.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
+	c.JSON(200, video.VideoHotResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: &video.VideoData{
+			Items: videoInfos,
+			Total: int64(len(videoInfos)),
+		},
+	})
+}
+
+func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
+	code, msg, videoInfos := h.videoService.VideoStream()
+	c.JSON(200, video.VideoStreamResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: &video.VideoData{
+			Items: videoInfos,
+			Total: int64(len(videoInfos)),
+		},
+	})
 }

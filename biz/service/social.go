@@ -1,19 +1,18 @@
 package service
 
 import (
-	"Tiktok/biz/model/dto"
-	"Tiktok/biz/model/entity"
+	"Tiktok/biz/entity"
+	"Tiktok/biz/model/user"
 	"Tiktok/pkg/consts"
 	"log"
-	"strconv"
 )
 
 type SocialDatabase interface {
 	CreateFollowing(userId string, toUserId string) error
 	DeleteFollowing(userId string, toUserId string) error
-	FollowingList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, error)
-	FollowerList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, error)
-	FriendList(userId string, pageNum int, pageSize int) ([]entity.UserEntity, bool)
+	FollowingList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
+	FollowerList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
+	FriendList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, bool)
 }
 type SocialService struct {
 	social SocialDatabase
@@ -44,79 +43,62 @@ func (s *SocialService) RelationAction(toUserId string, actionType string, userI
 	}
 	return consts.CodeRelationError, "RelationAction actionType error"
 }
-func (s *SocialService) FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
-	pageNumInt := 0
-	pageSizeInt := 10
-	pageNumInt, err := strconv.Atoi(pageNum)
-	if err != nil {
-		return consts.CodeError, "FollowingList PageNum strconv error", []dto.User{}, false
-	}
-	pageSizeInt, err = strconv.Atoi(pageSize)
-	if err != nil {
-		return consts.CodeError, "FollowingList PageSize strconv error", []dto.User{}, false
-	}
-	followings, err := s.social.FollowingList(userId, pageNumInt, pageSizeInt)
+
+func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool) {
+	followings, err := s.social.FollowingList(userId, pageNum, pageSize)
 	if err != nil {
 		log.Println(err)
-		return consts.CodeDBSelectError, "FollowingList  db.FollowingIdList error", []dto.User{}, false
+		return consts.CodeDBSelectError, "FollowingList  db.FollowingIdList error", nil, false
 	}
-	dtoFollowings := make([]dto.User, len(followings))
-	for i := 0; i < len(dtoFollowings); i++ {
-		dtoFollowings[i].ID = followings[i].Id
-		dtoFollowings[i].Username = followings[i].Username
-		dtoFollowings[i].AvatarURL = followings[i].Avatar_url
+	userInfos := []*user.UserInfo{}
+	for i := 0; i < len(followings); i++ {
+		userInfos = append(userInfos,
+			&user.UserInfo{
+				ID:        followings[i].Id,
+				Username:  followings[i].Username,
+				AvatarURL: followings[i].Avatar_url,
+				CreatedAt: followings[i].Created_at.String(),
+				UpdatedAt: followings[i].Created_at.String(),
+			})
 	}
-	return consts.CodeSuccess, "FollowingList success", dtoFollowings, true
+	return consts.CodeSuccess, "FollowingList success", userInfos, true
 }
-func (s *SocialService) FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
-	pageNumInt := 0
-	pageSizeInt := 10
-	pageNumInt, err := strconv.Atoi(pageNum)
-	if err != nil {
-		log.Printf("FollowerList PageNum strconv error: %v", err)
-		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
-	}
-	pageSizeInt, err = strconv.Atoi(pageSize)
-	if err != nil {
-		log.Printf("FollowerList PageSize strconv error: %v", err)
-		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
-	}
-	followers, err := s.social.FollowerList(userId, pageNumInt, pageSizeInt)
+
+func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool) {
+	followers, err := s.social.FollowerList(userId, pageNum, pageSize)
 	if err != nil {
 		log.Printf("FollowerList db.FollowerIdList error: %v", err)
-		return consts.CodeDBSelectError, "FollowerList db.FollowerIdList error", []dto.User{}, false
+		return consts.CodeDBSelectError, "FollowerList db.FollowerIdList error", nil, false
 	}
-
-	dtoFollowers := make([]dto.User, len(followers))
+	userInfos := []*user.UserInfo{}
 	for i := 0; i < len(followers); i++ {
-		dtoFollowers[i].ID = followers[i].Id
-		dtoFollowers[i].Username = followers[i].Username
-		dtoFollowers[i].AvatarURL = followers[i].Avatar_url
+		userInfos = append(userInfos,
+			&user.UserInfo{
+				ID:        followers[i].Id,
+				Username:  followers[i].Username,
+				AvatarURL: followers[i].Avatar_url,
+				CreatedAt: followers[i].Created_at.String(),
+				UpdatedAt: followers[i].Created_at.String(),
+			})
 	}
-	return consts.CodeSuccess, "FollowerList success", dtoFollowers, true
+	return consts.CodeSuccess, "FollowerList success", userInfos, true
 }
-func (s *SocialService) FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool) {
-	pageNumInt := 0
-	pageSizeInt := 10
-	pageNumInt, err := strconv.Atoi(pageNum)
-	if err != nil {
-		log.Printf("FriendList PageNum strconv error: %v", err)
-		return consts.CodeError, "FollowerList PageNum strconv error", []dto.User{}, false
-	}
-	pageSizeInt, err = strconv.Atoi(pageSize)
-	if err != nil {
-		log.Printf("FriendList PageSize strconv error: %v", err)
-		return consts.CodeError, "FollowerList PageSize strconv error", []dto.User{}, false
-	}
-	entityFriend, ok := s.social.FriendList(userId, pageNumInt, pageSizeInt)
+
+func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool) {
+	entityFriend, ok := s.social.FriendList(userId, pageNum, pageSize)
 	if !ok {
-		return consts.CodeDBSelectError, "FriendList db.FriendList error", []dto.User{}, false
+		return consts.CodeDBSelectError, "FriendList db.FriendList error", nil, false
 	}
-	friends := make([]dto.User, len(entityFriend))
+	userInfos := []*user.UserInfo{}
 	for i, _ := range entityFriend {
-		friends[i].Username = entityFriend[i].Username
-		friends[i].AvatarURL = entityFriend[i].Avatar_url
-		friends[i].ID = entityFriend[i].Id
+		userInfos = append(userInfos,
+			&user.UserInfo{
+				ID:        entityFriend[i].Id,
+				Username:  entityFriend[i].Username,
+				AvatarURL: entityFriend[i].Avatar_url,
+				CreatedAt: entityFriend[i].Created_at.String(),
+				UpdatedAt: entityFriend[i].Created_at.String(),
+			})
 	}
-	return consts.CodeSuccess, "FollowerList success", friends, true
+	return consts.CodeSuccess, "FollowerList success", userInfos, true
 }

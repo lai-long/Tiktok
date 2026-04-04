@@ -3,7 +3,8 @@ package handler
 import (
 	"Tiktok/biz/cache"
 	"Tiktok/biz/dao"
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/chat"
+	"Tiktok/biz/model/common"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
@@ -27,19 +28,24 @@ func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis) *WebsocketSever {
 	}
 }
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid, exist := c.Get("user_id")
-	if !exist {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeError,
-				Msg:  "WebSocketHandler userid not found",
-			},
-		})
+	userid, ok := ctx.Value("user_id").(string)
+	if !ok {
+		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "WebSocketHandler userid not found",
+		}})
 		return
 	}
-	uid := userid.(string)
-	toUserId := c.Query("to_userid")
-	groupId := c.Query("group_id")
+	uid := userid
+	req := new(chat.WebsocketReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "c.BindAndValidate(req) error",
+		}})
+	}
+
 	stdHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := (&websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -51,9 +57,9 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			return
 		}
 		client := &service.Client{
-			ID:      utils.CreateId(uid, toUserId),
-			SendID:  utils.CreateId(toUserId, uid),
-			GroupId: groupId,
+			ID:      utils.CreateId(uid, req.ToUserId),
+			SendID:  utils.CreateId(req.ToUserId, uid),
+			GroupId: req.GroupId,
 			Socket:  conn,
 			Send:    make(chan []byte, 128),
 		}

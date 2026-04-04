@@ -1,8 +1,9 @@
 package service
 
 import (
-	"Tiktok/biz/model/dto"
-	"Tiktok/biz/model/entity"
+	"Tiktok/biz/entity"
+
+	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
 	"log"
 	"strconv"
@@ -35,6 +36,7 @@ func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabas
 		likeDb:    likeDb,
 	}
 }
+
 func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int, string) {
 	//target type 1视频 2评论
 	if targetType == "1" {
@@ -92,41 +94,42 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 	}
 	return consts.CodeLikeError, "CommentLikeAction target type num error"
 }
-func (s *LikeService) LikeList(userId string, pageNum string, pageSize string) (int, string, []dto.Video, bool) {
+
+func (s *LikeService) LikeList(userId string, pageNum string, pageSize string) (int, string, []*video.VideoInfo, bool) {
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
 		log.Printf("LikeList pageNum strconv error : %v", err)
-		return consts.CodeError, "LikeList pageNum strconv error", []dto.Video{}, false
+		return consts.CodeError, "LikeList pageNum strconv error", nil, false
 	}
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("LikeList pageSize strconv error : %v", err)
-		return consts.CodeError, "LikeList pageSize strconv error", []dto.Video{}, false
+		return consts.CodeError, "LikeList pageSize strconv error", nil, false
 	}
 	err, videoId := s.videoDb.LikeVideoIds(userId, pageNumInt, pageSizeInt)
 	if err != nil {
 		log.Printf("LikeList err : %v", err)
-		return consts.CodeDBSelectError, "LikeList db.LikeVideoIds error", []dto.Video{}, false
+		return consts.CodeDBSelectError, "LikeList db.LikeVideoIds error", nil, false
 	}
 	ok, videos := s.videoDb.LikeVideos(videoId)
 	if !ok {
-		return consts.CodeDBSelectError, "LikeList db.LikeVideos error", []dto.Video{}, false
+		return consts.CodeDBSelectError, "LikeList db.LikeVideos error", nil, false
 	}
-	videoDTOs := make([]dto.Video, len(videos))
-	for i, video := range videos {
-		videoDTOs[i] = dto.Video{
-			ID:           video.ID,
-			UserID:       video.UserID,
-			Title:        video.Title,
-			Description:  video.Description,
-			CommentCount: int64(video.CommentCount),
-			CoverURL:     video.CoverURL,
-			CreatedAt:    video.CreatedAt,
-			LikeCount:    int64(video.LikeCount),
-			UpdatedAt:    video.UpdatedAt,
-			VideoURL:     video.VideoURL,
-			VisitCount:   int64(video.VisitCount),
-		}
+	var videoInfos []*video.VideoInfo
+	for _, v := range videos {
+		videoInfos = append(videoInfos, &video.VideoInfo{
+			ID:           v.ID,
+			UserID:       v.UserID,
+			Title:        v.Title,
+			Description:  v.Description,
+			CommentCount: int64(v.CommentCount),
+			CoverURL:     v.CoverURL,
+			CreatedAt:    v.CreatedAt,
+			LikeCount:    int64(v.LikeCount),
+			UpdatedAt:    v.UpdatedAt,
+			VideoURL:     v.VideoURL,
+			VisitCount:   int64(v.VisitCount),
+		})
 	}
-	return consts.CodeSuccess, "LikeList success", videoDTOs, true
+	return consts.CodeSuccess, "LikeList success", videoInfos, true
 }

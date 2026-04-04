@@ -1,8 +1,8 @@
 package service
 
 import (
-	"Tiktok/biz/model/dto"
-	"Tiktok/biz/model/entity"
+	"Tiktok/biz/entity"
+	"Tiktok/biz/model/react"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"log"
@@ -54,31 +54,33 @@ func (s *CommentService) CommentPublish(targetId, userId, content, targetType st
 	return consts.CodeDBCreateError, "CommentPublish CreateComment error"
 }
 
-func (s *CommentService) CommentList(targetId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool) {
+func (s *CommentService) CommentList(targetId string, pageSize string, pageNum string) (int, string, []*react.CommentInfo, bool) {
 	pageNumInt := 0
 	pageSizeInt := 10
 	pageNumInt, err := strconv.Atoi(pageNum)
 	if err != nil {
 		log.Printf("pageNumInt, err := strconv.Atoi(pageNum) error: %v", err)
-		return consts.CodeError, "CommentList pageNumInt strconv error", []dto.Comment{}, false
+		return consts.CodeError, "CommentList pageNumInt strconv error", nil, false
 	}
 	pageSizeInt, err = strconv.Atoi(pageSize)
 	if err != nil {
 		log.Printf("pageSizeInt, err := strconv.Atoi(pageSize) error: %v", err)
-		return consts.CodeError, "CommentList pageSize strconv error", []dto.Comment{}, false
+		return consts.CodeError, "CommentList pageSize strconv error", nil, false
 	}
 	err, commentEntity := s.db.GetComments(targetId, pageNumInt, pageSizeInt)
 	if err != nil {
 		log.Printf("db GetComments err: %v", err)
-		return consts.CodeDBSelectError, "service CommentList GetComments error", []dto.Comment{}, false
+		return consts.CodeDBSelectError, "service CommentList GetComments error", nil, false
 	}
-	comments := make([]dto.Comment, len(commentEntity))
-	for i := range commentEntity {
-		comments[i].CommentId = commentEntity[i].CommentId
-		comments[i].UserId = commentEntity[i].UserId
-		comments[i].Content = commentEntity[i].Content
-		comments[i].TargetId = commentEntity[i].TargetId
-		comments[i].CreatedAt = commentEntity[i].CreatedAt
+	var comments []*react.CommentInfo
+	for i, _ := range commentEntity {
+		comments = append(comments, &react.CommentInfo{
+			CommentId: commentEntity[i].CommentId,
+			UserId:    commentEntity[i].UserId,
+			Content:   commentEntity[i].Content,
+			TargetId:  commentEntity[i].TargetId,
+			CreatedAt: commentEntity[i].CreatedAt,
+		})
 	}
 	return consts.CodeSuccess, "CommentList success", comments, true
 }

@@ -35,6 +35,7 @@ func SetRouters(commentHandler *handler.CommentHandler, userHandler *handler.Use
 		video.GET("/list", videoHandler.VideoList)
 		video.POST("/search", videoHandler.VideoSearch)
 		video.GET("/popular", videoHandler.VideoPopular)
+		video.GET("/feed", videoHandler.VideoStream)
 	}
 	like := h.Group("/like")
 	like.Use(middleware.AuthMiddleware)

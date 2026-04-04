@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/user"
 	"Tiktok/pkg/config"
 	"log"
 	"mime/multipart"
@@ -41,7 +41,7 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 // jwt generate token
-func GenerateTokens(userDto dto.User) (string, string, bool) {
+func GenerateTokens(userDto *user.UserInfo) (string, string, bool) {
 	refreshTime := 288 * time.Hour
 	accessTime := 24 * time.Hour
 	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, config.Cfg.Jwt.RefreshSecret)
