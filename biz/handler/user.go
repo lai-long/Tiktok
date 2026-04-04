@@ -3,13 +3,13 @@ package handler
 import (
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/user"
+	"mime/multipart"
 
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
-	"mime/multipart"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -18,7 +18,7 @@ type UserSever interface {
 	Register(registerReq *user.RegisterReq) (int, string)
 	Login(loginReq *user.LoginReq, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string)
 	UserInfo(userInfoReq *user.UserInfoReq) (*user.UserInfo, int, string, bool)
-	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
+	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int, string, bool, *user.UserInfo)
 	RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool)
 }
 type UserHandler struct {
@@ -100,17 +100,22 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 }
 
 func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
-	data, _ := c.FormFile("data")
+	userAvatarReq, err := c.FormFile("data")
+	if err != nil {
+	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
 	}
-	code, msg, ok, user := h.userService.UserAvatar(data, userId)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
-		return
+	code, msg, _, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
+	resp := &user.UserAvatarResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: userInfo,
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: user})
+	c.JSON(200, resp)
 }
 
 func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
