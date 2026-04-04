@@ -5,7 +5,6 @@ import (
 	"Tiktok/biz/model/user"
 	"mime/multipart"
 
-	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
 	"context"
@@ -37,7 +36,10 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 	var err error
 	if err = c.BindAndValidate(registerReq); err != nil {
 		log.Println("UserRegister.BindAndValidate error:", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserRegister BindAndValidate error"}})
+		c.JSON(200, user.RegisterResp{Base: &common.Base{
+			Code: consts.CodeError,
+			Msg:  "UserRegister BindAndValidate error",
+		}})
 		c.Abort()
 		return
 	}
@@ -105,7 +107,10 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
+		c.JSON(200, user.UserAvatarResp{Base: &common.Base{
+			Code: consts.CodeUserError,
+			Msg:  "UserAvatar ctx.Value error",
+		}})
 	}
 	code, msg, _, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
 	resp := &user.UserAvatarResp{

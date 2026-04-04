@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/social"
 	"Tiktok/biz/model/user"
 	"Tiktok/pkg/consts"
@@ -14,8 +13,8 @@ import (
 type SocialSever interface {
 	RelationAction(toUserId string, actionType string, userId string) (int, string)
 	FollowingList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool)
-	FollowerList(userId string, pageNum int64, pageSize int64) (int, string, []dto.User, bool)
-	FriendList(userId string, pageNum int64, pageSize int64) (int, string, []dto.User, bool)
+	FollowerList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool)
+	FriendList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool)
 }
 type SocialHandler struct {
 	socialService SocialSever
@@ -72,67 +71,67 @@ func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext
 			Code: int32(code),
 			Msg:  msg,
 		},
-		Data: userInfos,
+		Data: &social.SocialData{
+			Items: userInfos,
+			Total: int64(len(userInfos)),
+		},
 	})
 }
 
 func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext) {
-	userId := c.Query("user_id")
-	pageNum := c.Query("page_num")
-	pageSize := c.Query("page_size")
-	code, msg, followers, ok := h.socialService.FollowerList(userId, pageNum, pageSize)
-	if !ok {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: code,
-				Msg:  msg,
+	req := new(social.FollowerListReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		c.JSON(200, social.FollowerListResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "social.FollowerListResp err",
 			},
 		})
-		return
 	}
-	c.JSON(200, dto.Response{
-		Base: dto.Base{
-			Code: code,
+	code, msg, followers, _ := h.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
+	c.JSON(200, social.FollowerListResp{
+		Base: &common.Base{
+			Code: int32(code),
 			Msg:  msg,
 		},
-		Data: dto.Data{
+		Data: &social.SocialData{
 			Items: followers,
-			Total: len(followers),
+			Total: int64(len(followers)),
 		},
 	})
 }
 
 func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
-	pageNum := c.Query("page_num")
-	pageSize := c.Query("page_size")
+	req := new(social.FriendListReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		c.JSON(200, social.FriendListResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "social.FriendListResp err",
+			},
+		})
+	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeRelationError,
-				Msg:  "FriendList userId exist not exist",
+		c.JSON(200, social.FriendListResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "social.FriendListResp err",
 			},
 		})
 		return
 	}
-	code, msg, friend, ok := h.socialService.FriendList(userId, pageNum, pageSize)
-	if !ok {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: code,
-				Msg:  msg,
-			},
-		})
-		return
-	}
-	c.JSON(200, dto.Response{
-		Base: dto.Base{
-			Code: code,
+	code, msg, friendsInfo, _ := h.socialService.FriendList(userId, req.PageNum, req.PageSize)
+	c.JSON(200, social.FriendListResp{
+		Base: &common.Base{
+			Code: int32(code),
 			Msg:  msg,
 		},
-		Data: dto.Data{
-			Items: friend,
-			Total: len(friend),
+		Data: &social.SocialData{
+			Items: friendsInfo,
+			Total: int64(len(friendsInfo)),
 		},
 	})
 }
