@@ -1,8 +1,9 @@
 package service
 
 import (
+	"Tiktok/biz/entity"
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/model/entity"
+	"Tiktok/biz/model/user"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+
 	"path/filepath"
 
 	"github.com/pquerna/otp/totp"
@@ -21,6 +23,7 @@ type UserRedis interface {
 	UserGetByRefreshToken(ctx context.Context, refreshToken string) (userId string, err error)
 	UserTokenDelete(ctx context.Context, refreshToken string) error
 }
+
 type UserDatabase interface {
 	CreateUser(user entity.UserEntity) error
 	GetUserByUsername(username string) (entity.UserEntity, error)
@@ -48,10 +51,11 @@ func (s *UserService) IsUsernameExists(username string) (bool, error) {
 	}
 	return true, nil
 }
-func (s *UserService) Register(userinfo dto.User) (int, string) {
+
+func (s *UserService) Register(userinfo *user.RegisterReq) (int, string) {
 	var userEntity entity.UserEntity
 	var err error
-	exists, err := s.IsUsernameExists(userinfo.Username)
+	exists, err := s.IsUsernameExists(userinfo.UserName)
 	if err != nil {
 		log.Println(err)
 		return consts.CodeUserError, "register  IsUsernameExists error"
@@ -60,7 +64,7 @@ func (s *UserService) Register(userinfo dto.User) (int, string) {
 		return consts.CodeUserError, "用户名已存在"
 	}
 	userEntity.Id = utils.IdGenerate()
-	userEntity.Username = userinfo.Username
+	userEntity.Username = userinfo.UserName
 	userEntity.Password, err = utils.HashPassword(userinfo.Password)
 	if err != nil {
 		log.Println(err)
@@ -73,58 +77,59 @@ func (s *UserService) Register(userinfo dto.User) (int, string) {
 	return consts.CodeSuccess, "success"
 }
 
-func (s *UserService) Login(userDto dto.User, mfaCode string, ctx context.Context) (int, string, dto.User, string, string) {
-	userEntity, err := s.userDb.GetUserByUsername(userDto.Username)
+func (s *UserService) Login(loginReq *user.LoginReq, mfaCode string, ctx context.Context) (int, string, user.UserInfo, string, string) {
+	userEntity, err := s.userDb.GetUserByUsername(loginReq.UserName)
 	if err != nil {
 		log.Println("get user entity error", err)
-		return consts.CodeUserError, "GetUserByUsername Error", dto.User{}, "", ""
+		return consts.CodeUserError, "GetUserByUsername Error", user.UserInfo{}, "", ""
 	}
-	ok := utils.CheckPasswordHash(userEntity.Password, userDto.Password)
+	ok := utils.CheckPasswordHash(userEntity.Password, loginReq.Password)
 	if !ok {
-		return consts.CodeUserError, "密码错误", dto.User{}, "", ""
+		return consts.CodeUserError, "密码错误", user.UserInfo{}, "", ""
 	}
-	userDto.AvatarURL = userEntity.Avatar_url
-	userDto.ID = userEntity.Id
-	userDto.Username = userEntity.Username
-	userDto.CreatedAt = userEntity.Created_at.String()
-	userDto.UpdatedAt = userEntity.Updated_at.String()
-	err, enable := s.mfaDb.CheckMfaBind(userDto.ID)
+	var userInfo user.UserInfo
+	userInfo.AvatarURL = userEntity.Avatar_url
+	userInfo.ID = userEntity.Id
+	userInfo.Username = userEntity.Username
+	userInfo.CreatedAt = userEntity.Created_at.String()
+	userInfo.UpdatedAt = userEntity.Updated_at.String()
+	err, enable := s.mfaDb.CheckMfaBind(userInfo.ID)
 	if err != nil {
 		log.Println(err)
-		return consts.CodeUserError, "CheckMfaBind error", dto.User{}, "", ""
+		return consts.CodeUserError, "CheckMfaBind error", user.UserInfo{}, "", ""
 	}
 	if enable != 0 {
 		if mfaCode == "" {
-			return consts.CodeMfaError, "GetMfaCode error 请输入mfa code", dto.User{}, "", ""
+			return consts.CodeMfaError, "GetMfaCode error 请输入mfa code", user.UserInfo{}, "", ""
 		}
-		mfaSecret, err := s.mfaDb.GetMfaSecret(userDto.ID)
+		mfaSecret, err := s.mfaDb.GetMfaSecret(userInfo.ID)
 		if err != nil {
 			log.Println(err)
-			return consts.CodeDBSelectError, "GetMfaSecret from db error", dto.User{}, "", ""
+			return consts.CodeDBSelectError, "GetMfaSecret from db error", user.UserInfo{}, "", ""
 		}
 		if !totp.Validate(mfaCode, mfaSecret) {
-			return consts.CodeMfaError, "totp.Validate error", dto.User{}, "", ""
+			return consts.CodeMfaError, "totp.Validate error", user.UserInfo{}, "", ""
 		}
 	}
-	reToken, acToken, ok := utils.GenerateTokens(userDto)
+	reToken, acToken, ok := utils.GenerateTokens(userInfo)
 	if ok == false {
-		return consts.CodeTokenError, "生成token错误", userDto, reToken, acToken
+		return consts.CodeTokenError, "生成token错误", userInfo, reToken, acToken
 	}
-	err = s.redis.UserTokenSet(ctx, reToken, userDto.ID)
+	err = s.redis.UserTokenSet(ctx, reToken, userInfo.ID)
 	if err != nil {
 		log.Println(err)
-		return consts.CodeUserError, "db create user refresh token error", dto.User{}, "", ""
+		return consts.CodeUserError, "db create user refresh token error", user.UserInfo{}, "", ""
 	}
-	return consts.CodeSuccess, "success", userDto, reToken, acToken
+	return consts.CodeSuccess, "success", userInfo, reToken, acToken
 }
 
-func (s *UserService) UserInfo(userId string) (dto.User, int, string, bool) {
+func (s *UserService) UserInfo(userId string) (user.UserInfo, int, string, bool) {
 	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		log.Printf("GetUserByUserIdError : %v", err)
-		return dto.User{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
+		return user.UserInfo{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
 	}
-	var user dto.User
+	var user user.UserInfo
 	user.Username = userEntity.Username
 	user.AvatarURL = userEntity.Avatar_url
 	user.ID = userEntity.Id
@@ -184,21 +189,22 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 	user.ID = userEntity.Id
 	return consts.CodeSuccess, "a change success", true, user
 }
+
 func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool) {
 	userId, err := s.redis.UserGetByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		log.Printf("redis.UserGetByRefreshToken error: %v", err)
 		return consts.CodeDBSelectError, "token 错误，s.redis.UserGetByRefreshToken err", "", "", false
 	}
-	user, err := s.userDb.GetUserByUserId(userId)
+	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		log.Printf("s.userDb.GetUserByUserIderror: %v", err)
 		return consts.CodeDBSelectError, "RefreshToken userDb.GetUserByUserId err ", "", "", false
 	}
-	var userDto dto.User
-	userDto.Username = user.Username
-	userDto.ID = user.Id
-	refreshToken2, accessToken, ok := utils.GenerateTokens(userDto)
+	var userInfo user.UserInfo
+	userInfo.Username = userEntity.Username
+	userInfo.ID = userEntity.Id
+	refreshToken2, accessToken, ok := utils.GenerateTokens(userInfo)
 	if !ok {
 		return consts.CodeUserError, "RefreshToken utils.GenerateTokens err", "", "", false
 	}
@@ -207,7 +213,7 @@ func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (in
 		log.Printf("redis.UserTokenDelete error: %v", err)
 		return consts.CodeUserError, "RefreshToken s.redis.UserTokenDelete err", "", "", false
 	}
-	err = s.redis.UserTokenSet(ctx, refreshToken2, userDto.ID)
+	err = s.redis.UserTokenSet(ctx, refreshToken2, userInfo.ID)
 	if err != nil {
 		log.Printf("redis.UserTokenSet error: %v", err)
 		return consts.CodeUserError, "RefreshToken s.redis.UserTokenSet err", "", "", false

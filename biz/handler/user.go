@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"Tiktok/biz/model/user"
+
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/service"
 	"Tiktok/pkg/consts"
@@ -12,9 +14,9 @@ import (
 )
 
 type UserSever interface {
-	Register(userinfo dto.User) (int, string)
-	Login(userDto dto.User, mfaCode string, ctx context.Context) (int, string, dto.User, string, string)
-	UserInfo(userId string) (dto.User, int, string, bool)
+	Register(registerReq *user.RegisterReq) (int, string)
+	Login(userDto *user.LoginReq, mfaCode string, ctx context.Context) (int, string, user.UserInfo, string, string)
+	UserInfo(userId string) (user.UserInfo, int, string, bool)
 	UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User)
 	RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool)
 }
@@ -30,28 +32,28 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
-	var userinfo dto.User
+	registerReq := new(user.RegisterReq)
 	var err error
-	if err = c.BindAndValidate(&userinfo); err != nil {
+	if err = c.BindAndValidate(registerReq); err != nil {
 		log.Println("UserRegister.BindAndValidate error:", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserRegister BindAndValidate error"}})
 		c.Abort()
 		return
 	}
-	code, msg := h.userService.Register(userinfo)
+	code, msg := h.userService.Register(registerReq)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
 
 func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
-	var userDto dto.User
-	if err := c.BindAndValidate(&userDto); err != nil {
+	loginReq := new(user.LoginReq)
+	if err := c.BindAndValidate(loginReq); err != nil {
 		log.Println("UserLogin.bindAndValidate error:", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "UserLogin BindAndValidate error"}})
 		c.Abort()
 		return
 	}
 	mfcCode := c.PostForm("code")
-	code, msg, user, reToken, acToken := h.userService.Login(userDto, mfcCode, ctx)
+	code, msg, user, reToken, acToken := h.userService.Login(loginReq, mfcCode, ctx)
 	res := dto.LoginResponse{
 		Response: dto.Response{
 			Base: dto.Base{
@@ -91,6 +93,7 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 	}
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: user})
 }
+
 func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 	refreshToken := c.PostForm("refresh_token")
 	code, msg, reToken, acToken, ok := h.userService.RefreshToken(ctx, refreshToken)
