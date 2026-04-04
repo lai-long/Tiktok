@@ -8,8 +8,3 @@ type Response struct {
 	Base Base        `json:"base"`
 	Data interface{} `json:"data"`
 }
-
-type Data struct {
-	Items interface{} `json:"items"`
-	Total int         `json:"total"`
-}

@@ -57,3 +57,10 @@ message RefreshTokenResp{
    string RefreshToken=2[(api.go_tag)="json:\"refresh_token\""];
    string AccessToken=3[(api.go_tag)="json:\"access_token\""];
 }
+
+message AuthReq{
+   string AccessToken=1[(api.header)="Access-Token"];
+}
+message AuthResp{
+   common.Base Base=1[(api.body)="base"];
+}

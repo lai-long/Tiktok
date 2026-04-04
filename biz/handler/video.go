@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
 	"context"
@@ -64,7 +63,12 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 		Description: req.Description,
 	}
 	code, msg := h.videoService.VideoPublish(videoInfo, data, ctx)
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
+	c.JSON(200, video.VideoPublishResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+	})
 }
 
 func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
@@ -139,5 +143,14 @@ func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) 
 
 func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
 	code, msg, videoInfos := h.videoService.VideoStream()
-	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}, Data: dto.Data{Items: videoInfos, Total: len(videoInfos)}})
+	c.JSON(200, video.VideoStreamResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: &video.VideoData{
+			Items: videoInfos,
+			Total: int64(len(videoInfos)),
+		},
+	})
 }
