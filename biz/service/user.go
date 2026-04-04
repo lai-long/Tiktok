@@ -77,15 +77,15 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int, string) {
 	return consts.CodeSuccess, "success"
 }
 
-func (s *UserService) Login(loginReq *user.LoginReq, mfaCode string, ctx context.Context) (int, string, user.UserInfo, string, string) {
+func (s *UserService) Login(loginReq *user.LoginReq, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string) {
 	userEntity, err := s.userDb.GetUserByUsername(loginReq.UserName)
 	if err != nil {
 		log.Println("get user entity error", err)
-		return consts.CodeUserError, "GetUserByUsername Error", user.UserInfo{}, "", ""
+		return consts.CodeUserError, "GetUserByUsername Error", &user.UserInfo{}, "", ""
 	}
 	ok := utils.CheckPasswordHash(userEntity.Password, loginReq.Password)
 	if !ok {
-		return consts.CodeUserError, "密码错误", user.UserInfo{}, "", ""
+		return consts.CodeUserError, "密码错误", &user.UserInfo{}, "", ""
 	}
 	var userInfo user.UserInfo
 	userInfo.AvatarURL = userEntity.Avatar_url
@@ -96,46 +96,46 @@ func (s *UserService) Login(loginReq *user.LoginReq, mfaCode string, ctx context
 	err, enable := s.mfaDb.CheckMfaBind(userInfo.ID)
 	if err != nil {
 		log.Println(err)
-		return consts.CodeUserError, "CheckMfaBind error", user.UserInfo{}, "", ""
+		return consts.CodeUserError, "CheckMfaBind error", &user.UserInfo{}, "", ""
 	}
 	if enable != 0 {
 		if mfaCode == "" {
-			return consts.CodeMfaError, "GetMfaCode error 请输入mfa code", user.UserInfo{}, "", ""
+			return consts.CodeMfaError, "GetMfaCode error 请输入mfa code", &user.UserInfo{}, "", ""
 		}
 		mfaSecret, err := s.mfaDb.GetMfaSecret(userInfo.ID)
 		if err != nil {
 			log.Println(err)
-			return consts.CodeDBSelectError, "GetMfaSecret from db error", user.UserInfo{}, "", ""
+			return consts.CodeDBSelectError, "GetMfaSecret from db error", &user.UserInfo{}, "", ""
 		}
 		if !totp.Validate(mfaCode, mfaSecret) {
-			return consts.CodeMfaError, "totp.Validate error", user.UserInfo{}, "", ""
+			return consts.CodeMfaError, "totp.Validate error", &user.UserInfo{}, "", ""
 		}
 	}
-	reToken, acToken, ok := utils.GenerateTokens(userInfo)
+	reToken, acToken, ok := utils.GenerateTokens(&userInfo)
 	if ok == false {
-		return consts.CodeTokenError, "生成token错误", userInfo, reToken, acToken
+		return consts.CodeTokenError, "生成token错误", &userInfo, reToken, acToken
 	}
 	err = s.redis.UserTokenSet(ctx, reToken, userInfo.ID)
 	if err != nil {
 		log.Println(err)
-		return consts.CodeUserError, "db create user refresh token error", user.UserInfo{}, "", ""
+		return consts.CodeUserError, "db create user refresh token error", &user.UserInfo{}, "", ""
 	}
-	return consts.CodeSuccess, "success", userInfo, reToken, acToken
+	return consts.CodeSuccess, "success", &userInfo, reToken, acToken
 }
 
-func (s *UserService) UserInfo(userId string) (user.UserInfo, int, string, bool) {
-	userEntity, err := s.userDb.GetUserByUserId(userId)
+func (s *UserService) UserInfo(userInfoReq *user.UserInfoReq) (*user.UserInfo, int, string, bool) {
+	userEntity, err := s.userDb.GetUserByUserId(userInfoReq.UserId)
 	if err != nil {
 		log.Printf("GetUserByUserIdError : %v", err)
-		return user.UserInfo{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
+		return &user.UserInfo{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
 	}
-	var user user.UserInfo
-	user.Username = userEntity.Username
-	user.AvatarURL = userEntity.Avatar_url
-	user.ID = userEntity.Id
-	user.CreatedAt = userEntity.Created_at.String()
-	user.UpdatedAt = userEntity.Updated_at.String()
-	return user, consts.CodeSuccess, "Get UserInfo success", true
+	var userInfo user.UserInfo
+	userInfo.Username = userEntity.Username
+	userInfo.AvatarURL = userEntity.Avatar_url
+	userInfo.ID = userEntity.Id
+	userInfo.CreatedAt = userEntity.Created_at.String()
+	userInfo.UpdatedAt = userEntity.Updated_at.String()
+	return &userInfo, consts.CodeSuccess, "Get UserInfo success", true
 }
 
 func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User) {
@@ -204,7 +204,7 @@ func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (in
 	var userInfo user.UserInfo
 	userInfo.Username = userEntity.Username
 	userInfo.ID = userEntity.Id
-	refreshToken2, accessToken, ok := utils.GenerateTokens(userInfo)
+	refreshToken2, accessToken, ok := utils.GenerateTokens(&userInfo)
 	if !ok {
 		return consts.CodeUserError, "RefreshToken utils.GenerateTokens err", "", "", false
 	}

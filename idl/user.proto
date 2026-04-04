@@ -37,4 +37,7 @@ message LoginResp{
 message UserInfoReq{
    string UserId=1[(api.body)="user_id"];
 }
-
+message UserInfoResp{
+   common.Base Base=1[(api.go_tag)="json:\"base\""];
+   UserInfo Data=2[(api.go_tag)="json:\"data\""];
+}
