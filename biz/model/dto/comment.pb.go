@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.0
 // 	protoc        v3.21.12
-// source: comment.proto
+// source: react.proto
 
 package dto
 
