@@ -1,5 +1,5 @@
 syntax="proto3";
-package comment;
+package social;
 option go_package="social";
 import "api.proto";
 import "common.proto";
