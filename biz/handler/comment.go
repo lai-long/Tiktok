@@ -77,7 +77,7 @@ func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext)
 			Code: int32(code),
 			Msg:  msg,
 		},
-		Items: commentInfos,
+		Data: &react.CommentData{Items: commentInfos},
 	})
 }
 

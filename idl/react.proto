@@ -4,6 +4,7 @@ package comment;
 option go_package="react";
 import "api.proto";
 import "common.proto";
+import "video.proto";
 message CommentInfo{
   string UserId=1[(api.go_tag)="json:\"user_id\""];
   string TargetId=2[(api.go_tag)="json:\"target_id\""];
@@ -31,9 +32,12 @@ message CommentListReq{
   string PageSize=2[(api.body)="page_size"];
   string PageNum=3[(api.body)="page_num"];
 }
+message CommentData{
+  repeated CommentInfo items=1[(api.go_tag)="json:\"items\""];
+}
 message CommentListResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
-  repeated CommentInfo items=2[(api.go_tag)="json:\"items\""];
+  CommentData Data=2[(api.go_tag)="json:\"data\""];
 }
 
 message CommentDeleteReq{
@@ -42,7 +46,7 @@ message CommentDeleteReq{
   string TargetType=3[(api.body)="target_type"];
 }
 message CommentDeleteResp{
-  common.Base base=1[(api.go_tag)="json:\"base\""];
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
 }
 
 message LikeActionReq{
@@ -51,7 +55,7 @@ message LikeActionReq{
   string ActionType=3[(api.body)="action_type"];
 }
 message LikeActionResp{
-  common.Base base=1[(api.go_tag)="json:\"base\""];
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
 }
 
 message LikeListReq{
@@ -59,6 +63,10 @@ message LikeListReq{
   string PageNum=2[(api.body)="page_num"];
   string PageSize=3[(api.body)="page_size"];
 }
+message LikeVideoData{
+  repeated video.VideoInfo items=1[(api.go_tag)="json:\"items\""];
+}
 message LikeListResp{
-  common.Base base=1[(api.go_tag)="json:\"base\""];
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  LikeVideoData Data=2[(api.go_tag)="json:\"data\""];
 }

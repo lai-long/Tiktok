@@ -3,17 +3,16 @@ syntax="proto3";
 package video;
 option go_package="video";
 import "api.proto";
-message Video{
+message VideoInfo{
   string ID=1[(api.go_tag)="json:\"id\""];
-  string UserID=2[(api.go_tag)="json:\"user_id\" form:\"user_id\""];
-  string Title=3[(api.go_tag)="form:\"title\" json:\"title\" binding:\"required\""];
-  string Description=4[(api.go_tag)="form:\"description\" json:\"description\" binding:\"required\""];
+  string UserID=2[(api.go_tag)="json:\"user_id\""];
+  string Title=3[(api.go_tag)="json:\"title\""];
+  string Description=4[(api.go_tag)="json:\"description\""];
   int64 CommentCount=5[(api.go_tag)="json:\"comment_count\""];
   string CoverURL=6[(api.go_tag)="json:\"cover_url\""];
   string CreatedAt=7[(api.go_tag)="json:\"created_at\""];
-  string DeletedAt=8[(api.go_tag)="json:\"deleted_at\""];
-  int64 LikeCount=9[(api.go_tag)="json:\"like_count\""];
-  string UpdatedAt=10[(api.go_tag)="json:\"updated_at\""];
-  string VideoURL=11[(api.go_tag)="json:\"video_url\""];
-  int64 VisitCount=12[(api.go_tag)="json:\"visit_count\""];
+  int64 LikeCount=8[(api.go_tag)="json:\"like_count\""];
+  string UpdatedAt=9[(api.go_tag)="json:\"updated_at\""];
+  string VideoURL=10[(api.go_tag)="json:\"video_url\""];
+  int64 VisitCount=11[(api.go_tag)="json:\"visit_count\""];
 }
