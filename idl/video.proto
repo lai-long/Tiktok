@@ -59,3 +59,9 @@ message VideoSearchResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
   VideoData Data=2[(api.go_tag)="json:\"data\""];
 }
+
+message VideoStreamReq{}
+message VideoStreamResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  VideoData Data=2[(api.go_tag)="json:\"data\""];
+}
