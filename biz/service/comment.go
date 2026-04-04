@@ -1,8 +1,8 @@
 package service
 
 import (
+	"Tiktok/biz/entity"
 	"Tiktok/biz/model/dto"
-	"Tiktok/biz/model/entity"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"log"
