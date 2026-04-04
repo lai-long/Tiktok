@@ -3,6 +3,7 @@ syntax="proto3";
 package video;
 option go_package="video";
 import "api.proto";
+import "common.proto";
 message VideoInfo{
   string ID=1[(api.go_tag)="json:\"id\""];
   string UserID=2[(api.go_tag)="json:\"user_id\""];
@@ -15,4 +16,46 @@ message VideoInfo{
   string UpdatedAt=9[(api.go_tag)="json:\"updated_at\""];
   string VideoURL=10[(api.go_tag)="json:\"video_url\""];
   int64 VisitCount=11[(api.go_tag)="json:\"visit_count\""];
+}
+message VideoData{
+  repeated VideoInfo items=1[(api.go_tag)="json:\"items\""];
+  int64 Total=2[(api.go_tag)="json:\"total\""];
+}
+
+message VideoPublishReq{
+  string Title=1[(api.body)="title"];
+  string Description=2[(api.body)="description"];
+}
+message VideoPublishResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+}
+
+message VideoListReq{
+  string UserId=1[(api.body)="user_id"];
+  int64 PageNum=2[(api.body)="page_num"];
+  int64 PageSize=3[(api.body)="page_size"];
+}
+
+message VideoListResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  VideoData Data=2[(api.go_tag)="json:\"data\""];
+}
+
+message VideoHotReq{
+  int64 PageNum=1[(api.body)="page_num"];
+  int64 PageSize=2[(api.body)="page_size"];
+}
+message VideoHotResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  VideoData Data=2[(api.go_tag)="json:\"data\""];
+}
+
+message VideoSearchReq{
+  string KeyWord=1[(api.body)="keyword"];
+  int64 PageNum=2[(api.body)="page_num"];
+  int64 PageSize=3[(api.body)="page_size"];
+}
+message VideoSearchResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  VideoData Data=2[(api.go_tag)="json:\"data\""];
 }
