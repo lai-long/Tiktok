@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/social"
+	"Tiktok/biz/model/user"
 	"Tiktok/pkg/consts"
 	"context"
 
@@ -10,9 +13,9 @@ import (
 
 type SocialSever interface {
 	RelationAction(toUserId string, actionType string, userId string) (int, string)
-	FollowingList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
-	FollowerList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
-	FriendList(userId string, pageNum string, pageSize string) (int, string, []dto.User, bool)
+	FollowingList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool)
+	FollowerList(userId string, pageNum int64, pageSize int64) (int, string, []dto.User, bool)
+	FriendList(userId string, pageNum int64, pageSize int64) (int, string, []dto.User, bool)
 }
 type SocialHandler struct {
 	socialService SocialSever
@@ -23,50 +26,56 @@ func NewSocialHandler(service SocialSever) *SocialHandler {
 }
 
 func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContext) {
-	toUserId := c.PostForm("to_user_id")
-	actionType := c.PostForm("action_type")
-	userId, ok := ctx.Value("user_id").(string)
-	if !ok {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: consts.CodeRelationError,
-				Msg:  "RelationAction userId exist error",
+	req := new(social.RelationActionReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		c.JSON(200, social.RelationActionResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "social.RelationActionResp err",
 			},
 		})
 	}
-	code, msg := h.socialService.RelationAction(toUserId, actionType, userId)
-	c.JSON(200, dto.Response{
-		Base: dto.Base{
-			Code: code,
-			Msg:  msg,
-		},
-	})
-}
-func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext) {
-	userId := c.Query("user_id")
-	pageNum := c.Query("page_num")
-	pageSize := c.Query("page_size")
-	code, msg, users, ok := h.socialService.FollowingList(userId, pageNum, pageSize)
+	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
-				Code: code,
-				Msg:  msg,
+		c.JSON(200, social.RelationActionResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "social.RelationActionResp err",
 			},
 		})
 		return
 	}
-	c.JSON(200, dto.Response{
-		Base: dto.Base{
-			Code: code,
+	code, msg := h.socialService.RelationAction(req.ToUserId, req.ActionType, userId)
+	c.JSON(200, social.RelationActionResp{
+		Base: &common.Base{
+			Code: int32(code),
 			Msg:  msg,
-		},
-		Data: dto.Data{
-			Items: users,
-			Total: len(users),
 		},
 	})
 }
+
+func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext) {
+	req := new(social.FollowingListReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		c.JSON(200, social.FollowingListResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "social.FollowingListResp err",
+			},
+		})
+	}
+	code, msg, userInfos, _ := h.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	c.JSON(200, social.FollowingListResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Data: userInfos,
+	})
+}
+
 func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext) {
 	userId := c.Query("user_id")
 	pageNum := c.Query("page_num")
@@ -92,6 +101,7 @@ func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext)
 		},
 	})
 }
+
 func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
