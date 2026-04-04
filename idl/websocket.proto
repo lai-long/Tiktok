@@ -1,7 +1,7 @@
 
 syntax="proto3";
 package websocket;
-option go_package="/biz/model/dto";
+option go_package="websocket";
 import "api.proto";
 message SendMsg{
   string Type=1[(api.go_tag)="json:\"type\""];

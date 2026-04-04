@@ -1,7 +1,7 @@
 
 syntax="proto3";
 package video;
-option go_package="/biz/model/dto";
+option go_package="video";
 import "api.proto";
 message Video{
   string ID=1[(api.go_tag)="json:\"id\""];

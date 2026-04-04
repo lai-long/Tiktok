@@ -1,7 +1,7 @@
 
 syntax="proto3";
 package comment;
-option go_package="/biz/model/dto";
+option go_package="api/comment";
 import "api.proto";
 message Comment{
   string UserId=1[(api.go_tag)="json:\"user_id\" form:\"user_id\""];
