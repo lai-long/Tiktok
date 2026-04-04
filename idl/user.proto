@@ -41,3 +41,7 @@ message UserInfoResp{
    common.Base Base=1[(api.go_tag)="json:\"base\""];
    UserInfo Data=2[(api.go_tag)="json:\"data\""];
 }
+
+message UserAvatarReq{
+   bytes file=1[(api.body)="data",(api.form)="data"];
+}

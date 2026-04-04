@@ -64,9 +64,9 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 		c.Abort()
 		return
 	}
-	username, _ := (*claims)["username"].(string)
 	userid, _ := (*claims)["userid"].(string)
-	c.Set("username", username)
-	c.Set("user_id", userid)
-	c.Next(ctx)
+	username, _ := (*claims)["username"].(string)
+	newCtx := context.WithValue(ctx, "user_id", userid)
+	newCtx = context.WithValue(newCtx, "username", username)
+	c.Next(newCtx)
 }

@@ -29,8 +29,8 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 	targetId := c.PostForm("target_id")
 	//targetType 1、视频 2、评论
 	targetType := c.PostForm("target_type")
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: consts.CodeLikeError,
 			Msg:  "likeAction Get userId error",
@@ -44,7 +44,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 		return
 	}
-	code, msg := h.likeService.LikeAction(userId.(string), targetId, action, targetType)
+	code, msg := h.likeService.LikeAction(userId, targetId, action, targetType)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,

@@ -35,8 +35,8 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 		}})
 		return
 	}
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: consts.CodeCommentError,
 			Msg:  "CommentPublish userId exists error",
@@ -44,7 +44,7 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 		log.Println("CommentPublish userId exists error: %v", err)
 		return
 	}
-	comment.UserId = userId.(string)
+	comment.UserId = userId
 	code, msg := h.service.CommentPublish(comment.TargetId, comment.UserId, comment.Content, comment.TargetType)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
@@ -79,14 +79,14 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 	commentId := c.PostForm("comment_id")
 	targetType := c.PostForm("target_type")
 	targetId := c.PostForm("target_id")
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
 			Code: consts.CodeCommentError,
 			Msg:  "commentDelete Get userId error",
 		}})
 	}
-	code, msg := h.service.CommentDelete(commentId, targetId, userId.(string), targetType)
+	code, msg := h.service.CommentDelete(commentId, targetId, userId, targetType)
 	c.JSON(200, dto.Response{Base: dto.Base{
 		Code: code,
 		Msg:  msg,

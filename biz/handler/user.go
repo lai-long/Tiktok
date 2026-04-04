@@ -101,8 +101,8 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 
 func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 	data, _ := c.FormFile("data")
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeUserError, Msg: "用户不存在，c.Get error"}})
 	}
 	code, msg, ok, user := h.userService.UserAvatar(data, userId)
