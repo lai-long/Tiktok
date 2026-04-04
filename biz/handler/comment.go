@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/react"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
@@ -10,8 +12,8 @@ import (
 )
 
 type CommentSever interface {
-	CommentPublish(targetId string, userId string, content string, targetType string) (int, string)
-	CommentList(targetId string, pageSize string, pageNum string) (int, string, []dto.Comment, bool)
+	CommentPublish(targetId, userId, content, targetType string) (int, string)
+	CommentList(targetId string, pageSize string, pageNum string) (int, string, []*react.CommentInfo, bool)
 	CommentDelete(commentId string, target string, userId string, targetType string) (int, string)
 }
 
@@ -26,59 +28,70 @@ func NewCommentHandler(service CommentSever) *CommentHandler {
 }
 
 func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestContext) {
-	var comment dto.Comment
-	err := c.Bind(&comment)
+	commentPublishReq := new(react.CommentPublishReq)
+	err := c.BindAndValidate(commentPublishReq)
 	if err != nil {
-		c.JSON(200, dto.Response{Base: dto.Base{
-			Code: consts.CodeCommentError,
-			Msg:  "CommentPublish comment Bind error:",
-		}})
+		c.JSON(200, react.CommentPublishResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "CommentPublish BindAndValidate error",
+			},
+		})
 		return
 	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{
-			Code: consts.CodeCommentError,
-			Msg:  "CommentPublish userId exists error",
-		}})
-		log.Println("CommentPublish userId exists error: %v", err)
+		c.JSON(200, react.CommentPublishResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "CommentPublish ctx.Value userid error",
+			},
+		})
+		log.Printf("CommentPublish userId exists error: %v\n", err)
 		return
 	}
-	comment.UserId = userId
-	code, msg := h.service.CommentPublish(comment.TargetId, comment.UserId, comment.Content, comment.TargetType)
-	c.JSON(200, dto.Response{Base: dto.Base{
-		Code: code,
-		Msg:  msg,
-	}})
+	code, msg := h.service.CommentPublish(commentPublishReq.TargetAt, userId, commentPublishReq.Content, commentPublishReq.TargetType)
+	c.JSON(200, react.CommentPublishResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+	})
 
 }
 
 func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext) {
-	targetId := c.Query("target_id")
-	pageSize := c.Query("page_size")
-	pageNum := c.Query("page_num")
-	code, msg, comments, ok := h.service.CommentList(targetId, pageSize, pageNum)
-	if !ok {
-		c.JSON(200, dto.Response{Base: dto.Base{
-			Code: code,
-			Msg:  msg,
-		}})
-		return
+	commentListReq := new(react.CommentListReq)
+	err := c.BindAndValidate(commentListReq)
+	if err != nil {
+		c.JSON(200, react.CommentListResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "CommentList BindAndValidate error",
+			},
+		})
 	}
-	c.JSON(200, dto.Response{Base: dto.Base{
-		Code: code,
-		Msg:  msg,
-	},
-		Data: dto.Data{
-			Items: comments,
-			Total: len(comments),
-		}})
+	code, msg, commentInfos, _ := h.service.CommentList(commentListReq.TargetAt, commentListReq.PageSize, commentListReq.PageNum)
+	c.JSON(200, react.CommentListResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+		Items: commentInfos,
+	})
 }
 
 func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContext) {
-	commentId := c.PostForm("comment_id")
-	targetType := c.PostForm("target_type")
-	targetId := c.PostForm("target_id")
+	commentDeleteReq := new(react.CommentDeleteReq)
+	err := c.BindAndValidate(commentDeleteReq)
+	if err != nil {
+		c.JSON(200, react.CommentDeleteResp{
+			Base: &common.Base{
+				Code: consts.CodeError,
+				Msg:  "CommentDelete BindAndValidate error",
+			},
+		})
+	}
 	userId, ok := ctx.Value("user_id").(string)
 	if !ok {
 		c.JSON(200, dto.Response{Base: dto.Base{
@@ -86,9 +99,11 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 			Msg:  "commentDelete Get userId error",
 		}})
 	}
-	code, msg := h.service.CommentDelete(commentId, targetId, userId, targetType)
-	c.JSON(200, dto.Response{Base: dto.Base{
-		Code: code,
-		Msg:  msg,
-	}})
+	code, msg := h.service.CommentDelete(commentDeleteReq.CommentId, commentDeleteReq.TargetAt, userId, commentDeleteReq.TargetType)
+	c.JSON(200, react.CommentDeleteResp{
+		Base: &common.Base{
+			Code: int32(code),
+			Msg:  msg,
+		},
+	})
 }

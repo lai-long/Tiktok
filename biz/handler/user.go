@@ -16,8 +16,8 @@ import (
 
 type UserSever interface {
 	Register(registerReq *user.RegisterReq) (int, string)
-	Login(loginReq *user.LoginReq, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string)
-	UserInfo(userInfoReq *user.UserInfoReq) (*user.UserInfo, int, string, bool)
+	Login(username, password, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string)
+	UserInfo(userId string) (*user.UserInfo, int, string, bool)
 	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int, string, bool, *user.UserInfo)
 	RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool)
 }
@@ -65,7 +65,7 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 		c.Abort()
 		return
 	}
-	code, msg, userInfo, reToken, acToken := h.userService.Login(loginReq, loginReq.Code, ctx)
+	code, msg, userInfo, reToken, acToken := h.userService.Login(loginReq.UserName, loginReq.Password, loginReq.Code, ctx)
 	loginResp := &user.LoginResp{
 		Base: &common.Base{
 			Code: int32(code),
@@ -88,7 +88,7 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 			"msg":  "UserInfoReq.bindAndValidate error",
 		})
 	}
-	userInfo, code, msg, _ := h.userService.UserInfo(userInfoReq)
+	userInfo, code, msg, _ := h.userService.UserInfo(userInfoReq.UserId)
 	userInfoResp := &user.UserInfoResp{
 		Base: &common.Base{
 			Code: int32(code),

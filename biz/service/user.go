@@ -76,13 +76,13 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int, string) {
 	return consts.CodeSuccess, "success"
 }
 
-func (s *UserService) Login(loginReq *user.LoginReq, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string) {
-	userEntity, err := s.userDb.GetUserByUsername(loginReq.UserName)
+func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string) {
+	userEntity, err := s.userDb.GetUserByUsername(userName)
 	if err != nil {
 		log.Println("get user entity error", err)
 		return consts.CodeUserError, "GetUserByUsername Error", &user.UserInfo{}, "", ""
 	}
-	ok := utils.CheckPasswordHash(userEntity.Password, loginReq.Password)
+	ok := utils.CheckPasswordHash(userEntity.Password, password)
 	if !ok {
 		return consts.CodeUserError, "密码错误", &user.UserInfo{}, "", ""
 	}
@@ -122,8 +122,8 @@ func (s *UserService) Login(loginReq *user.LoginReq, mfaCode string, ctx context
 	return consts.CodeSuccess, "success", &userInfo, reToken, acToken
 }
 
-func (s *UserService) UserInfo(userInfoReq *user.UserInfoReq) (*user.UserInfo, int, string, bool) {
-	userEntity, err := s.userDb.GetUserByUserId(userInfoReq.UserId)
+func (s *UserService) UserInfo(userId string) (*user.UserInfo, int, string, bool) {
+	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		log.Printf("GetUserByUserIdError : %v", err)
 		return &user.UserInfo{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
