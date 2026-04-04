@@ -451,8 +451,6 @@ type UserAvatarReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	File []byte `protobuf:"bytes,1,opt,name=file,proto3" form:"data" json:"data,omitempty"`
 }
 
 func (x *UserAvatarReq) Reset() {
@@ -487,9 +485,57 @@ func (*UserAvatarReq) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *UserAvatarReq) GetFile() []byte {
+type UserAvatarResp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Base *common.Base `protobuf:"bytes,1,opt,name=Base,proto3" form:"Base" json:"base" query:"Base"`
+	Data *UserInfo    `protobuf:"bytes,2,opt,name=data,proto3" form:"data" json:"data" query:"data"`
+}
+
+func (x *UserAvatarResp) Reset() {
+	*x = UserAvatarResp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_user_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UserAvatarResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserAvatarResp) ProtoMessage() {}
+
+func (x *UserAvatarResp) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserAvatarResp.ProtoReflect.Descriptor instead.
+func (*UserAvatarResp) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UserAvatarResp) GetBase() *common.Base {
 	if x != nil {
-		return x.File
+		return x.Base
+	}
+	return nil
+}
+
+func (x *UserAvatarResp) GetData() *UserInfo {
+	if x != nil {
+		return x.Data
 	}
 	return nil
 }
@@ -570,13 +616,18 @@ var file_user_proto_rawDesc = []byte{
 	0x22, 0x52, 0x04, 0x42, 0x61, 0x73, 0x65, 0x12, 0x33, 0x0a, 0x04, 0x44, 0x61, 0x74, 0x61, 0x18,
 	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x55, 0x73, 0x65,
 	0x72, 0x49, 0x6e, 0x66, 0x6f, 0x42, 0x0f, 0xca, 0xf3, 0x18, 0x0b, 0x6a, 0x73, 0x6f, 0x6e, 0x3a,
-	0x22, 0x64, 0x61, 0x74, 0x61, 0x22, 0x52, 0x04, 0x44, 0x61, 0x74, 0x61, 0x22, 0x35, 0x0a, 0x0d,
-	0x55, 0x73, 0x65, 0x72, 0x41, 0x76, 0x61, 0x74, 0x61, 0x72, 0x52, 0x65, 0x71, 0x12, 0x24, 0x0a,
-	0x04, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x42, 0x10, 0xca, 0xbb, 0x18,
-	0x04, 0x64, 0x61, 0x74, 0x61, 0xe2, 0xbb, 0x18, 0x04, 0x64, 0x61, 0x74, 0x61, 0x52, 0x04, 0x66,
-	0x69, 0x6c, 0x65, 0x42, 0x17, 0x5a, 0x15, 0x54, 0x69, 0x6b, 0x74, 0x6f, 0x6b, 0x2f, 0x62, 0x69,
-	0x7a, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x64, 0x61, 0x74, 0x61, 0x22, 0x52, 0x04, 0x44, 0x61, 0x74, 0x61, 0x22, 0x0f, 0x0a, 0x0d,
+	0x55, 0x73, 0x65, 0x72, 0x41, 0x76, 0x61, 0x74, 0x61, 0x72, 0x52, 0x65, 0x71, 0x22, 0x78, 0x0a,
+	0x0e, 0x55, 0x73, 0x65, 0x72, 0x41, 0x76, 0x61, 0x74, 0x61, 0x72, 0x52, 0x65, 0x73, 0x70, 0x12,
+	0x31, 0x0a, 0x04, 0x42, 0x61, 0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e,
+	0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x42, 0x0f, 0xca, 0xf3, 0x18,
+	0x0b, 0x6a, 0x73, 0x6f, 0x6e, 0x3a, 0x22, 0x62, 0x61, 0x73, 0x65, 0x22, 0x52, 0x04, 0x42, 0x61,
+	0x73, 0x65, 0x12, 0x33, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x0e, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
+	0x42, 0x0f, 0xca, 0xf3, 0x18, 0x0b, 0x6a, 0x73, 0x6f, 0x6e, 0x3a, 0x22, 0x64, 0x61, 0x74, 0x61,
+	0x22, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0x17, 0x5a, 0x15, 0x54, 0x69, 0x6b, 0x74, 0x6f,
+	0x6b, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f, 0x75, 0x73, 0x65, 0x72,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -591,29 +642,32 @@ func file_user_proto_rawDescGZIP() []byte {
 	return file_user_proto_rawDescData
 }
 
-var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_user_proto_goTypes = []interface{}{
-	(*UserInfo)(nil),      // 0: user.UserInfo
-	(*RegisterReq)(nil),   // 1: user.RegisterReq
-	(*RegisterResp)(nil),  // 2: user.RegisterResp
-	(*LoginReq)(nil),      // 3: user.LoginReq
-	(*LoginResp)(nil),     // 4: user.LoginResp
-	(*UserInfoReq)(nil),   // 5: user.UserInfoReq
-	(*UserInfoResp)(nil),  // 6: user.UserInfoResp
-	(*UserAvatarReq)(nil), // 7: user.UserAvatarReq
-	(*common.Base)(nil),   // 8: common.Base
+	(*UserInfo)(nil),       // 0: user.UserInfo
+	(*RegisterReq)(nil),    // 1: user.RegisterReq
+	(*RegisterResp)(nil),   // 2: user.RegisterResp
+	(*LoginReq)(nil),       // 3: user.LoginReq
+	(*LoginResp)(nil),      // 4: user.LoginResp
+	(*UserInfoReq)(nil),    // 5: user.UserInfoReq
+	(*UserInfoResp)(nil),   // 6: user.UserInfoResp
+	(*UserAvatarReq)(nil),  // 7: user.UserAvatarReq
+	(*UserAvatarResp)(nil), // 8: user.UserAvatarResp
+	(*common.Base)(nil),    // 9: common.Base
 }
 var file_user_proto_depIdxs = []int32{
-	8, // 0: user.RegisterResp.Base:type_name -> common.Base
-	8, // 1: user.LoginResp.Base:type_name -> common.Base
+	9, // 0: user.RegisterResp.Base:type_name -> common.Base
+	9, // 1: user.LoginResp.Base:type_name -> common.Base
 	0, // 2: user.LoginResp.data:type_name -> user.UserInfo
-	8, // 3: user.UserInfoResp.Base:type_name -> common.Base
+	9, // 3: user.UserInfoResp.Base:type_name -> common.Base
 	0, // 4: user.UserInfoResp.Data:type_name -> user.UserInfo
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	9, // 5: user.UserAvatarResp.Base:type_name -> common.Base
+	0, // 6: user.UserAvatarResp.data:type_name -> user.UserInfo
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_user_proto_init() }
@@ -718,6 +772,18 @@ func file_user_proto_init() {
 				return nil
 			}
 		}
+		file_user_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UserAvatarResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -725,7 +791,7 @@ func file_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_user_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

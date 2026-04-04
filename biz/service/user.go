@@ -2,7 +2,6 @@ package service
 
 import (
 	"Tiktok/biz/entity"
-	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/user"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
@@ -138,56 +137,58 @@ func (s *UserService) UserInfo(userInfoReq *user.UserInfoReq) (*user.UserInfo, i
 	return &userInfo, consts.CodeSuccess, "Get UserInfo success", true
 }
 
-func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, dto.User) {
+func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, *user.UserInfo) {
 	dataFile, err := data.Open()
 	if err != nil {
 		log.Printf("data.Open error: %v", err)
-		return consts.CodeUserError, "data.Open Error", false, dto.User{}
+		return consts.CodeUserError, "data.Open Error", false, &user.UserInfo{}
 	}
 	defer dataFile.Close()
 	ok, err := utils.IsImage(dataFile)
 	if err != nil {
 		log.Printf("IsImage error: %v", err)
-		return consts.CodeUserError, "utils.IsImage Error", false, dto.User{}
+		return consts.CodeUserError, "utils.IsImage Error", false, &user.UserInfo{}
 	}
 	if !ok {
-		return consts.CodeIOError, "IsImage false,文件不是图片", false, dto.User{}
+		return consts.CodeIOError, "IsImage false,文件不是图片", false, &user.UserInfo{}
 	}
 	if _, err := dataFile.Seek(0, io.SeekStart); err != nil {
-		return consts.CodeIOError, "a dataFile.Seek 重置文件指针失败", false, dto.User{}
+		return consts.CodeIOError, "a dataFile.Seek 重置文件指针失败", false, &user.UserInfo{}
 	}
 	filename := utils.IdGenerate()
 	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
 	if err != nil {
 		log.Println(err)
-		return consts.CodeUserError, "a user avatar MkdirAll Error", false, dto.User{}
+		return consts.CodeUserError, "a user avatar MkdirAll Error", false, &user.UserInfo{}
 	}
 	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
 		log.Printf("os.Create error: %v", err)
-		return consts.CodeUserError, "user a upload os.Create Error", false, dto.User{}
+		return consts.CodeUserError, "user a upload os.Create Error", false, &user.UserInfo{}
 	}
 	defer file.Close()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
 		log.Printf("io.Copy error: %v", err)
-		return consts.CodeIOError, "a io.copy error", false, dto.User{}
+		return consts.CodeIOError, "a io.copy error", false, &user.UserInfo{}
 	}
 	err = s.userDb.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
 	if err != nil {
 		log.Printf("db.UpdateUserAvatar error: %v", err)
-		return consts.CodeDBUpdateError, "a db.UpdateUserAvatar error", false, dto.User{}
+		return consts.CodeDBUpdateError, "a db.UpdateUserAvatar error", false, &user.UserInfo{}
 	}
 	userEntity, err := s.userDb.GetUserByUserId(userId.(string))
 	if err != nil {
 		log.Printf("db.GetUserByUserIderror: %v", err)
-		return consts.CodeDBSelectError, "a db.GetUserByUserId error", false, dto.User{}
+		return consts.CodeDBSelectError, "a db.GetUserByUserId error", false, &user.UserInfo{}
 	}
-	var user dto.User
-	user.Username = userEntity.Username
-	user.AvatarURL = userEntity.Avatar_url
-	user.ID = userEntity.Id
-	return consts.CodeSuccess, "a change success", true, user
+	var userInfo user.UserInfo
+	userInfo.Username = userEntity.Username
+	userInfo.AvatarURL = userEntity.Avatar_url
+	userInfo.ID = userEntity.Id
+	userInfo.CreatedAt = userEntity.Created_at.String()
+	userInfo.UpdatedAt = userEntity.Updated_at.String()
+	return consts.CodeSuccess, "a change success", true, &userInfo
 }
 
 func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool) {
