@@ -1,0 +1,48 @@
+syntax="proto3";
+package comment;
+option go_package="social";
+import "api.proto";
+import "common.proto";
+import "user.proto";
+
+message SocialData{
+  repeated user.UserInfo items =1[(api.go_tag)="json:\"items\""];
+  int64 Total=2[(api.go_tag)="json:\"total\""];
+}
+message RelationActionReq{
+  string ToUserId=1[(api.body)="to_user_id"];
+  string ActionType=2[(api.body)="action_type"];
+}
+message RelationActionResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+}
+
+message FollowingListReq{
+  string UserId=1[(api.body)="user_id"];
+  int64 PageNum=2[(api.body)="page_num"];
+  int64 PageSize=3[(api.body)="page_size"];
+}
+message FollowingListResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  SocialData data=2[(api.go_tag)="json:\"data\""];
+}
+
+message FollowerListReq{
+  string UserId=1[(api.body)="user_id"];
+  int64 PageNum=2[(api.body)="page_num"];
+  int64 PageSize=3[(api.body)="page_size"];
+}
+message FollowerListResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  SocialData data=2[(api.go_tag)="json:\"data\""];
+}
+
+message FriendListReq{
+  string UserId=1[(api.body)="user_id"];
+  int64 PageNum=2[(api.body)="page_num"];
+  int64 PageSize=3[(api.body)="page_size"];
+}
+message FriendListResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  SocialData data=2[(api.go_tag)="json:\"data\""];
+}
