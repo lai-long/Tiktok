@@ -3,6 +3,7 @@ package service
 import (
 	"Tiktok/biz/entity"
 	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
@@ -37,7 +38,7 @@ func NewVideoService(videoDb VideoDatabase, videoRedis VideoRedis) *VideoService
 	return &VideoService{videoDb: videoDb, VideoRedis: videoRedis}
 }
 
-func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string) {
+func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string) {
 	dataFile, err := data.Open()
 	if err != nil {
 		return consts.CodeIOError, "VideoPublish data.Open err"
@@ -60,10 +61,10 @@ func (s *VideoService) VideoPublish(video dto.Video, data *multipart.FileHeader,
 		return consts.CodeIOError, "VideoPublish io.copy err"
 	}
 	var videoEntity entity.VideoEntity
-	videoEntity.Title = video.Title
-	videoEntity.Description = video.Description
+	videoEntity.Title = videoInfo.Title
+	videoEntity.Description = videoInfo.Description
 	videoEntity.VideoURL = "/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename)
-	videoEntity.UserID = video.UserID
+	videoEntity.UserID = videoInfo.UserID
 	videoEntity.ID = filename
 	videoEntity.VisitCount = rand.Intn(100)
 	err = s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))

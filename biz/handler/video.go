@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/dto"
 	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
@@ -12,7 +13,7 @@ import (
 )
 
 type VideoSever interface {
-	VideoPublish(video video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string)
+	VideoPublish(video *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string)
 	VideoList(userId string, pageSize string, pageNum string) (int, string, []video.VideoInfo, bool)
 	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []video.VideoInfo, bool)
 	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []video.VideoInfo, bool)
@@ -27,27 +28,41 @@ func NewVideoHandler(videoService VideoSever) *VideoHandler {
 }
 
 func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) {
-	var videoInfo video.VideoInfo
-	if err := c.Bind(&videoInfo); err != nil {
+	req := new(video.VideoPublishReq)
+	if err := c.BindAndValidate(req); err != nil {
 		log.Printf("c.Bind: %v", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish Bind Error"}})
+		c.JSON(200, video.VideoPublishResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoPublish BindAndValidate error",
+			},
+		})
 		return
 	}
 	data, err := c.FormFile("data")
 	if err != nil {
 		log.Printf("c.FormFile: %v", err)
-		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish FormFile Error"}})
+		c.JSON(200, video.VideoPublishResp{
+			Base: &common.Base{
+				Code: consts.CodeVideoError,
+				Msg:  "VideoPublish FormFile error",
+			},
+		})
 	}
 	userId, ok := c.Value("user_id").(string)
 	if !ok {
-		c.JSON(200, dto.Response{
-			Base: dto.Base{
+		c.JSON(200, video.VideoPublishResp{
+			Base: &common.Base{
 				Code: consts.CodeVideoError,
 				Msg:  "VideoPublish Get User Error",
 			},
 		})
 	}
-	videoInfo.UserID = userId
+	videoInfo := &video.VideoInfo{
+		UserID:      userId,
+		Title:       req.Title,
+		Description: req.Description,
+	}
 	code, msg := h.videoService.VideoPublish(videoInfo, data, ctx)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
