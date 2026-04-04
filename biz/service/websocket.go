@@ -3,7 +3,7 @@ package service
 import (
 	"Tiktok/biz/cache"
 	"Tiktok/biz/dao"
-	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/chat"
 	"Tiktok/pkg/consts"
 	"fmt"
 	"log"
@@ -60,7 +60,7 @@ func (c *Client) Read() {
 	}()
 	for {
 		c.Socket.PongHandler()
-		sendMsg := new(dto.SendMsg)
+		sendMsg := new(chat.SendMsg)
 		err := c.Socket.ReadJSON(sendMsg)
 		if err != nil {
 			log.Println("client ReadJSON err", err)
@@ -134,7 +134,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				manager.mu.Unlock()
 			}
 			Manager.Clients[client.ID] = client
-			replyMSg := dto.ReplyMsg{
+			replyMSg := chat.ReplyMsg{
 				From:    client.ID,
 				Code:    consts.CodeSuccess,
 				Content: "连接成功",
@@ -154,7 +154,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				manager.mu.Unlock()
 			}
 			if _, ok := Manager.Clients[client.ID]; ok {
-				replyMSg := dto.ReplyMsg{
+				replyMSg := chat.ReplyMsg{
 					From:    client.ID,
 					Code:    consts.CodeSuccess,
 					Content: "连接中断",
@@ -174,7 +174,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					if id != sendId {
 						continue
 					}
-					replyMSg := dto.ReplyMsg{
+					replyMSg := chat.ReplyMsg{
 						From:    client.ID,
 						Code:    consts.CodeSuccess,
 						Content: string(message),
@@ -191,7 +191,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				manager.mu.RUnlock()
 				id := broadcast.Clients.ID
 				if flag {
-					replyMSg := dto.ReplyMsg{
+					replyMSg := chat.ReplyMsg{
 						From:    broadcast.Clients.ID,
 						Code:    consts.CodeSuccess,
 						Content: "对方在线",
@@ -200,7 +200,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					broadcast.Clients.Send <- msg
 					m.InsertMsg(id, string(message))
 				} else {
-					replyMSg := dto.ReplyMsg{
+					replyMSg := chat.ReplyMsg{
 						From:    broadcast.Clients.ID,
 						Code:    consts.CodeSuccess,
 						Content: "对方不在线",
@@ -217,7 +217,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				}
 				str := strings.Join(message, ",\n ")
 				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(str))
-				replyMSg := dto.ReplyMsg{
+				replyMSg := chat.ReplyMsg{
 					From:    "未在线时收到消息",
 					Code:    consts.CodeSuccess,
 					Content: finalInfo,
@@ -242,7 +242,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				if err != nil {
 					log.Println(err)
 				}
-				replyMSg := dto.ReplyMsg{
+				replyMSg := chat.ReplyMsg{
 					From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
 					Code:    consts.CodeSuccess,
 					Content: finalInfo,
@@ -252,7 +252,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			}
 		case groupBroadcast := <-manager.GroupBroadcast:
 			for _, client := range groupBroadcast.Clients {
-				replyMSg := dto.ReplyMsg{
+				replyMSg := chat.ReplyMsg{
 					From:    client.ID,
 					Code:    consts.CodeSuccess,
 					Content: string(groupBroadcast.Message),
