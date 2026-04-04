@@ -37,8 +37,8 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 		log.Printf("c.FormFile: %v", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish FormFile Error"}})
 	}
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := c.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
 				Code: consts.CodeVideoError,
@@ -46,7 +46,7 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 			},
 		})
 	}
-	video.UserID = userId.(string)
+	video.UserID = userId
 	code, msg := h.videoService.VideoPublish(video, data, ctx)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }

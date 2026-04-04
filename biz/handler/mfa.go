@@ -15,23 +15,23 @@ type MfaServer interface {
 }
 
 func (h *UserHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Base{
 			Code: consts.CodeError,
 			Msg:  "GET USER ID not found",
 		})
 		return
 	}
-	userName, exist := c.Get("username")
-	if !exist {
+	userName, ok := ctx.Value("username").(string)
+	if !ok {
 		c.JSON(200, dto.Base{
 			Code: consts.CodeError,
 			Msg:  "GET USER USERNAME not found",
 		})
 		return
 	}
-	ok, key, secret, code, msg := h.MfaServer.GenerateMfa(userName.(string), userId.(string))
+	ok, key, secret, code, msg := h.MfaServer.GenerateMfa(userName, userId)
 	if !ok {
 		c.JSON(200, dto.Base{
 			Code: code,
@@ -61,14 +61,14 @@ func (h *UserHandler) MfaBind(ctx context.Context, c *app.RequestContext) {
 		})
 		return
 	}
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Base{
 			Code: consts.CodeError,
 			Msg:  "GET USER ID not found",
 		})
 	}
-	code, msg := h.MfaServer.MfaBindByCode(mfaCode, userId.(string))
+	code, msg := h.MfaServer.MfaBindByCode(mfaCode, userId)
 	c.JSON(200, dto.Base{
 		Code: code,
 		Msg:  msg,

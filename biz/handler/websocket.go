@@ -27,8 +27,8 @@ func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis) *WebsocketSever {
 	}
 }
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid, exist := c.Get("user_id")
-	if !exist {
+	userid, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
 				Code: consts.CodeError,
@@ -37,7 +37,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 		})
 		return
 	}
-	uid := userid.(string)
+	uid := userid
 	toUserId := c.Query("to_userid")
 	groupId := c.Query("group_id")
 	stdHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

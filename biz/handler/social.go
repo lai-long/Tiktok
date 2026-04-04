@@ -25,8 +25,8 @@ func NewSocialHandler(service SocialSever) *SocialHandler {
 func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContext) {
 	toUserId := c.PostForm("to_user_id")
 	actionType := c.PostForm("action_type")
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
 				Code: consts.CodeRelationError,
@@ -34,7 +34,7 @@ func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContex
 			},
 		})
 	}
-	code, msg := h.socialService.RelationAction(toUserId, actionType, userId.(string))
+	code, msg := h.socialService.RelationAction(toUserId, actionType, userId)
 	c.JSON(200, dto.Response{
 		Base: dto.Base{
 			Code: code,
@@ -95,8 +95,8 @@ func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext)
 func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
 	pageNum := c.Query("page_num")
 	pageSize := c.Query("page_size")
-	userId, exist := c.Get("user_id")
-	if !exist {
+	userId, ok := ctx.Value("user_id").(string)
+	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
 				Code: consts.CodeRelationError,
@@ -105,7 +105,7 @@ func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
 		})
 		return
 	}
-	code, msg, friend, ok := h.socialService.FriendList(userId.(string), pageNum, pageSize)
+	code, msg, friend, ok := h.socialService.FriendList(userId, pageNum, pageSize)
 	if !ok {
 		c.JSON(200, dto.Response{
 			Base: dto.Base{
