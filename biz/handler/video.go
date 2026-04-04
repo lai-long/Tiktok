@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Tiktok/biz/model/dto"
+	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
 	"context"
 	"log"
@@ -11,11 +12,11 @@ import (
 )
 
 type VideoSever interface {
-	VideoPublish(video dto.Video, data *multipart.FileHeader, ctx context.Context) (int, string)
-	VideoList(userId string, pageSize string, pageNum string) (int, string, []dto.Video, bool)
-	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []dto.Video, bool)
-	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []dto.Video, bool)
-	VideoStream() (int, string, []dto.Video)
+	VideoPublish(video video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string)
+	VideoList(userId string, pageSize string, pageNum string) (int, string, []video.VideoInfo, bool)
+	VideoSearch(keyword string, pageNum string, pageSize string) (int, string, []video.VideoInfo, bool)
+	VideoPopular(ctx context.Context, pageNum string, pageSize string) (int, string, []video.VideoInfo, bool)
+	VideoStream() (int, string, []video.VideoInfo)
 }
 type VideoHandler struct {
 	videoService VideoSever
@@ -26,8 +27,8 @@ func NewVideoHandler(videoService VideoSever) *VideoHandler {
 }
 
 func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) {
-	var video dto.Video
-	if err := c.Bind(&video); err != nil {
+	var videoInfo video.VideoInfo
+	if err := c.Bind(&videoInfo); err != nil {
 		log.Printf("c.Bind: %v", err)
 		c.JSON(200, dto.Response{Base: dto.Base{Code: consts.CodeVideoError, Msg: "VideoPublish Bind Error"}})
 		return
@@ -46,8 +47,8 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 			},
 		})
 	}
-	video.UserID = userId
-	code, msg := h.videoService.VideoPublish(video, data, ctx)
+	videoInfo.UserID = userId
+	code, msg := h.videoService.VideoPublish(videoInfo, data, ctx)
 	c.JSON(200, dto.Response{Base: dto.Base{Code: code, Msg: msg}})
 }
 
