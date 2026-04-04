@@ -1,13 +1,35 @@
 syntax="proto3";
 package user;
-option go_package="/biz/model/dto";
+option go_package="/api/user";
 import "api.proto";
-message User{
+import "common.proto";
+message UserInfo{
    string ID = 1[(api.go_tag)="json:\"id\""];
    string Username=2[(api.go_tag)="form:\"username\" json:\"username\" binding:\"required\""];
-   string Password=3[(api.go_tag)="form:\"password\" json:\"password\" binding:\"required\""];
-   string AvatarURL=4[(api.go_tag)="json:\"avatar_url\""];
-   string CreatedAt=5[(api.go_tag)="json:\"created_at\""];
-   string UpdatedAt=6[(api.go_tag)="json:\"updated_at\""];
-   string DeletedAt=7[(api.go_tag)="json:\"deleted_at\""];
+   string AvatarURL=3[(api.go_tag)="json:\"avatar_url\""];
+   string CreatedAt=4[(api.go_tag)="json:\"created_at\""];
+   string UpdatedAt=5[(api.go_tag)="json:\"updated_at\""];
+   string DeletedAt=6[(api.go_tag)="json:\"deleted_at\""];
+}
+
+
+
+message RegisterReq{
+   string UserName=1[(api.body)="username",(api.go_tag)=" binding:\"required\""];
+   string Password=2[(api.body)="password",(api.go_tag)=" binding:\"required\""];
+}
+message RegisterResp{
+   common.Base Base=1[(api.go_tag)="json:\"base\""];
+}
+
+message LoginReq{
+   string UserName=1[(api.body)="username",(api.go_tag)=" binding:\"required\""];
+   string Password=2[(api.body)="password",(api.go_tag)=" binding:\"required\""];
+   string Code=3[(api.body)="code"];
+}
+message LoginResp{
+   common.Base Base=1[(api.go_tag)="json:\"base\""];
+   UserInfo data=2[(api.go_tag)="json:\"data\""];
+   string RefreshToken=3[(api.go_tag)="json:\"refresh_token\""];
+   string AccessToken=4[(api.go_tag)="json:\"access_token\""];
 }
