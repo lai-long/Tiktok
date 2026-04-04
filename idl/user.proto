@@ -5,7 +5,7 @@ import "api.proto";
 import "common.proto";
 message UserInfo{
    string ID = 1[(api.go_tag)="json:\"id\""];
-   string Username=2[(api.go_tag)="form:\"username\" json:\"username\" binding:\"required\""];
+   string Username=2[(api.go_tag)="json:\"username\""];
    string AvatarURL=3[(api.go_tag)="json:\"avatar_url\""];
    string CreatedAt=4[(api.go_tag)="json:\"created_at\""];
    string UpdatedAt=5[(api.go_tag)="json:\"updated_at\""];
