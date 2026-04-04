@@ -10,7 +10,7 @@ func (m *MySQLdb) CreatVideo(entity entity.VideoEntity) error {
 	return err
 }
 
-func (m *MySQLdb) GetVideoByUserID(userId string, pageSize int, pageNum int) ([]entity.VideoEntity, error) {
+func (m *MySQLdb) GetVideoByUserID(userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error) {
 	var video []entity.VideoEntity
 	sql := `select * from videos where user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
 	offset := pageNum * pageSize
@@ -18,7 +18,7 @@ func (m *MySQLdb) GetVideoByUserID(userId string, pageSize int, pageNum int) ([]
 	return video, err
 }
 
-func (m *MySQLdb) GetVideoByKeyWord(keyword string, pageNum int, pageSize int) ([]entity.VideoEntity, error) {
+func (m *MySQLdb) GetVideoByKeyWord(keyword string, pageNum int64, pageSize int64) ([]entity.VideoEntity, error) {
 	var video []entity.VideoEntity
 	keywords := "%" + keyword + "%"
 	sql := `select * from videos where title like ? or description like ? ORDER BY id DESC LIMIT ? OFFSET ? `

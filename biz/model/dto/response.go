@@ -8,11 +8,6 @@ type Response struct {
 	Base Base        `json:"base"`
 	Data interface{} `json:"data"`
 }
-type LoginResponse struct {
-	Response
-	RefreshToken string `json:"refresh_token"`
-	AccessToken  string `json:"access_token"`
-}
 
 type Data struct {
 	Items interface{} `json:"items"`
