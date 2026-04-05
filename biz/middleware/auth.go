@@ -14,6 +14,14 @@ import (
 )
 
 func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
+	path := string(c.Request.URI().Path())
+	switch path {
+	case "/user/login",
+		"/user/register",
+		"/user/refresh":
+		c.Next(ctx)
+		return
+	}
 	req := new(user.AuthReq)
 	err := c.BindAndValidate(req)
 	if req.AccessToken == "" {
