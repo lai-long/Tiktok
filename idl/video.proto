@@ -64,3 +64,21 @@ message VideoStreamResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
   VideoData Data=2[(api.go_tag)="json:\"data\""];
 }
+
+service VideoService {
+  rpc VideoPublish(VideoPublishReq) returns (VideoPublishResp) {
+    option (api.post) = "/video/publish";
+  }
+  rpc VideoList(VideoListReq) returns (VideoListResp) {
+    option (api.get) = "/video/list";
+  }
+  rpc VideoSearch(VideoSearchReq) returns (VideoSearchResp) {
+    option (api.post) = "/video/search";
+  }
+  rpc VideoPopular(VideoHotReq) returns (VideoHotResp) {
+    option (api.get) = "/video/popular";
+  }
+  rpc VideoStream(VideoStreamReq) returns (VideoStreamResp) {
+    option (api.get) = "/video/feed";
+  }
+}
