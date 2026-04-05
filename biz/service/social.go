@@ -52,14 +52,7 @@ func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int
 	}
 	userInfos := []*user.UserInfo{}
 	for i := 0; i < len(followings); i++ {
-		userInfos = append(userInfos,
-			&user.UserInfo{
-				ID:        followings[i].Id,
-				Username:  followings[i].Username,
-				AvatarURL: followings[i].Avatar_url,
-				CreatedAt: followings[i].Created_at.String(),
-				UpdatedAt: followings[i].Created_at.String(),
-			})
+		userInfos = append(userInfos, followings[i].ToUserInfo())
 	}
 	return consts.CodeSuccess, "FollowingList success", userInfos, true
 }
@@ -72,14 +65,7 @@ func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int6
 	}
 	userInfos := []*user.UserInfo{}
 	for i := 0; i < len(followers); i++ {
-		userInfos = append(userInfos,
-			&user.UserInfo{
-				ID:        followers[i].Id,
-				Username:  followers[i].Username,
-				AvatarURL: followers[i].Avatar_url,
-				CreatedAt: followers[i].Created_at.String(),
-				UpdatedAt: followers[i].Created_at.String(),
-			})
+		userInfos = append(userInfos, followers[i].ToUserInfo())
 	}
 	return consts.CodeSuccess, "FollowerList success", userInfos, true
 }
@@ -91,14 +77,7 @@ func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64)
 	}
 	userInfos := []*user.UserInfo{}
 	for i, _ := range entityFriend {
-		userInfos = append(userInfos,
-			&user.UserInfo{
-				ID:        entityFriend[i].Id,
-				Username:  entityFriend[i].Username,
-				AvatarURL: entityFriend[i].Avatar_url,
-				CreatedAt: entityFriend[i].Created_at.String(),
-				UpdatedAt: entityFriend[i].Created_at.String(),
-			})
+		userInfos = append(userInfos, entityFriend[i].ToUserInfo())
 	}
 	return consts.CodeSuccess, "FollowerList success", userInfos, true
 }

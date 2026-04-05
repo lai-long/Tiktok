@@ -1,6 +1,9 @@
 package entity
 
-import "database/sql"
+import (
+	"Tiktok/biz/model/video"
+	"database/sql"
+)
 
 type VideoEntity struct {
 	ID           string       `db:"id"`
@@ -15,4 +18,20 @@ type VideoEntity struct {
 	UpdatedAt    string       `db:"updated_at"`
 	VideoURL     string       `db:"video_url"`
 	VisitCount   int          `db:"visit_count"`
+}
+
+func (u *VideoEntity) ToVideoInfo() *video.VideoInfo {
+	return &video.VideoInfo{
+		ID:           u.ID,
+		UserID:       u.UserID,
+		Title:        u.Title,
+		Description:  u.Description,
+		CommentCount: int64(u.CommentCount),
+		CoverURL:     u.CoverURL,
+		CreatedAt:    u.CreatedAt,
+		LikeCount:    int64(u.LikeCount),
+		UpdatedAt:    u.UpdatedAt,
+		VideoURL:     u.VideoURL,
+		VisitCount:   int64(u.VisitCount),
+	}
 }

@@ -85,19 +85,7 @@ func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i := 0; i < len(videoList); i++ {
-		videoInfos = append(videoInfos, &video.VideoInfo{
-			ID:           videoList[i].ID,
-			UserID:       videoList[i].UserID,
-			Title:        videoList[i].Title,
-			Description:  videoList[i].Description,
-			CommentCount: int64(videoList[i].CommentCount),
-			CoverURL:     videoList[i].CoverURL,
-			CreatedAt:    videoList[i].CreatedAt,
-			LikeCount:    int64(videoList[i].LikeCount),
-			UpdatedAt:    videoList[i].UpdatedAt,
-			VideoURL:     videoList[i].VideoURL,
-			VisitCount:   videoInfos[i].VisitCount,
-		})
+		videoInfos = append(videoInfos, videoList[i].ToVideoInfo())
 	}
 	return consts.CodeSuccess, "success", videoInfos, true
 }
@@ -110,19 +98,7 @@ func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i := 0; i < len(videoEntity); i++ {
-		videoInfos = append(videoInfos, &video.VideoInfo{
-			ID:           videoEntity[i].ID,
-			UserID:       videoEntity[i].UserID,
-			Title:        videoEntity[i].Title,
-			Description:  videoEntity[i].Description,
-			CommentCount: int64(videoEntity[i].CommentCount),
-			CoverURL:     videoEntity[i].CoverURL,
-			CreatedAt:    videoEntity[i].CreatedAt,
-			LikeCount:    int64(videoEntity[i].LikeCount),
-			UpdatedAt:    videoEntity[i].UpdatedAt,
-			VideoURL:     videoEntity[i].VideoURL,
-			VisitCount:   videoInfos[i].VisitCount,
-		})
+		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
 	return consts.CodeSuccess, "success", videoInfos, true
 }
@@ -143,19 +119,7 @@ func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize
 	}
 	var videoInfos []*video.VideoInfo
 	for i := 0; i < len(z); i++ {
-		videoInfos = append(videoInfos, &video.VideoInfo{
-			ID:           videoEntity[i].ID,
-			UserID:       videoEntity[i].UserID,
-			Title:        videoEntity[i].Title,
-			Description:  videoEntity[i].Description,
-			CommentCount: int64(videoEntity[i].CommentCount),
-			CoverURL:     videoEntity[i].CoverURL,
-			CreatedAt:    videoEntity[i].CreatedAt,
-			LikeCount:    int64(videoEntity[i].LikeCount),
-			UpdatedAt:    videoEntity[i].UpdatedAt,
-			VideoURL:     videoEntity[i].VideoURL,
-			VisitCount:   videoInfos[i].VisitCount,
-		})
+		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
 	return consts.CodeSuccess, "success", videoInfos, true
 }
@@ -167,20 +131,8 @@ func (s *VideoService) VideoStream() (int, string, []*video.VideoInfo) {
 		return consts.CodeDBSelectError, "videoDb.GetVideoStream err", nil
 	}
 	videoInfos := []*video.VideoInfo{}
-	for _, v := range videoEntity {
-		videoInfos = append(videoInfos, &video.VideoInfo{
-			ID:           v.ID,
-			UserID:       v.UserID,
-			Title:        v.Title,
-			Description:  v.Description,
-			CommentCount: int64(v.CommentCount),
-			CoverURL:     v.CoverURL,
-			CreatedAt:    v.CreatedAt,
-			LikeCount:    int64(v.LikeCount),
-			UpdatedAt:    v.UpdatedAt,
-			VideoURL:     v.VideoURL,
-			VisitCount:   int64(v.VisitCount),
-		})
+	for i, _ := range videoEntity {
+		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
 	return consts.CodeSuccess, "success", videoInfos
 }

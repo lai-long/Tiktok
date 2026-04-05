@@ -74,13 +74,7 @@ func (s *CommentService) CommentList(targetId string, pageSize string, pageNum s
 	}
 	var comments []*react.CommentInfo
 	for i, _ := range commentEntity {
-		comments = append(comments, &react.CommentInfo{
-			CommentId: commentEntity[i].CommentId,
-			UserId:    commentEntity[i].UserId,
-			Content:   commentEntity[i].Content,
-			TargetId:  commentEntity[i].TargetId,
-			CreatedAt: commentEntity[i].CreatedAt,
-		})
+		comments = append(comments, commentEntity[i].ToCommentInfo())
 	}
 	return consts.CodeSuccess, "CommentList success", comments, true
 }

@@ -1,6 +1,9 @@
 package entity
 
-import "database/sql"
+import (
+	"Tiktok/biz/model/react"
+	"database/sql"
+)
 
 type CommentEntity struct {
 	UserId       string       `db:"user_id"`
@@ -13,4 +16,18 @@ type CommentEntity struct {
 	UpdatedAt    string       `db:"updated_at"`
 	DeletedAt    sql.NullTime `db:"deleted_at"`
 	TargetType   string       `db:"target_type"`
+}
+
+func (c *CommentEntity) ToCommentInfo() *react.CommentInfo {
+	return &react.CommentInfo{
+		UserId:       c.UserId,
+		TargetId:     c.TargetId,
+		CommentId:    c.CommentId,
+		Content:      c.Content,
+		LikeCount:    c.LikeCount,
+		CreatedAt:    c.CreatedAt,
+		UpdatedAt:    c.UpdatedAt,
+		TargetType:   c.TargetType,
+		CommentCount: c.CommentCount,
+	}
 }
