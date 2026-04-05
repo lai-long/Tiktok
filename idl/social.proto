@@ -46,3 +46,19 @@ message FriendListResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
   SocialData data=2[(api.go_tag)="json:\"data\""];
 }
+
+
+service SocialService {
+  rpc RelationAction(RelationActionReq) returns (RelationActionResp) {
+    option (api.post) = "/relation/action";
+  }
+  rpc FollowingList(FollowingListReq) returns (FollowingListResp) {
+    option (api.get) = "/following/list";
+  }
+  rpc FollowerList(FollowerListReq) returns (FollowerListResp) {
+    option (api.get) = "/follower/list";
+  }
+  rpc FriendList(FriendListReq) returns (FriendListResp) {
+    option (api.get) = "/friend/list";
+  }
+}

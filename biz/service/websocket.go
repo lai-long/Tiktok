@@ -1,8 +1,8 @@
 package service
 
 import (
-	"Tiktok/biz/cache"
-	"Tiktok/biz/dao"
+	"Tiktok/biz/dal/cache"
+	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/model/chat"
 	"Tiktok/pkg/consts"
 	"fmt"

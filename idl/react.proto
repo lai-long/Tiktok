@@ -34,6 +34,7 @@ message CommentListReq{
 }
 message CommentData{
   repeated CommentInfo items=1[(api.go_tag)="json:\"items\""];
+  int64 Total=2[(api.go_tag)="json:\"total\""];
 }
 message CommentListResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
@@ -65,8 +66,30 @@ message LikeListReq{
 }
 message LikeVideoData{
   repeated video.VideoInfo items=1[(api.go_tag)="json:\"items\""];
+  int64 Total=2[(api.go_tag)="json:\"total\""];
 }
 message LikeListResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
   LikeVideoData Data=2[(api.go_tag)="json:\"data\""];
+}
+
+service CommentService {
+  rpc CommentPublish(CommentPublishReq) returns (CommentPublishResp) {
+    option (api.post) = "/comment/publish";
+  }
+  rpc CommentList(CommentListReq) returns (CommentListResp) {
+    option (api.get) = "/comment/list";
+  }
+  rpc CommentDelete(CommentDeleteReq) returns (CommentDeleteResp) {
+    option (api.delete) = "/comment/delete";
+  }
+}
+
+service LikeService {
+  rpc LikeAction(LikeActionReq) returns (LikeActionResp) {
+    option (api.post) = "/like/action";
+  }
+  rpc LikeList(LikeListReq) returns (LikeListResp) {
+    option (api.get) = "/like/list";
+  }
 }

@@ -22,3 +22,11 @@ message MfaBindReq{
 message MfaBindResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
 }
+service MfaService{
+  rpc MfaQrcode(MfaQrcodeReq) returns(MfaQrcodeResp){
+    option(api.get) = "/auth/mfa/qrcode";
+  }
+  rpc MfaBind(MfaBindReq)returns(MfaBindResp){
+    option(api.post) = "/auth/mfa/bind";
+  }
+}

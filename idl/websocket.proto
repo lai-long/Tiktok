@@ -25,3 +25,9 @@ message WebsocketReq{
 message WebsocketResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
 }
+
+service WebsocketService{
+  rpc Websocket(WebsocketReq)returns(WebsocketResp){
+    option(api.get)="/ws";
+  }
+}

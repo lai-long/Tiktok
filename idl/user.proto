@@ -64,3 +64,20 @@ message AuthReq{
 message AuthResp{
    common.Base Base=1[(api.body)="base"];
 }
+service UserService{
+   rpc UserRegister(RegisterReq) returns(RegisterResp){
+      option(api.post) = "/user/register";
+   }
+   rpc UserLogin(LoginReq) returns(LoginResp){
+      option(api.post) = "/user/login";
+   }
+   rpc UserInfo(UserInfoReq)returns(UserInfoResp){
+      option(api.get) = "/user/info";
+   }
+   rpc UserAvatar(UserAvatarReq)returns(UserAvatarResp){
+      option(api.put) = "/user/avatar/upload";
+   }
+   rpc RefreshToken(RefreshTokenReq)returns(RefreshTokenResp){
+      option(api.post)="/user/refresh";
+   }
+}
