@@ -8,8 +8,9 @@ import (
 
 	mfa "Tiktok/biz/model/mfa"
 
+	"Tiktok/pkg/consts"
+
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 )
 
 type MfaServer interface {
-	GenerateMfa(username string, userId string) (bool, string, string, int, string)
+	GenerateMfa(username string, userId string) (string, string, int32, error)
 	MfaBindByCode(code string, userId string) (int, string)
 	MfaBindBySecret(secret string, userId string) (int, string)
 }
@@ -39,7 +40,10 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	var req mfa.MfaQrcodeReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &mfa.MfaQrcodeResp{
+			Base: &common.Base{Code: consts.CodeError},
+		}
+		c.JSON(200, resp)
 		return
 	}
 	userId, _ := ctx.Value("user_id").(string)
@@ -50,7 +54,7 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 
 		Data: &mfa.MfaData{Secret: secret, Qrcode: key},
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.CodeSuccess, resp)
 }
 
 // MfaBind .
