@@ -4,6 +4,7 @@ import (
 	"Tiktok/pkg/consts"
 	"log"
 
+	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 )
 
@@ -14,22 +15,21 @@ type MfaDatabase interface {
 	CheckMfaBind(userId string) (error, int)
 }
 
-func (s *UserService) GenerateMfa(username string, userId string) (bool, string, string, int, string) {
+func (s *UserService) GenerateMfa(username string, userId string) (string, string, int32, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
 	})
 	if err != nil {
-		log.Println("Generate MFA err:", err)
-		return false, "", "", consts.CodeMfaError, "Mfa Generate err"
+		return "", "", consts.CodeMfaError, errors.Wrap(err, "totp.GenerateMfa error")
 	}
 	secret := key.Secret()
 	err = s.mfaDb.SaveMfaSecret(secret, userId)
 	if err != nil {
 		log.Println("Generate MFA err:", err)
-		return false, "", "", consts.CodeDBUpdateError, "Mfa Generate err"
+		return "", "", consts.CodeDBUpdateError
 	}
-	return true, key.URL(), secret, consts.CodeSuccess, "Mfa Generate success"
+	return key.URL(), secret, consts.CodeSuccess
 }
 func (s *UserService) MfaBindByCode(code string, userId string) (int, string) {
 	secret, err := s.mfaDb.GetMfaSecret(userId)
