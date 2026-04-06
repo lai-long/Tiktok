@@ -37,14 +37,7 @@ var (
 // Websocket .
 // @router /ws [GET]
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid, ok := ctx.Value("user_id").(string)
-	if !ok {
-		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
-			Code: 0,
-			Msg:  "WebSocketHandler userid not found",
-		}})
-		return
-	}
+	userid := ctx.Value("user_id").(string)
 	uid := userid
 	req := new(chat.WebsocketReq)
 	err := c.BindAndValidate(req)

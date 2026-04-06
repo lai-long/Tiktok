@@ -49,7 +49,7 @@ func (m *MySQLdb) LikeDelete(userId, targetID, targetType string) error {
 	return nil
 }
 
-func (m *MySQLdb) LikeVideoIds(userId string, pageNum int, pageSize int) (error, []string) {
+func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) (error, []string) {
 	sql := `SELECT target_id FROM likes WHERE  user_id = ? AND target_type = 1  ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var videoId []string
 	offset := pageNum * pageSize
@@ -80,7 +80,7 @@ func (m *MySQLdb) CreateComment(commentId string, videoId string, userId string,
 	return err
 }
 
-func (m *MySQLdb) GetComments(videoId string, pageNum int, pageSize int) (error, []entity.CommentEntity) {
+func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) (error, []entity.CommentEntity) {
 	sql := `SELECT * FROM comments WHERE target_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	offset := pageNum * pageSize
 	var comments []entity.CommentEntity

@@ -44,7 +44,7 @@ func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContex
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	userId, _ := ctx.Value("user_id").(string)
+	userId := ctx.Value("user_id").(string)
 	code, msg := h.socialService.RelationAction(req.ToUserId, req.ActionType, userId)
 	resp := new(social.RelationActionResp)
 	resp.Base.Code = int32(code)
@@ -98,7 +98,7 @@ func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	userId, _ := ctx.Value("user_id").(string)
+	userId := ctx.Value("user_id").(string)
 	code, msg, userInfos, _ := h.socialService.FriendList(userId, req.PageNum, req.PageSize)
 	resp := &social.FollowingListResp{
 		Base: &common.Base{Code: int32(code), Msg: msg},

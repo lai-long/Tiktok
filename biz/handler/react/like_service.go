@@ -6,16 +6,18 @@ import (
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/video"
 	"context"
+	"log"
 
 	react "Tiktok/biz/model/react"
 
+	"Tiktok/pkg/consts"
+
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 type LikeSever interface {
-	LikeAction(userId string, videoId string, action string, targetType string) (int, string)
-	LikeList(userId string, pageNum string, pageSize string) (int, string, []*video.VideoInfo, bool)
+	LikeAction(userId string, videoId string, action string, targetType string) (int32, error)
+	LikeList(userId string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo)
 }
 
 type LikesHandler struct {
@@ -41,10 +43,13 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 	var req react.LikeActionReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &react.CommentPublishResp{
+			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	userId, _ := ctx.Value("user_id").(string)
+	userId := ctx.Value("user_id").(string)
 	if req.TargetType == "" {
 		c.JSON(200, react.LikeActionResp{Base: &common.Base{
 			Code: 0,
@@ -52,11 +57,14 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 		return
 	}
-	code, msg := h.likeService.LikeAction(userId, req.TargetAt, req.ActionType, req.TargetType)
+	code, err := h.likeService.LikeAction(userId, req.TargetAt, req.ActionType, req.TargetType)
+	if err != nil {
+		log.Println("likeService.LikeAction:", err)
+	}
 	resp := new(react.LikeActionResp)
-	resp.Base.Code = int32(code)
-	resp.Base.Msg = msg
-	c.JSON(consts.StatusOK, resp)
+	resp.Base.Code = code
+	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	c.JSON(200, resp)
 }
 
 // LikeList .
@@ -66,14 +74,19 @@ func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
 	var req react.LikeListReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &react.CommentPublishResp{
+			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, videoInfos, _ := h.likeService.LikeList(req.UserId, req.PageNum, req.PageSize)
+	code, err, videoInfos := h.likeService.LikeList(req.UserId, req.PageNum, req.PageSize)
+	if err != nil {
+		log.Println("likeService.LikeList:", err)
+	}
 	resp := &react.LikeListResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &react.LikeVideoData{Items: videoInfos, Total: int64(len(videoInfos))},
 	}
-
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
