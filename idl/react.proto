@@ -29,8 +29,8 @@ message CommentPublishResp{
 
 message CommentListReq{
   string TargetAt=1[(api.body)="target_id"];
-  string PageSize=2[(api.body)="page_size"];
-  string PageNum=3[(api.body)="page_num"];
+  int64 PageSize=2[(api.body)="page_size"];
+  int64 PageNum=3[(api.body)="page_num"];
 }
 message CommentData{
   repeated CommentInfo items=1[(api.go_tag)="json:\"items\""];
@@ -61,8 +61,8 @@ message LikeActionResp{
 
 message LikeListReq{
   string UserId=1[(api.body)="user_id"];
-  string PageNum=2[(api.body)="page_num"];
-  string PageSize=3[(api.body)="page_size"];
+  int64 PageNum=2[(api.body)="page_num"];
+  int64 PageSize=3[(api.body)="page_size"];
 }
 message LikeVideoData{
   repeated video.VideoInfo items=1[(api.go_tag)="json:\"items\""];

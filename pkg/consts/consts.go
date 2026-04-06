@@ -29,7 +29,7 @@ const (
 	MfaBindError       int32 = 201011 //mfa绑定错误
 )
 
-// 01视频
+// 02视频
 const (
 	VideoReqValidError int32 = 102001 //视频模块参数绑定错误
 	VideoRedisSetError int32 = 202001 //视频模块redis set错误
@@ -38,7 +38,16 @@ const (
 	VideoDBDeleteError int32 = 202004 //视频模块模块数据库delete错误
 	VideoDBSelectError int32 = 202005 //视频模块模块数据库select错误
 	VideoRedisGetError int32 = 202006 //视频模块redis get错误
+)
 
+// 03react模块
+const (
+	ReactReqValidError int32 = 103001 //互动模块视频绑定错误
+	ReactReqValueError int32 = 103002 //传入参数错误
+	ReactDBInsertError int32 = 203002 //视频模块模块数据库insert错误
+	ReactDBUpdateError int32 = 203003 //视频模块模块数据库update错误
+	ReactDBDeleteError int32 = 203004 //视频模块模块数据库delete错误
+	ReactDBSelectError int32 = 203005 //视频模块模块数据库select错误
 )
 
 var mapErrorMsg = map[int32]string{

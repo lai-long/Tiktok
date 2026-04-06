@@ -6,15 +6,17 @@ import (
 	"Tiktok/biz/model/common"
 	react "Tiktok/biz/model/react"
 	"context"
+	"log"
+
+	"Tiktok/pkg/consts"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 type CommentSever interface {
-	CommentPublish(targetId, userId, content, targetType string) (int, string)
-	CommentList(targetId string, pageSize string, pageNum string) (int, string, []*react.CommentInfo, bool)
-	CommentDelete(commentId string, target string, userId string, targetType string) (int, string)
+	CommentPublish(targetId, userId, content, targetType string) (int32, error)
+	CommentList(targetId string, pageSize int64, pageNum int64) (int32, error, []*react.CommentInfo)
+	CommentDelete(commentId string, target string, userId string, targetType string) (int32, error)
 }
 type CommentHandler struct {
 	service CommentSever
@@ -38,15 +40,21 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 	var req react.CommentPublishReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &react.CommentPublishResp{
+			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	userId, _ := ctx.Value("user_id").(string)
-	code, msg := h.service.CommentPublish(req.TargetAt, userId, req.Content, req.TargetType)
-	resp := &react.CommentPublishResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+	userId := ctx.Value("user_id").(string)
+	code, err := h.service.CommentPublish(req.TargetAt, userId, req.Content, req.TargetType)
+	if err != nil {
+		log.Println("CommentPublish err:", err)
 	}
-	c.JSON(consts.StatusOK, resp)
+	resp := &react.CommentPublishResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+	}
+	c.JSON(200, resp)
 }
 
 // CommentList .
@@ -55,15 +63,18 @@ func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext)
 	var req react.CommentListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &react.CommentPublishResp{
+			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, commentInfos, _ := h.service.CommentList(req.TargetAt, req.PageSize, req.PageNum)
+	code, err, commentInfos := h.service.CommentList(req.TargetAt, req.PageSize, req.PageNum)
 	resp := &react.CommentListResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &react.CommentData{Items: commentInfos},
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // CommentDelete .
@@ -73,13 +84,19 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 	var req react.CommentDeleteReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &react.CommentPublishResp{
+			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	userId, _ := ctx.Value("user_id").(string)
-	code, msg := h.service.CommentDelete(req.CommentId, req.TargetAt, userId, req.TargetType)
+	userId := ctx.Value("user_id").(string)
+	code, err := h.service.CommentDelete(req.CommentId, req.TargetAt, userId, req.TargetType)
+	if err != nil {
+		log.Println("CommentDelete err:", err)
+	}
 	resp := new(react.CommentDeleteResp)
-	resp.Base.Code = int32(code)
-	resp.Base.Msg = msg
-	c.JSON(consts.StatusOK, resp)
+	resp.Base.Code = code
+	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	c.JSON(200, resp)
 }
