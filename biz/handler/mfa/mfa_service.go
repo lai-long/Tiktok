@@ -20,8 +20,8 @@ var (
 
 type MfaServer interface {
 	GenerateMfa(username string, userId string) (string, string, int32, error)
-	MfaBindByCode(code string, userId string) (int, string)
-	MfaBindBySecret(secret string, userId string) (int, string)
+	MfaBindByCode(code string, userId string) (int32, error)
+	MfaBindBySecret(secret string, userId string) (int32, error)
 }
 type MfaHandler struct {
 	MfaService MfaServer

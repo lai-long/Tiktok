@@ -22,6 +22,8 @@ const (
 	UserRedisSetError  int32 = 201007 //用户模块redis set错误
 	UserRedisGetError  int32 = 201008 //用户模块redis get错误
 	UserRedisDelError  int32 = 201009 //用户模块redis del错误
+	MfaGenerateError   int32 = 201010 //生成mfa错误
+	MfaBindError       int32 = 201011 //mfa绑定错误
 )
 
 var mapErrorMsg = map[int32]string{
@@ -44,6 +46,8 @@ var mapErrorMsg = map[int32]string{
 	UserRedisSetError:  "用户模块redis set错误",
 	UserRedisGetError:  "用户模块redis get错误",
 	UserRedisDelError:  "用户模块redis del错误",
+	MfaGenerateError:   "生成mfa错误",
+	MfaBindError:       "mfa绑定错误",
 }
 
 func GetErrorCodeMsg(code int32) string {

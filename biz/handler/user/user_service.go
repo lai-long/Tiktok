@@ -166,11 +166,14 @@ func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, msg, reToken, acToken, _ := h.userService.RefreshToken(ctx, req.RefreshToken)
+	code, reToken, acToken, err := h.userService.RefreshToken(ctx, req.RefreshToken)
+	if err != nil {
+		log.Println("userService.RefreshToken error:", err)
+	}
 	resp := &user.RefreshTokenResp{
-		Base:         &common.Base{Code: int32(code), Msg: msg},
+		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		RefreshToken: reToken,
 		AccessToken:  acToken,
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
