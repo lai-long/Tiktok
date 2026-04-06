@@ -5,12 +5,12 @@ import (
 	"Tiktok/biz/model/react"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
-	"log"
-	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 type CommentDatabase interface {
-	GetComments(videoId string, pageNum int, pageSize int) (error, []entity.CommentEntity)
+	GetComments(videoId string, pageNum int64, pageSize int64) (error, []entity.CommentEntity)
 	CommentDelete(commentId string) error
 	GetCommentById(commentId string) (entity.CommentEntity, error)
 	VideoCommentCountUp(videoId string) error
@@ -28,90 +28,69 @@ func NewCommentService(db CommentDatabase) *CommentService {
 	return &CommentService{db: db}
 }
 
-func (s *CommentService) CommentPublish(targetId, userId, content, targetType string) (int, string) {
+func (s *CommentService) CommentPublish(targetId, userId, content, targetType string) (int32, error) {
 	if targetType == "1" {
 		commentId := utils.IdGenerate()
 		err := s.db.CreateComment(commentId, targetId, userId, content, targetType)
 		if err != nil {
-			log.Println("Video db CreateComment err", err)
-			return consts.CodeDBCreateError, "Video CommentPublish CreateComment error"
+			return consts.ReactDBInsertError, errors.Wrap(err, "->CommentPublish Create comment error ")
 		}
 		err = s.db.VideoCommentCountUp(targetId)
 		if err != nil {
-			log.Println("db CommentCountUp err", err)
-			return consts.CodeDBUpdateError, "Video CommentPublish CommentCountUp error"
+			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentPublish Update comment count error ")
 		}
-		return consts.CodeSuccess, "Video CommentPublish success"
+		return consts.Success, nil
 	} else if targetType == "2" {
 		commentId := utils.IdGenerate()
 		err := s.db.CreateComment(commentId, targetId, userId, content, targetType)
 		if err != nil {
-			log.Println("Comment db CreateComment err", err)
-			return consts.CodeDBCreateError, "Comment CommentPublish CreateComment error"
+			return consts.ReactDBInsertError, errors.Wrap(err, "->CommentPublish Create comment error ")
 		}
 		err = s.db.CommentCommentCountUp(targetId)
+		if err != nil {
+			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentPublish update comment count error ")
+		}
 	}
-	return consts.CodeDBCreateError, "CommentPublish CreateComment error"
+	return consts.ReactReqValueError, nil
 }
 
-func (s *CommentService) CommentList(targetId string, pageSize string, pageNum string) (int, string, []*react.CommentInfo, bool) {
-	pageNumInt := 0
-	pageSizeInt := 10
-	pageNumInt, err := strconv.Atoi(pageNum)
+func (s *CommentService) CommentList(targetId string, pageSize int64, pageNum int64) (int32, error, []*react.CommentInfo) {
+
+	err, commentEntity := s.db.GetComments(targetId, pageNum, pageSize)
 	if err != nil {
-		log.Printf("pageNumInt, err := strconv.Atoi(pageNum) error: %v", err)
-		return consts.CodeError, "CommentList pageNumInt strconv error", nil, false
-	}
-	pageSizeInt, err = strconv.Atoi(pageSize)
-	if err != nil {
-		log.Printf("pageSizeInt, err := strconv.Atoi(pageSize) error: %v", err)
-		return consts.CodeError, "CommentList pageSize strconv error", nil, false
-	}
-	err, commentEntity := s.db.GetComments(targetId, pageNumInt, pageSizeInt)
-	if err != nil {
-		log.Printf("db GetComments err: %v", err)
-		return consts.CodeDBSelectError, "service CommentList GetComments error", nil, false
+		return consts.ReactDBSelectError, errors.Wrap(err, "->CommentList select comment err"), nil
 	}
 	var comments []*react.CommentInfo
 	for i, _ := range commentEntity {
-		comments = append(comments, &react.CommentInfo{
-			CommentId: commentEntity[i].CommentId,
-			UserId:    commentEntity[i].UserId,
-			Content:   commentEntity[i].Content,
-			TargetId:  commentEntity[i].TargetId,
-			CreatedAt: commentEntity[i].CreatedAt,
-		})
+		comments = append(comments, commentEntity[i].ToCommentInfo())
 	}
-	return consts.CodeSuccess, "CommentList success", comments, true
+	return consts.Success, nil, comments
 }
 
-func (s *CommentService) CommentDelete(commentId string, targetId string, userId string, targetType string) (int, string) {
+func (s *CommentService) CommentDelete(commentId string, targetId string, userId string, targetType string) (int32, error) {
 	comment, err := s.db.GetCommentById(commentId)
 	if err != nil {
-		log.Println("db GetComment err", err)
-		return consts.CodeDBSelectError, "CommentDelete GetCommentById error"
+		return consts.ReactDBSelectError, errors.Wrap(err, "->CommentDelete select comment err")
 	}
 	if comment.UserId != userId {
-		return consts.CodeError, "CommentDelete GetUserId error,comment_userId != userId"
+		return consts.ReactReqValueError, nil
 	}
 	err = s.db.CommentDelete(commentId)
 	if err != nil {
-		log.Println("db CommentDelete err", err)
-		return consts.CodeDBDeleteError, "CommentDelete CreateComment error"
+		return consts.ReactDBDeleteError, errors.Wrap(err, "->CommentDelete delete comment err")
 	}
 	if targetType == "1" {
 		err = s.db.VideoCommentCountDown(targetId)
 		if err != nil {
-			log.Println("db CommentCountDown err", err)
-			return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
-		return consts.CodeSuccess, commentId
+		return consts.Success, nil
 	} else if targetType == "2" {
 		err = s.db.CommentCommentCountDown(targetId)
 		if err != nil {
-			log.Println("db CommentCommentCountDown err", err)
-			return consts.CodeDBDeleteError, "CommentDelete CommentCountDown error"
+			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
+		return consts.Success, nil
 	}
-	return consts.CodeDBDeleteError, "CommentDelete Delete comment error"
+	return consts.ReactReqValueError, nil
 }

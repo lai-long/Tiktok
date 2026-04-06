@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -35,26 +36,24 @@ func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
-func CheckPasswordHash(password, hash string) bool {
+func CheckPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(hash))
-	return err == nil
+	return errors.Wrap(err, "CheckPasswordHash error")
 }
 
 // jwt generate token
-func GenerateTokens(userDto *user.UserInfo) (string, string, bool) {
+func GenerateTokens(userDto *user.UserInfo) (string, string, error) {
 	refreshTime := 288 * time.Hour
 	accessTime := 24 * time.Hour
 	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, config.Cfg.Jwt.RefreshSecret)
 	if err != nil {
-		log.Println(err)
-		return "生成refreshToken错误", "", false
+		return "生成refreshToken错误", "", err
 	}
 	accessToken, err := GetToken(userDto.Username, userDto.ID, accessTime, config.Cfg.Jwt.AccessSecret)
 	if err != nil {
-		log.Println(err)
-		return "生成accessToken错误", "", false
+		return "生成accessToken错误", "", err
 	}
-	return refreshToken, accessToken, true
+	return refreshToken, accessToken, nil
 }
 func GetToken(username string, userid string, t time.Duration, secret string) (string, error) {
 	jwtClaims := &jwt.MapClaims{
@@ -80,7 +79,7 @@ func IsImage(file multipart.File) (bool, error) {
 	head := make([]byte, 512)
 	_, err := file.Read(head)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "->isImage read file header error")
 	}
 	mime := http.DetectContentType(head)
 	switch mime {

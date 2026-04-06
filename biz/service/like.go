@@ -5,8 +5,8 @@ import (
 
 	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
-	"log"
-	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 type LikeCommentDatabase interface {
@@ -16,7 +16,7 @@ type LikeCommentDatabase interface {
 type LikeVideoDatabase interface {
 	VideoLikeCountUp(videoId string) error
 	VideoLikeCountDown(videoId string) error
-	LikeVideoIds(userId string, pageNum int, pageSize int) (error, []string)
+	LikeVideoIds(userId string, pageNum int64, pageSize int64) (error, []string)
 	LikeVideos(videoId []string) (bool, []entity.VideoEntity)
 }
 type LikeDatabase interface {
@@ -37,99 +37,70 @@ func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabas
 	}
 }
 
-func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int, string) {
+func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int32, error) {
 	//target type 1视频 2评论
 	if targetType == "1" {
 		if action == "1" {
 			err := s.likeDb.LikeCreate(userId, targetId, targetType)
 			if err != nil {
-				return consts.CodeDBCreateError, "LikeAction LikeCreate error"
+				return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
 			}
 			err = s.videoDb.VideoLikeCountUp(targetId)
 			if err != nil {
-				return consts.CodeDBUpdateError, "LikeAction LikeCountUp error"
+				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction VideoLikeCount up error")
 			}
-			return consts.CodeSuccess, "LikeAction success"
+			return consts.Success, nil
 		}
 		if action == "2" {
 			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
-				log.Println(err)
-				return consts.CodeDBDeleteError, "VideoLikeAction LikeDelete error"
+				return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
 			}
 			err = s.videoDb.VideoLikeCountDown(targetId)
 			if err != nil {
-				log.Println(err)
-				return consts.CodeDBUpdateError, "VideoLikeAction LikeCountDown error"
+				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction VideoLikeCount down error")
 			}
-			return consts.CodeSuccess, "VideoLikeAction success"
+			return consts.Success, nil
 		}
-		return consts.CodeLikeError, "VideoLikeAction action num error"
+		return consts.ReactReqValueError, nil
 	} else if targetType == "2" {
 		if action == "1" {
 			err := s.likeDb.LikeCreate(userId, targetId, targetType)
 			if err != nil {
-				log.Println("CommentLikeAction LikeCreate error", err)
-				return consts.CodeDBCreateError, "CommentLikeAction CommentCreate error"
+				return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
 			}
 			err = s.commentDb.CommentLikeCountUp(targetId)
 			if err != nil {
-				log.Println("CommentLikeAction CommentCountUp error", err)
-				return consts.CodeDBUpdateError, "CommentLikeAction CommentCountUp error"
+				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount up error")
 			}
 		}
 		if action == "2" {
 			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
-				log.Println("CommentLikeAction CommentDelete error", err)
-				return consts.CodeDBDeleteError, "CommentLikeAction CommentDelete error"
+				return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
 			}
 			err = s.commentDb.CommentLikeCountDown(targetId)
 			if err != nil {
-				log.Println("CommentLikeAction CommentCountDown error", err)
-				return consts.CodeDBUpdateError, "CommentLikeAction CommentCountDown error"
+				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount down error")
 			}
 		}
-		return consts.CodeSuccess, "CommentLikeAction action num error"
+		return consts.Success, nil
 	}
-	return consts.CodeLikeError, "CommentLikeAction target type num error"
+	return consts.ReactReqValueError, nil
 }
 
-func (s *LikeService) LikeList(userId string, pageNum string, pageSize string) (int, string, []*video.VideoInfo, bool) {
-	pageNumInt, err := strconv.Atoi(pageNum)
+func (s *LikeService) LikeList(userId string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
+	err, videoId := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
-		log.Printf("LikeList pageNum strconv error : %v", err)
-		return consts.CodeError, "LikeList pageNum strconv error", nil, false
-	}
-	pageSizeInt, err := strconv.Atoi(pageSize)
-	if err != nil {
-		log.Printf("LikeList pageSize strconv error : %v", err)
-		return consts.CodeError, "LikeList pageSize strconv error", nil, false
-	}
-	err, videoId := s.videoDb.LikeVideoIds(userId, pageNumInt, pageSizeInt)
-	if err != nil {
-		log.Printf("LikeList err : %v", err)
-		return consts.CodeDBSelectError, "LikeList db.LikeVideoIds error", nil, false
+		return consts.ReactDBSelectError, errors.Wrap(err, "->LikeList select LikeVideo error"), nil
 	}
 	ok, videos := s.videoDb.LikeVideos(videoId)
 	if !ok {
-		return consts.CodeDBSelectError, "LikeList db.LikeVideos error", nil, false
+		return consts.ReactDBSelectError, errors.New("->LikeList LikeVideos err"), nil
 	}
 	var videoInfos []*video.VideoInfo
 	for _, v := range videos {
-		videoInfos = append(videoInfos, &video.VideoInfo{
-			ID:           v.ID,
-			UserID:       v.UserID,
-			Title:        v.Title,
-			Description:  v.Description,
-			CommentCount: int64(v.CommentCount),
-			CoverURL:     v.CoverURL,
-			CreatedAt:    v.CreatedAt,
-			LikeCount:    int64(v.LikeCount),
-			UpdatedAt:    v.UpdatedAt,
-			VideoURL:     v.VideoURL,
-			VisitCount:   int64(v.VisitCount),
-		})
+		videoInfos = append(videoInfos, v.ToVideoInfo())
 	}
-	return consts.CodeSuccess, "LikeList success", videoInfos, true
+	return consts.Success, nil, videoInfos
 }

@@ -6,12 +6,14 @@ import (
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/service"
 	"context"
+	"log"
 	"mime/multipart"
 
 	user "Tiktok/biz/model/user"
 
+	"Tiktok/pkg/consts"
+
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 var (
@@ -23,11 +25,11 @@ var (
 )
 
 type UserSever interface {
-	Register(registerReq *user.RegisterReq) (int, string)
-	Login(username, password, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string)
-	UserInfo(userId string) (*user.UserInfo, int, string, bool)
-	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int, string, bool, *user.UserInfo)
-	RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool)
+	Register(registerReq *user.RegisterReq) (int32, error)
+	Login(username, password, mfaCode string, ctx context.Context) (int32, error, *user.UserInfo, string, string)
+	UserInfo(userId string) (*user.UserInfo, int32, error)
+	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int32, error, *user.UserInfo)
+	RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error)
 }
 type UserHandler struct {
 	userService UserSever
@@ -46,14 +48,21 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 	var req user.RegisterReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		code := consts.UserReqValidError
+		resp := &user.RegisterResp{
+			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg := h.userService.Register(&req)
+	code, err := h.userService.Register(&req)
+	if err != nil {
+		log.Println("userService.Register error:", err)
+	}
 	resp := new(user.RegisterResp)
-	resp.Base.Code = int32(code)
-	resp.Base.Msg = msg
-	c.JSON(consts.StatusOK, resp)
+	resp.Base.Code = code
+	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	c.JSON(200, resp)
 }
 
 // UserLogin .
@@ -63,17 +72,24 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 	var req user.LoginReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("userService.Login bind error:", err)
+		resp := &user.LoginResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, userInfo, reToken, acToken := h.userService.Login(req.UserName, req.Password, req.Code, ctx)
+	code, err, userInfo, reToken, acToken := h.userService.Login(req.UserName, req.Password, req.Code, ctx)
+	if err != nil {
+		log.Println("userService.Login error:", err)
+	}
 	resp := &user.LoginResp{
-		Base:         &common.Base{Code: int32(code), Msg: msg},
+		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data:         userInfo,
 		RefreshToken: reToken,
 		AccessToken:  acToken,
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // UserInfo .
@@ -83,18 +99,25 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 	var req user.UserInfoReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("userService.Login bind error:", err)
+		resp := &user.UserInfoResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	userInfo, code, msg, _ := h.userService.UserInfo(req.UserId)
+	userInfo, code, err := h.userService.UserInfo(req.UserId)
+	if err != nil {
+		log.Println("userService.UserInfo error:", err)
+	}
 	resp := &user.UserInfoResp{
 		Base: &common.Base{
-			Code: int32(code),
-			Msg:  msg,
+			Code: code,
+			Msg:  consts.GetErrorCodeMsg(code),
 		},
 		Data: userInfo,
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // UserAvatar .
@@ -104,21 +127,29 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 	var req user.UserAvatarReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("userService.UserAvatar bind req error:", err)
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
 	userAvatarReq, err := c.FormFile("data")
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("userService.UserAvatar FormFile error:", err)
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	userId, _ := ctx.Value("user_id").(string)
-	code, msg, _, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
+	userId := ctx.Value("user_id").(string)
+	code, err, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
 	resp := &user.UserAvatarResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: userInfo,
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // RefreshToken .
@@ -128,14 +159,21 @@ func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 	var req user.RefreshTokenReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("userService.RefreshToken bind req error:", err)
+		resp := &user.RefreshTokenResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, reToken, acToken, _ := h.userService.RefreshToken(ctx, req.RefreshToken)
+	code, reToken, acToken, err := h.userService.RefreshToken(ctx, req.RefreshToken)
+	if err != nil {
+		log.Println("userService.RefreshToken error:", err)
+	}
 	resp := &user.RefreshTokenResp{
-		Base:         &common.Base{Code: int32(code), Msg: msg},
+		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		RefreshToken: reToken,
 		AccessToken:  acToken,
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }

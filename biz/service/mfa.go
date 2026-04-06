@@ -2,8 +2,8 @@ package service
 
 import (
 	"Tiktok/pkg/consts"
-	"log"
 
+	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 )
 
@@ -14,53 +14,47 @@ type MfaDatabase interface {
 	CheckMfaBind(userId string) (error, int)
 }
 
-func (s *UserService) GenerateMfa(username string, userId string) (bool, string, string, int, string) {
+func (s *UserService) GenerateMfa(username string, userId string) (string, string, int32, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
 	})
 	if err != nil {
-		log.Println("Generate MFA err:", err)
-		return false, "", "", consts.CodeMfaError, "Mfa Generate err"
+		return "", "", consts.MfaGenerateError, errors.Wrap(err, "->generate mfa totp.GenerateMfa error")
 	}
 	secret := key.Secret()
 	err = s.mfaDb.SaveMfaSecret(secret, userId)
 	if err != nil {
-		log.Println("Generate MFA err:", err)
-		return false, "", "", consts.CodeDBUpdateError, "Mfa Generate err"
+		return "", "", consts.UserDBUpdateError, errors.Wrap(err, "->generate mfa save MFA error")
 	}
-	return true, key.URL(), secret, consts.CodeSuccess, "Mfa Generate success"
+	return key.URL(), secret, consts.Success, nil
 }
-func (s *UserService) MfaBindByCode(code string, userId string) (int, string) {
+func (s *UserService) MfaBindByCode(code string, userId string) (int32, error) {
 	secret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
-		log.Println("Get MFA secret err:", err)
-		return consts.CodeDBSelectError, "GetMfaSecret err:"
+		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
 	}
 	valid := totp.Validate(code, secret)
 	if !valid {
-		return consts.CodeMfaError, "GetMfaSecret err:"
+		return consts.MfaCodeFalse, nil
 	}
 	err = s.mfaDb.MfaBindUpdate(userId)
 	if err != nil {
-		log.Println("MfaBindUpdate err:", err)
-		return consts.CodeDBUpdateError, "MfaBindUpdate err:"
+		return consts.UserDBUpdateError, errors.Wrap(err, "->mfa bind by code update MFA error")
 	}
-	return consts.CodeSuccess, "MfaBindUpdate success"
+	return consts.Success, nil
 }
-func (s *UserService) MfaBindBySecret(secret string, userId string) (int, string) {
+func (s *UserService) MfaBindBySecret(secret string, userId string) (int32, error) {
 	dbSecret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
-		log.Println("Get MFA secret err:", err)
-		return consts.CodeDBSelectError, "GetMfaSecret err:"
+		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")
 	}
 	if dbSecret != secret {
-		return consts.CodeMfaError, "MfaSecret false err:"
+		return consts.MfaCodeFalse, nil
 	}
 	err = s.mfaDb.MfaBindUpdate(userId)
 	if err != nil {
-		log.Println("MfaBindUpdate err:", err)
-		return consts.CodeDBUpdateError, "MfaBindUpdate err:"
+		return consts.UserDBUpdateError, errors.Wrap(err, "->mfa bind by secret update MFA error")
 	}
-	return consts.CodeSuccess, "MfaBindUpdate success"
+	return consts.Success, nil
 }

@@ -8,11 +8,11 @@ import (
 	"context"
 	"database/sql"
 	"io"
-	"log"
 	"mime/multipart"
 	"os"
-
 	"path/filepath"
+
+	"github.com/pkg/errors"
 
 	"github.com/pquerna/otp/totp"
 )
@@ -46,178 +46,144 @@ func (s *UserService) IsUsernameExists(username string) (bool, error) {
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
-		return false, err
+		return false, errors.Wrap(err, "get user by username")
 	}
 	return true, nil
 }
 
-func (s *UserService) Register(userinfo *user.RegisterReq) (int, string) {
+func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 	var userEntity entity.UserEntity
 	var err error
 	exists, err := s.IsUsernameExists(userinfo.UserName)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeUserError, "register  IsUsernameExists error"
+		return consts.UserDBSelectError, errors.Wrap(err, "IsUsernameExists error")
 	}
 	if exists {
-		return consts.CodeUserError, "用户名已存在"
+		return consts.UserNameExists, nil
 	}
 	userEntity.Id = utils.IdGenerate()
 	userEntity.Username = userinfo.UserName
 	userEntity.Password, err = utils.HashPassword(userinfo.Password)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeHashError, "hashPassword error"
+		return consts.UserHashError, errors.Wrap(err, "utils.HashPassword error")
 	}
 	if err = s.userDb.CreateUser(userEntity); err != nil {
-		log.Println(err)
-		return consts.CodeDBCreateError, "db create user error"
+		return consts.UserDBInsertError, errors.Wrap(err, "CreateUser error")
 	}
-	return consts.CodeSuccess, "success"
+	return consts.Success, nil
 }
 
-func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int, string, *user.UserInfo, string, string) {
+func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int32, error, *user.UserInfo, string, string) {
 	userEntity, err := s.userDb.GetUserByUsername(userName)
+	if err != nil && err != sql.ErrNoRows {
+		return consts.UserDBSelectError, errors.Wrap(err, "->Login GetUserByUsername数据库查询错误"), &user.UserInfo{}, "", ""
+	} else if err == sql.ErrNoRows {
+		return consts.UserNotExists, errors.Wrap(err, "->login用户不存在"), &user.UserInfo{}, "", ""
+	}
+	err = utils.CheckPasswordHash(userEntity.Password, password)
 	if err != nil {
-		log.Println("get user entity error", err)
-		return consts.CodeUserError, "GetUserByUsername Error", &user.UserInfo{}, "", ""
+		return consts.UserPasswordError, errors.Wrap(err, "->login: check password failed"), &user.UserInfo{}, "", ""
 	}
-	ok := utils.CheckPasswordHash(userEntity.Password, password)
-	if !ok {
-		return consts.CodeUserError, "密码错误", &user.UserInfo{}, "", ""
-	}
-	var userInfo user.UserInfo
-	userInfo.AvatarURL = userEntity.Avatar_url
-	userInfo.ID = userEntity.Id
-	userInfo.Username = userEntity.Username
-	userInfo.CreatedAt = userEntity.Created_at.String()
-	userInfo.UpdatedAt = userEntity.Updated_at.String()
+	userInfo := userEntity.ToUserInfo()
 	err, enable := s.mfaDb.CheckMfaBind(userInfo.ID)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeUserError, "CheckMfaBind error", &user.UserInfo{}, "", ""
+		return consts.UserDBSelectError, errors.Wrap(err, "->login: check mfa bind failed"), &user.UserInfo{}, "", ""
 	}
 	if enable != 0 {
 		if mfaCode == "" {
-			return consts.CodeMfaError, "GetMfaCode error 请输入mfa code", &user.UserInfo{}, "", ""
+			return consts.MfaLack, nil, &user.UserInfo{}, "", ""
 		}
 		mfaSecret, err := s.mfaDb.GetMfaSecret(userInfo.ID)
 		if err != nil {
-			log.Println(err)
-			return consts.CodeDBSelectError, "GetMfaSecret from db error", &user.UserInfo{}, "", ""
+			return consts.UserDBSelectError, errors.Wrap(err, "->login get mfa secret failed"), &user.UserInfo{}, "", ""
 		}
 		if !totp.Validate(mfaCode, mfaSecret) {
-			return consts.CodeMfaError, "totp.Validate error", &user.UserInfo{}, "", ""
+			return consts.MfaCodeFalse, nil, &user.UserInfo{}, "", ""
 		}
 	}
-	reToken, acToken, ok := utils.GenerateTokens(&userInfo)
-	if ok == false {
-		return consts.CodeTokenError, "生成token错误", &userInfo, reToken, acToken
+	reToken, acToken, err := utils.GenerateTokens(userInfo)
+	if err != nil {
+		return consts.GenerateTokenError, errors.Wrap(err, "->login 生成token错误"), userInfo, reToken, acToken
 	}
 	err = s.redis.UserTokenSet(ctx, reToken, userInfo.ID)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeUserError, "db create user refresh token error", &user.UserInfo{}, "", ""
+		return consts.UserRedisSetError, errors.Wrap(err, "->login 将refresh token存入redis错误"), &user.UserInfo{}, "", ""
 	}
-	return consts.CodeSuccess, "success", &userInfo, reToken, acToken
+	return consts.Success, nil, userInfo, reToken, acToken
 }
 
-func (s *UserService) UserInfo(userId string) (*user.UserInfo, int, string, bool) {
+func (s *UserService) UserInfo(userId string) (*user.UserInfo, int32, error) {
 	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
-		log.Printf("GetUserByUserIdError : %v", err)
-		return &user.UserInfo{}, consts.CodeDBSelectError, "GetUserByUserIdError", false
+		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo GetUserByUserId error")
 	}
-	var userInfo user.UserInfo
-	userInfo.Username = userEntity.Username
-	userInfo.AvatarURL = userEntity.Avatar_url
-	userInfo.ID = userEntity.Id
-	userInfo.CreatedAt = userEntity.Created_at.String()
-	userInfo.UpdatedAt = userEntity.Updated_at.String()
-	return &userInfo, consts.CodeSuccess, "Get UserInfo success", true
+	userInfo := userEntity.ToUserInfo()
+	return userInfo, consts.Success, nil
 }
 
-func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int, string, bool, *user.UserInfo) {
+func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, error, *user.UserInfo) {
 	dataFile, err := data.Open()
 	if err != nil {
-		log.Printf("data.Open error: %v", err)
-		return consts.CodeUserError, "data.Open Error", false, &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->UserInfo data open 错误"), &user.UserInfo{}
 	}
 	defer dataFile.Close()
 	ok, err := utils.IsImage(dataFile)
 	if err != nil {
-		log.Printf("IsImage error: %v", err)
-		return consts.CodeUserError, "utils.IsImage Error", false, &user.UserInfo{}
+		return consts.FileError, errors.Wrap(err, "->userInfo check image failed"), &user.UserInfo{}
 	}
 	if !ok {
-		return consts.CodeIOError, "IsImage false,文件不是图片", false, &user.UserInfo{}
+		return consts.ImageFalse, nil, &user.UserInfo{}
 	}
 	if _, err := dataFile.Seek(0, io.SeekStart); err != nil {
-		return consts.CodeIOError, "a dataFile.Seek 重置文件指针失败", false, &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
 	}
 	filename := utils.IdGenerate()
 	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeUserError, "a user avatar MkdirAll Error", false, &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->userInfo os mkdir错误"), &user.UserInfo{}
 	}
 	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
-		log.Printf("os.Create error: %v", err)
-		return consts.CodeUserError, "user a upload os.Create Error", false, &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->userInfo os creat failed"), &user.UserInfo{}
 	}
 	defer file.Close()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
-		log.Printf("io.Copy error: %v", err)
-		return consts.CodeIOError, "a io.copy error", false, &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->userInfo io copy error"), &user.UserInfo{}
 	}
 	err = s.userDb.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
 	if err != nil {
-		log.Printf("db.UpdateUserAvatar error: %v", err)
-		return consts.CodeDBUpdateError, "a db.UpdateUserAvatar error", false, &user.UserInfo{}
+		return consts.UserDBUpdateError, errors.Wrap(err, "->userinfo 更新头像错误"), &user.UserInfo{}
 	}
 	userEntity, err := s.userDb.GetUserByUserId(userId.(string))
 	if err != nil {
-		log.Printf("db.GetUserByUserIderror: %v", err)
-		return consts.CodeDBSelectError, "a db.GetUserByUserId error", false, &user.UserInfo{}
+		return consts.UserDBSelectError, errors.Wrap(err, "->userinfo get user by userid failed"), &user.UserInfo{}
 	}
-	var userInfo user.UserInfo
-	userInfo.Username = userEntity.Username
-	userInfo.AvatarURL = userEntity.Avatar_url
-	userInfo.ID = userEntity.Id
-	userInfo.CreatedAt = userEntity.Created_at.String()
-	userInfo.UpdatedAt = userEntity.Updated_at.String()
-	return consts.CodeSuccess, "a change success", true, &userInfo
+	userInfo := userEntity.ToUserInfo()
+	return consts.Success, nil, userInfo
 }
 
-func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int, string, string, string, bool) {
+func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error) {
 	userId, err := s.redis.UserGetByRefreshToken(ctx, refreshToken)
 	if err != nil {
-		log.Printf("redis.UserGetByRefreshToken error: %v", err)
-		return consts.CodeDBSelectError, "token 错误，s.redis.UserGetByRefreshToken err", "", "", false
+		return consts.UserRedisGetError, "", "", errors.Wrap(err, "->RefreshToken GetUserIDByRefreshToken error")
 	}
 	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
-		log.Printf("s.userDb.GetUserByUserIderror: %v", err)
-		return consts.CodeDBSelectError, "RefreshToken userDb.GetUserByUserId err ", "", "", false
+		return consts.UserDBSelectError, "", "", errors.Wrap(err, "->RefreshToken GetUserByUserId error")
 	}
-	var userInfo user.UserInfo
-	userInfo.Username = userEntity.Username
-	userInfo.ID = userEntity.Id
-	refreshToken2, accessToken, ok := utils.GenerateTokens(&userInfo)
-	if !ok {
-		return consts.CodeUserError, "RefreshToken utils.GenerateTokens err", "", "", false
+	userInfo := userEntity.ToUserInfo()
+	refreshToken2, accessToken, err := utils.GenerateTokens(userInfo)
+	if err != nil {
+		return consts.GenerateTokenError, "", "", errors.Wrap(err, "->RefreshToken GenerateTokens error")
 	}
 	err = s.redis.UserTokenDelete(ctx, refreshToken)
 	if err != nil {
-		log.Printf("redis.UserTokenDelete error: %v", err)
-		return consts.CodeUserError, "RefreshToken s.redis.UserTokenDelete err", "", "", false
+		return consts.UserRedisDelError, "", "", errors.Wrap(err, "->RefreshToken DeleteToken error")
 	}
 	err = s.redis.UserTokenSet(ctx, refreshToken2, userInfo.ID)
 	if err != nil {
-		log.Printf("redis.UserTokenSet error: %v", err)
-		return consts.CodeUserError, "RefreshToken s.redis.UserTokenSet err", "", "", false
+		return consts.UserRedisSetError, "", "", errors.Wrap(err, "->RefreshToken SetToken error")
 	}
-	return consts.CodeSuccess, "refreshToken s.redis.UserTokenSet success", refreshToken2, accessToken, true
+	return consts.Success, refreshToken2, accessToken, nil
 }
