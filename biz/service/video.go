@@ -7,12 +7,12 @@ import (
 	"Tiktok/pkg/utils"
 	"context"
 	"io"
-	"log"
 	"math/rand"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -36,27 +36,24 @@ func NewVideoService(videoDb VideoDatabase, videoRedis VideoRedis) *VideoService
 	return &VideoService{videoDb: videoDb, VideoRedis: videoRedis}
 }
 
-func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string) {
+func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int32, error) {
 	dataFile, err := data.Open()
 	if err != nil {
-		return consts.CodeIOError, "VideoPublish data.Open err"
+		return consts.IOOsError, errors.Wrap(err, "->VideoPublish data.Open err")
 	}
 	defer dataFile.Close()
 	filename := utils.IdGenerate()
 	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeIOError, "VideoPublish os.MkdirAll err"
+		return consts.IOOsError, errors.Wrap(err, "->VideoPublish os.MkdirAll err")
 	}
 	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
 	if err != nil {
-		log.Println(err)
-		return consts.CodeIOError, "VideoPublish os.Create err"
+		return consts.IOOsError, errors.Wrap(err, "->VideoPublish os.Create err")
 	}
 	defer file.Close()
 	if _, err := io.Copy(file, dataFile); err != nil {
-		log.Println(err)
-		return consts.CodeIOError, "VideoPublish io.copy err"
+		return consts.IOOsError, errors.Wrap(err, "->VideoPublish io.Copy err")
 	}
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = videoInfo.Title
@@ -67,72 +64,66 @@ func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.
 	videoEntity.VisitCount = rand.Intn(100)
 	err = s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
 	if err != nil {
-		return consts.CodeRedisError, `VideoPublish re.VideoHotSet err`
+		return consts.VideoRedisSetError, errors.Wrap(err, "->VideoPublish redis hot set err")
 	}
 	err = s.videoDb.CreatVideo(videoEntity)
 	if err != nil {
-		log.Println("VideoPublish db.CreateVideo err: %v", err)
-		return consts.CodeDBCreateError, "VideoPublish db.Create err"
+		return consts.VideoDBInsertError, errors.Wrap(err, "->VideoPublish create video err")
 	}
-	return consts.CodeSuccess, "success"
+	return consts.Success, nil
 }
 
-func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (int, string, []*video.VideoInfo, bool) {
+func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (int32, error, []*video.VideoInfo) {
 	videoList, err := s.videoDb.GetVideoByUserID(userId, pageSize, pageNum)
 	if err != nil {
-		log.Printf("GetVideoByUserID err: %v", err)
-		return consts.CodeDBSelectError, "VideoList GetVideoByUserID error", nil, false
+		return consts.VideoDBSelectError, errors.Wrap(err, "->VideoList GetVideo err"), nil
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i := 0; i < len(videoList); i++ {
 		videoInfos = append(videoInfos, videoList[i].ToVideoInfo())
 	}
-	return consts.CodeSuccess, "success", videoInfos, true
+	return consts.Success, nil, videoInfos
 }
 
-func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64) (int, string, []*video.VideoInfo, bool) {
+func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
 	videoEntity, err := s.videoDb.GetVideoByKeyWord(keyword, pageNum, pageSize)
 	if err != nil {
-		log.Printf("db.GetVideoByKeyWord err: %v", err)
-		return consts.CodeVideoError, "GetVideoByVideoTitleOrDescription error", nil, false
+		return consts.VideoDBSelectError, errors.Wrap(err, "->VideoSearch GetVideo Error"), nil
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i := 0; i < len(videoEntity); i++ {
 		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
-	return consts.CodeSuccess, "success", videoInfos, true
+	return consts.Success, nil, videoInfos
 }
 
-func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int, string, []*video.VideoInfo, bool) {
+func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
 	z, err := s.VideoRedis.VideoHotGet(ctx, "videoHot", pageNum, pageSize)
 	if err != nil {
-		log.Printf("re.VideoHotGet err: %v", err)
-		return consts.CodeRedisError, "VideoPopular re.VideoHotGet err", nil, false
+		return consts.VideoRedisGetError, errors.Wrap(err, "->VideoPopular GetVideoHot error"), nil
 	}
 	videoEntity := make([]entity.VideoEntity, len(z))
 	for i, _ := range z {
 		videoEntity[i], err = s.videoDb.GetVideoByVideoId(z[i].Member.(string))
 		if err != nil {
-			log.Printf("GetVideoByVideoId %v", err)
-			return consts.CodeDBSelectError, "VideoPopular db.GetVideoByVideoId err", nil, false
+			return consts.VideoDBSelectError, errors.Wrap(err, "->video popular select video"), nil
 		}
 	}
 	var videoInfos []*video.VideoInfo
 	for i := 0; i < len(z); i++ {
 		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
-	return consts.CodeSuccess, "success", videoInfos, true
+	return consts.Success, nil, videoInfos
 }
 
-func (s *VideoService) VideoStream() (int, string, []*video.VideoInfo) {
+func (s *VideoService) VideoStream() (int32, error, []*video.VideoInfo) {
 	videoEntity, err := s.videoDb.GetVideoStream()
 	if err != nil {
-		log.Printf("videoDb.GetVideoStream err: %v", err)
-		return consts.CodeDBSelectError, "videoDb.GetVideoStream err", nil
+		return consts.VideoDBSelectError, errors.Wrap(err, "->video stream select video error"), nil
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i, _ := range videoEntity {
 		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
-	return consts.CodeSuccess, "success", videoInfos
+	return consts.Success, nil, videoInfos
 }

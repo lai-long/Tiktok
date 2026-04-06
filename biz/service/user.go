@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"io"
-	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -125,19 +124,18 @@ func (s *UserService) UserInfo(userId string) (*user.UserInfo, int32, error) {
 func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, error, *user.UserInfo) {
 	dataFile, err := data.Open()
 	if err != nil {
-		return consts.FileError, errors.Wrap(err, "->UserInfo data open 错误"), &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->UserInfo data open 错误"), &user.UserInfo{}
 	}
 	defer dataFile.Close()
 	ok, err := utils.IsImage(dataFile)
 	if err != nil {
-		log.Printf("IsImage error: %v", err)
 		return consts.FileError, errors.Wrap(err, "->userInfo check image failed"), &user.UserInfo{}
 	}
 	if !ok {
 		return consts.ImageFalse, nil, &user.UserInfo{}
 	}
 	if _, err := dataFile.Seek(0, io.SeekStart); err != nil {
-		return consts.FileError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
+		return consts.IOOsError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
 	}
 	filename := utils.IdGenerate()
 	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
