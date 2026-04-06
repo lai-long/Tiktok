@@ -4,7 +4,8 @@ import (
 	"Tiktok/biz/entity"
 	"Tiktok/biz/model/user"
 	"Tiktok/pkg/consts"
-	"log"
+
+	"github.com/pkg/errors"
 )
 
 type SocialDatabase interface {
@@ -25,59 +26,56 @@ func NewSocialService(social SocialDatabase, user UserDatabase) *SocialService {
 		user:   user,
 	}
 }
-func (s *SocialService) RelationAction(toUserId string, actionType string, userId string) (int, string) {
+func (s *SocialService) RelationAction(toUserId string, actionType string, userId string) (int32, error) {
 	if actionType == "0" {
 		err := s.social.CreateFollowing(userId, toUserId)
 		if err != nil {
-			log.Println(err)
-			return consts.CodeDBCreateError, "RelationAction CreateFollowing error"
+			return consts.SocialDBInsertError, errors.Wrap(err, "->RelationAction CreateFollowing err")
 		}
-		return consts.CodeSuccess, "RelationAction follow success"
+		return consts.Success, nil
 	}
 	if actionType == "1" {
 		err := s.social.DeleteFollowing(userId, toUserId)
 		if err != nil {
-			return consts.CodeDBDeleteError, "RelationAction DeleteFollowing error"
+			return consts.SocialDBDeleteError, errors.Wrap(err, "->RelationACtion DeleteFollowing err")
 		}
-		return consts.CodeSuccess, "RelationAction delete follow success"
+		return consts.Success, nil
 	}
-	return consts.CodeRelationError, "RelationAction actionType error"
+	return consts.SocialReqValueError, nil
 }
 
-func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool) {
+func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int64) (int32, error, []*user.UserInfo) {
 	followings, err := s.social.FollowingList(userId, pageNum, pageSize)
 	if err != nil {
-		log.Println(err)
-		return consts.CodeDBSelectError, "FollowingList  db.FollowingIdList error", nil, false
+		return consts.SocialDBSelectError, errors.Wrap(err, "->Following List Get Following List err"), nil
 	}
 	userInfos := []*user.UserInfo{}
 	for i := 0; i < len(followings); i++ {
 		userInfos = append(userInfos, followings[i].ToUserInfo())
 	}
-	return consts.CodeSuccess, "FollowingList success", userInfos, true
+	return consts.Success, nil, userInfos
 }
 
-func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool) {
+func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int64) (int32, error, []*user.UserInfo) {
 	followers, err := s.social.FollowerList(userId, pageNum, pageSize)
 	if err != nil {
-		log.Printf("FollowerList db.FollowerIdList error: %v", err)
-		return consts.CodeDBSelectError, "FollowerList db.FollowerIdList error", nil, false
+		return consts.SocialDBSelectError, errors.Wrap(err, "->FollowerList Get List err"), nil
 	}
 	userInfos := []*user.UserInfo{}
 	for i := 0; i < len(followers); i++ {
 		userInfos = append(userInfos, followers[i].ToUserInfo())
 	}
-	return consts.CodeSuccess, "FollowerList success", userInfos, true
+	return consts.Success, nil, userInfos
 }
 
-func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64) (int, string, []*user.UserInfo, bool) {
+func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64) (int32, error, []*user.UserInfo) {
 	entityFriend, ok := s.social.FriendList(userId, pageNum, pageSize)
 	if !ok {
-		return consts.CodeDBSelectError, "FriendList db.FriendList error", nil, false
+		return consts.SocialDBSelectError, errors.New("->FriendList Get List err"), nil
 	}
 	userInfos := []*user.UserInfo{}
 	for i, _ := range entityFriend {
 		userInfos = append(userInfos, entityFriend[i].ToUserInfo())
 	}
-	return consts.CodeSuccess, "FollowerList success", userInfos, true
+	return consts.Success, nil, userInfos
 }
