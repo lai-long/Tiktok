@@ -5,6 +5,7 @@ package mfa
 import (
 	"Tiktok/biz/model/common"
 	"context"
+	"log"
 
 	mfa "Tiktok/biz/model/mfa"
 
@@ -41,20 +42,22 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		resp := &mfa.MfaQrcodeResp{
-			Base: &common.Base{Code: consts.CodeError},
+			Base: &common.Base{Code: consts.UserReqValidError},
 		}
 		c.JSON(200, resp)
 		return
 	}
 	userId, _ := ctx.Value("user_id").(string)
 	userName, _ := ctx.Value("username").(string)
-	_, key, secret, code, msg := h.MfaService.GenerateMfa(userName, userId)
+	key, secret, code, err := h.MfaService.GenerateMfa(userName, userId)
+	if err != nil {
+		log.Println("MfaQrcode err: ", err)
+	}
 	resp := &mfa.MfaQrcodeResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
-
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &mfa.MfaData{Secret: secret, Qrcode: key},
 	}
-	c.JSON(consts.CodeSuccess, resp)
+	c.JSON(200, resp)
 }
 
 // MfaBind .
@@ -64,19 +67,24 @@ func (h *MfaHandler) MfaBind(ctx context.Context, c *app.RequestContext) {
 	var req mfa.MfaBindReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		resp := &mfa.MfaQrcodeResp{
+			Base: &common.Base{Code: consts.UserReqValidError},
+		}
+		c.JSON(200, resp)
 		return
 	}
 	resp := new(mfa.MfaBindResp)
-	var code int
-	var msg string
+	var code int32
 	userId, _ := ctx.Value("user_id").(string)
 	if req.Secret != "" {
-		code, msg = h.MfaService.MfaBindBySecret(req.Secret, req.Secret)
+		code, err = h.MfaService.MfaBindBySecret(req.Secret, userId)
 	} else {
-		code, msg = h.MfaService.MfaBindByCode(req.Code, userId)
+		code, err = h.MfaService.MfaBindByCode(req.Code, userId)
 	}
-	resp.Base.Msg = msg
-	resp.Base.Code = int32(code)
-	c.JSON(consts.StatusOK, resp)
+	if err != nil {
+		log.Println("MfaBind err: ", err)
+	}
+	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	resp.Base.Code = code
+	c.JSON(200, resp)
 }
