@@ -5,20 +5,22 @@ package video
 import (
 	"Tiktok/biz/model/common"
 	"context"
+	"log"
 	"mime/multipart"
 
 	video "Tiktok/biz/model/video"
 
+	"Tiktok/pkg/consts"
+
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 type VideoSever interface {
-	VideoPublish(video *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int, string)
-	VideoList(userId string, pageSize int64, pageNum int64) (int, string, []*video.VideoInfo, bool)
-	VideoSearch(keyword string, pageNun, pageSize int64) (int, string, []*video.VideoInfo, bool)
-	VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int, string, []*video.VideoInfo, bool)
-	VideoStream() (int, string, []*video.VideoInfo)
+	VideoPublish(video *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int32, error)
+	VideoList(userId string, pageSize int64, pageNum int64) (int32, error, []*video.VideoInfo)
+	VideoSearch(keyword string, pageNun, pageSize int64) (int32, error, []*video.VideoInfo)
+	VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo)
+	VideoStream() (int32, error, []*video.VideoInfo)
 }
 type VideoHandler struct {
 	videoService VideoSever
@@ -43,7 +45,11 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 	var req video.VideoPublishReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("video publish  bind err:", err)
+		resp := &video.VideoPublishResp{
+			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
 	data, _ := c.FormFile("data")
@@ -53,28 +59,16 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 		Title:       req.Title,
 		Description: req.Description,
 	}
-	code, msg := h.videoService.VideoPublish(videoInfo, data, ctx)
+	code, err := h.videoService.VideoPublish(videoInfo, data, ctx)
+	if err != nil {
+		log.Println("video publish err:", err)
+	}
 	resp := new(video.VideoPublishResp)
-	resp.Base.Code = int32(code)
-	resp.Base.Msg = msg
-	c.JSON(consts.StatusOK, resp)
+	resp.Base.Code = code
+	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	c.JSON(200, resp)
 }
 
-//func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
-
-//		code, msg, videoInfos, _ := h.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
-//		c.JSON(200, video.VideoListResp{
-//			Base: &common.Base{
-//				Code: int32(code),
-//				Msg:  msg,
-//			},
-//			Data: &video.VideoData{
-//				Items: videoInfos,
-//				Total: int64(len(videoInfos)),
-//			},
-//		})
-//	}
-//
 // VideoList .
 // @router /video/list [GET]
 func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
@@ -82,15 +76,22 @@ func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
 	var req video.VideoListReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("video list  bind err:", err)
+		resp := &video.VideoPublishResp{
+			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, videoInfos, _ := h.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
+	code, err, videoInfos := h.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
+	if err != nil {
+		log.Println("video list err:", err)
+	}
 	resp := &video.VideoListResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &video.VideoData{Items: videoInfos, Total: int64(len(videoInfos))},
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // VideoSearch .
@@ -100,15 +101,22 @@ func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 	var req video.VideoSearchReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("video search  bind err:", err)
+		resp := &video.VideoPublishResp{
+			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, videoInfos, _ := h.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
+	code, err, videoInfos := h.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
+	if err != nil {
+		log.Println("video search err:", err)
+	}
 	resp := &video.VideoListResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &video.VideoData{Items: videoInfos, Total: int64(len(videoInfos))},
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // VideoPopular .
@@ -118,15 +126,22 @@ func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) 
 	var req video.VideoHotReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("video popular  bind err:", err)
+		resp := &video.VideoPublishResp{
+			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, videoInfos, _ := h.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
+	code, err, videoInfos := h.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
+	if err != nil {
+		log.Println("video popular err:", err)
+	}
 	resp := &video.VideoListResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &video.VideoData{Items: videoInfos, Total: int64(len(videoInfos))},
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
 
 // VideoStream .
@@ -136,13 +151,20 @@ func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
 	var req video.VideoStreamReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		log.Println("video stream  bind err:", err)
+		resp := &video.VideoPublishResp{
+			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
+		}
+		c.JSON(200, resp)
 		return
 	}
-	code, msg, videoInfos := h.videoService.VideoStream()
+	code, err, videoInfos := h.videoService.VideoStream()
+	if err != nil {
+		log.Println("video stream err:", err)
+	}
 	resp := &video.VideoListResp{
-		Base: &common.Base{Code: int32(code), Msg: msg},
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &video.VideoData{Items: videoInfos, Total: int64(len(videoInfos))},
 	}
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(200, resp)
 }
