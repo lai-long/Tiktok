@@ -136,7 +136,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			Manager.Clients[client.ID] = client
 			replyMSg := chat.ReplyMsg{
 				From:    client.ID,
-				Code:    consts.CodeSuccess,
+				Code:    consts.Success,
 				Content: "连接成功",
 			}
 			msg, _ := protojson.Marshal(&replyMSg)
@@ -156,7 +156,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			if _, ok := Manager.Clients[client.ID]; ok {
 				replyMSg := chat.ReplyMsg{
 					From:    client.ID,
-					Code:    consts.CodeSuccess,
+					Code:    consts.Success,
 					Content: "连接中断",
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
@@ -176,7 +176,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					}
 					replyMSg := chat.ReplyMsg{
 						From:    client.ID,
-						Code:    consts.CodeSuccess,
+						Code:    consts.Success,
 						Content: string(message),
 					}
 					msg, _ := protojson.Marshal(&replyMSg)
@@ -193,7 +193,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				if flag {
 					replyMSg := chat.ReplyMsg{
 						From:    broadcast.Clients.ID,
-						Code:    consts.CodeSuccess,
+						Code:    consts.Success,
 						Content: "对方在线",
 					}
 					msg, _ := protojson.Marshal(&replyMSg)
@@ -202,7 +202,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				} else {
 					replyMSg := chat.ReplyMsg{
 						From:    broadcast.Clients.ID,
-						Code:    consts.CodeSuccess,
+						Code:    consts.Success,
 						Content: "对方不在线",
 					}
 					m.InsertMsg(id, string(message))
@@ -219,7 +219,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(str))
 				replyMSg := chat.ReplyMsg{
 					From:    "未在线时收到消息",
-					Code:    consts.CodeSuccess,
+					Code:    consts.Success,
 					Content: finalInfo,
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
@@ -244,7 +244,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				}
 				replyMSg := chat.ReplyMsg{
 					From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
-					Code:    consts.CodeSuccess,
+					Code:    consts.Success,
 					Content: finalInfo,
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
@@ -254,7 +254,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			for _, client := range groupBroadcast.Clients {
 				replyMSg := chat.ReplyMsg{
 					From:    client.ID,
-					Code:    consts.CodeSuccess,
+					Code:    consts.Success,
 					Content: string(groupBroadcast.Message),
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
