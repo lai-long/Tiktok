@@ -26,7 +26,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	err := c.BindAndValidate(req)
 	if req.AccessToken == "" {
 		c.JSON(200, user.AuthResp{Base: &common.Base{
-			Code: consts.CodeError,
+			Code: consts.UserReqValidError,
 			Msg:  "AccessToken 为空",
 		}})
 		c.Abort()
@@ -35,7 +35,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	tokenString := strings.TrimSpace(req.AccessToken)
 	if tokenString == "" {
 		c.JSON(200, user.AuthResp{Base: &common.Base{
-			Code: consts.CodeError,
+			Code: consts.UserPasswordError,
 			Msg:  "tokenString TrimSpace error",
 		}})
 		c.Abort()
@@ -51,7 +51,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		log.Printf("JWT parse error: %v", err)
 		c.JSON(200, user.AuthResp{Base: &common.Base{
-			Code: consts.CodeTokenError,
+			Code: consts.UserPasswordError,
 			Msg:  "JWT parse error",
 		}})
 		c.Abort()
@@ -59,7 +59,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	}
 	if !token.Valid {
 		c.JSON(200, user.AuthResp{Base: &common.Base{
-			Code: consts.CodeTokenError,
+			Code: consts.UserPasswordError,
 			Msg:  "JWT Valid error",
 		}})
 		c.Abort()
