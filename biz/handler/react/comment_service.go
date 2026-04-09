@@ -96,7 +96,6 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 		log.Println("CommentDelete err:", err)
 	}
 	resp := new(react.CommentDeleteResp)
-	resp.Base.Code = code
-	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
 	c.JSON(200, resp)
 }
