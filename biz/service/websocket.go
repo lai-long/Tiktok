@@ -89,8 +89,19 @@ func (c *Client) Read() {
 					}
 					msg, _ := protojson.Marshal(&replyMSg)
 					c.Send <- msg
+					if c.SendID != "" {
+						Manager.mu.Lock()
+						for id, client := range Manager.Clients {
+							if id == c.SendID {
+								client.Send <- msg
+								break
+							}
+						}
+						Manager.mu.Unlock()
+					}
 					return
 				}
+				log.Println("AI chat:", resp)
 				if len(resp.Choices) == 0 || resp.Choices[0].Message == nil {
 					replyMSg := chat.ReplyMsg{
 						From:    "AI",
@@ -99,15 +110,41 @@ func (c *Client) Read() {
 					}
 					msg, _ := protojson.Marshal(&replyMSg)
 					c.Send <- msg
+					if c.SendID != "" {
+						Manager.mu.Lock()
+						for id, client := range Manager.Clients {
+							if id == c.SendID {
+								client.Send <- msg
+								break
+							}
+						}
+						Manager.mu.Unlock()
+					}
 					return
+				}
+				// 构建包含content和reasoning_content的响
+				replyContent := resp.Choices[0].Message.Content
+				if resp.Choices[0].Message.ReasoningContent != "" {
+					replyContent += "\n\n思考过程：" + resp.Choices[0].Message.ReasoningContent
 				}
 				replyMSg := chat.ReplyMsg{
 					From:    "AI",
 					Code:    consts.Success,
-					Content: resp.Choices[0].Message.Content,
+					Content: replyContent,
 				}
 				msg, _ := protojson.Marshal(&replyMSg)
 				c.Send <- msg
+				// 发送给对话中的其他用户
+				if c.SendID != "" {
+					Manager.mu.Lock()
+					for id, client := range Manager.Clients {
+						if id == c.SendID {
+							client.Send <- msg
+							break
+						}
+					}
+					Manager.mu.Unlock()
+				}
 			}(question)
 		}
 		if sendMsg.Type == "1" {
