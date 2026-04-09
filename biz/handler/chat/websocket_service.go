@@ -9,6 +9,7 @@ import (
 	"Tiktok/biz/service"
 	"Tiktok/pkg/utils"
 	"context"
+	"log"
 	"net/http"
 
 	chat "Tiktok/biz/model/chat"
@@ -37,15 +38,25 @@ var (
 // Websocket .
 // @router /ws [GET]
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid := ctx.Value("user_id").(string)
+	userid, ok := ctx.Value("user_id").(string)
+	if !ok || userid == "" {
+		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
+			Code: 200,
+			Msg:  "Unauthorized: user_id not found",
+		}})
+		return
+	}
+	log.Println("User connected:", userid)
 	uid := userid
 	req := new(chat.WebsocketReq)
 	err := c.BindAndValidate(req)
 	if err != nil {
+		log.Println("BindAndValidate error:", err)
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
 			Code: 0,
-			Msg:  "c.BindAndValidate(req) error",
+			Msg:  "Invalid request parameters",
 		}})
+		return
 	}
 	stdHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := (&websocket.Upgrader{
@@ -54,7 +65,8 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			},
 		}).Upgrade(w, r, nil)
 		if err != nil {
-			http.NotFound(w, r)
+			log.Println("WebSocket upgrade error:", err)
+			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
 			return
 		}
 		client := &service.Client{

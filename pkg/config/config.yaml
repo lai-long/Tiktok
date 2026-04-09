@@ -17,3 +17,5 @@ redis:
 jwt:
   access_secret: "secret1"
   refresh_secret: "secret2"
+api:
+  api_key: "123456"

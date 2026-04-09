@@ -5,6 +5,7 @@ import (
 	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/model/chat"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/utils"
 	"fmt"
 	"log"
 	"strconv"
@@ -58,8 +59,11 @@ func (c *Client) Read() {
 		Manager.Unregister <- c
 		_ = c.Socket.Close()
 	}()
+
+	c.Socket.SetPongHandler(func(string) error {
+		return nil
+	})
 	for {
-		c.Socket.PongHandler()
 		sendMsg := new(chat.SendMsg)
 		err := c.Socket.ReadJSON(sendMsg)
 		if err != nil {
@@ -72,6 +76,14 @@ func (c *Client) Read() {
 		//type 2 获取未在线时的消息
 		//type 3 获取历史消息
 		//type 4 群聊
+		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
+		if ok {
+			go func(q string) {
+				resp, _ := ChatWithAi(q)
+				bytes, _ := protojson.Marshal(resp)
+				c.Send <- bytes
+			}(question)
+		}
 		if sendMsg.Type == "1" {
 			Manager.Broadcast <- &Broadcast{
 				Type:    "1",
@@ -123,7 +135,6 @@ func (c *Client) Write() {
 	}
 }
 func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
-
 	for {
 		select {
 		case client := <-manager.Register:
@@ -169,7 +180,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				message := broadcast.Message
 				sendId := broadcast.Clients.SendID
 				flag := false
-				manager.mu.RLock()
+				manager.mu.Lock()
 				for id, client := range Manager.Clients {
 					if id != sendId {
 						continue
@@ -188,7 +199,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 						delete(manager.Clients, client.ID)
 					}
 				}
-				manager.mu.RUnlock()
+				manager.mu.Unlock()
 				id := broadcast.Clients.ID
 				if flag {
 					replyMSg := chat.ReplyMsg{
@@ -198,25 +209,42 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					}
 					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
-					m.InsertMsg(id, string(message))
+					err := m.InsertMsg(id, string(message))
+					if err != nil {
+						log.Println("Insert message error:", err)
+					}
 				} else {
 					replyMSg := chat.ReplyMsg{
 						From:    broadcast.Clients.ID,
 						Code:    consts.Success,
 						Content: "对方不在线",
 					}
-					m.InsertMsg(id, string(message))
-					re.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
+					err := m.InsertMsg(id, string(message))
+					if err != nil {
+						log.Println("Insert message error:", err)
+					}
+					err = re.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
+					if err != nil {
+						log.Println("Save offline message error:", err)
+					}
 					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
 				}
 			} else if broadcast.Type == "2" {
 				message, err := re.FetchOfflineMsg(broadcast.Clients.SendID)
 				if err != nil {
-					log.Println(err)
+					log.Println("Fetch offline message error:", err)
+					replyMSg := chat.ReplyMsg{
+						From:    "系统",
+						Code:    consts.Success,
+						Content: "获取离线消息失败",
+					}
+					msg, _ := protojson.Marshal(&replyMSg)
+					broadcast.Clients.Send <- msg
+					continue
 				}
 				str := strings.Join(message, ",\n ")
-				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(str))
+				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(message))
 				replyMSg := chat.ReplyMsg{
 					From:    "未在线时收到消息",
 					Code:    consts.Success,
@@ -227,21 +255,26 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			} else if broadcast.Type == "3" {
 				pageNum := 0
 				pageSize := 10
-				pageNum, err := strconv.Atoi(broadcast.PageNum)
-				if err != nil {
-					log.Println(err)
+				if broadcast.PageNum != "" {
+					pageNum, _ = strconv.Atoi(broadcast.PageNum)
 				}
-				pageSize, err = strconv.Atoi(broadcast.PageSize)
-				if err != nil {
-					log.Println(err)
+				if broadcast.PageSize != "" {
+					pageSize, _ = strconv.Atoi(broadcast.PageSize)
 				}
 
-				msgs := m.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
+				msgs, err := m.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
+				if err != nil || msgs == nil {
+					replyMSg := chat.ReplyMsg{
+						From:    "系统",
+						Code:    consts.Success,
+						Content: "获取历史消息失败",
+					}
+					msg, _ := protojson.Marshal(&replyMSg)
+					broadcast.Clients.Send <- msg
+					continue
+				}
 				str := strings.Join(msgs, ",\n ")
 				finalInfo := str + fmt.Sprintf("\ntotal:%d", len(msgs))
-				if err != nil {
-					log.Println(err)
-				}
 				replyMSg := chat.ReplyMsg{
 					From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
 					Code:    consts.Success,
