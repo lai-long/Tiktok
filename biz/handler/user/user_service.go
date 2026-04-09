@@ -60,8 +60,7 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 		log.Println("userService.Register error:", err)
 	}
 	resp := new(user.RegisterResp)
-	resp.Base.Code = code
-	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
 	c.JSON(200, resp)
 }
 

@@ -12,7 +12,7 @@ redis:
   host: "localhost"
 #  host: "172.17.0.1"
   port: "6379"
-  password: ""
+  password: "root"
   db: 0
 jwt:
   access_secret: "secret1"

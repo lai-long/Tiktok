@@ -62,8 +62,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		log.Println("likeService.LikeAction:", err)
 	}
 	resp := new(react.LikeActionResp)
-	resp.Base.Code = code
-	resp.Base.Msg = consts.GetErrorCodeMsg(code)
+	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
 	c.JSON(200, resp)
 }
 
