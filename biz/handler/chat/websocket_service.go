@@ -76,6 +76,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			Socket:  conn,
 			Send:    make(chan []byte, 128),
 		}
+		log.Println("WebSocket client:", client)
 		service.Manager.Register <- client
 		go client.Read()
 		go client.Write()
