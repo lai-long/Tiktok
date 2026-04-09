@@ -79,9 +79,35 @@ func (c *Client) Read() {
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
 			go func(q string) {
-				resp, _ := ChatWithAi(q)
-				bytes, _ := protojson.Marshal(resp)
-				c.Send <- bytes
+				resp, err := ChatWithAi(q)
+				if err != nil {
+					log.Println("AI chat error:", err)
+					replyMSg := chat.ReplyMsg{
+						From:    "AI",
+						Code:    consts.Success,
+						Content: "ai呢",
+					}
+					msg, _ := protojson.Marshal(&replyMSg)
+					c.Send <- msg
+					return
+				}
+				if len(resp.Choices) == 0 || resp.Choices[0].Message == nil {
+					replyMSg := chat.ReplyMsg{
+						From:    "AI",
+						Code:    consts.Success,
+						Content: "ai不理你",
+					}
+					msg, _ := protojson.Marshal(&replyMSg)
+					c.Send <- msg
+					return
+				}
+				replyMSg := chat.ReplyMsg{
+					From:    "AI",
+					Code:    consts.Success,
+					Content: resp.Choices[0].Message.Content,
+				}
+				msg, _ := protojson.Marshal(&replyMSg)
+				c.Send <- msg
 			}(question)
 		}
 		if sendMsg.Type == "1" {

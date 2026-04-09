@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -24,26 +25,38 @@ func ChatWithAi(content string) (*ai.GLMResp, error) {
 				Role:    "user",
 				Content: content,
 			},
-			{},
 		},
 		Stream:      false,
 		Temperature: 1,
 	}
-	payload, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	payload, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, errors.Wrap(err, "json marshal error")
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		return nil, errors.Wrap(err, "create request error")
+	}
 	req.Header.Add("Authorization", "Bearer "+config.Cfg.Api.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
-	var resp ai.GLMResp
-	if err := json.Unmarshal(body, &resp); err == nil {
-		return &resp, nil
+	client := &http.Client{
+		Timeout: 180 * time.Second,
 	}
-	var errResp ai.GLMResp
-	err := json.Unmarshal(body, &errResp)
+	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "http request error")
 	}
-	return nil, errors.New("未知错误:" + string(body))
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "read response body error")
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("API error: status code %d, body: %s", res.StatusCode, string(body))
+	}
+	var resp ai.GLMResp
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, errors.Wrap(err, "json unmarshal error")
+	}
+	return &resp, nil
 }
