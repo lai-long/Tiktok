@@ -15,7 +15,7 @@ import (
 func ChatWithAi(content string) (*ai.GLMResp, error) {
 	url := "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 	reqBody := &ai.GLMReq{
-		Model: "glm-4.7-flash",
+		Model: "glm-4-air",
 		Messages: []*ai.ChatMessage{
 			{
 				Role:    "system",
