@@ -24,10 +24,14 @@ type JwtConfig struct {
 	AccessSecret  string `mapstructure:"access_secret"`
 	RefreshSecret string `mapstructure:"refresh_secret"`
 }
+type ApiConfig struct {
+	ApiKey string `mapstructure:"api_key"`
+}
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
 	Redis RedisConfig `mapstructure:"redis"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
+	Api   ApiConfig   `mapstructure:"api"`
 }
 
 var Cfg *Config

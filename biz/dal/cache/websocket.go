@@ -6,11 +6,20 @@ import (
 	"time"
 )
 
-func (r *Redis) SaveOfflineMsg(id, content string) {
+func (r *Redis) SaveOfflineMsg(id, content string) error {
 	ctx := context.Background()
 	key := "offline:" + id
-	r.redis.RPush(ctx, key, content)
-	r.redis.Expire(ctx, key, 72*time.Hour)
+	err := r.redis.RPush(ctx, key, content).Err()
+	if err != nil {
+		log.Println("Save offline message error:", err)
+		return err
+	}
+	err = r.redis.Expire(ctx, key, 72*time.Hour).Err()
+	if err != nil {
+		log.Println("Set expire error:", err)
+		return err
+	}
+	return nil
 }
 func (r *Redis) FetchOfflineMsg(id string) ([]string, error) {
 	ctx := context.Background()
