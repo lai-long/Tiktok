@@ -8,13 +8,19 @@ import (
 	"Tiktok/biz/handler/chat"
 	"Tiktok/biz/handler/mfa"
 	"Tiktok/biz/handler/react"
-	"Tiktok/biz/handler/social"
+	socialHandler "Tiktok/biz/handler/social"
 	"Tiktok/biz/handler/user"
 	"Tiktok/biz/handler/video"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
 
-	"Tiktok/biz/service"
+	commentService "Tiktok/biz/service/comment"
+	likeService "Tiktok/biz/service/like"
+	mfaService "Tiktok/biz/service/mfa"
+	socialService "Tiktok/biz/service/social"
+	userService "Tiktok/biz/service/user"
+	videoService "Tiktok/biz/service/video"
+	ws "Tiktok/biz/service/websocket"
 	"Tiktok/pkg/config"
 
 	"log"
@@ -38,40 +44,41 @@ func main() {
 	defer ddb.Close()
 	mysqlDb := dao.NewMySQLdb(ddb)
 
-	userService := service.NewUserService(mysqlDb, mysqlDb, re)
-	userHandler := user.NewUserHandler(userService)
+	userSrv := userService.NewUserService(mysqlDb, mysqlDb, re)
+	userHandler := user.NewUserHandler(userSrv)
 	user.UserInfo = userHandler.UserInfo
 	user.UserRegister = userHandler.UserRegister
 	user.UserLogin = userHandler.UserLogin
 	user.RefreshToken = userHandler.RefreshToken
 	user.UserAvatar = userHandler.UserAvatar
-	mfaHandler := mfa.NewMfaHandler(userService)
+	mfaSrv := mfaService.NewMfaService(mysqlDb)
+	mfaHandler := mfa.NewMfaHandler(mfaSrv)
 	mfa.MfaBind = mfaHandler.MfaBind
 	mfa.MfaQrcode = mfaHandler.MfaQrcode
 
-	videoService := service.NewVideoService(mysqlDb, re)
-	videoHandler := video.NewVideoHandler(videoService)
+	videoSrv := videoService.NewVideoService(mysqlDb, re)
+	videoHandler := video.NewVideoHandler(videoSrv)
 	video.VideoPublish = videoHandler.VideoPublish
 	video.VideoStream = videoHandler.VideoStream
 	video.VideoSearch = videoHandler.VideoSearch
 	video.VideoPopular = videoHandler.VideoPopular
 	video.VideoList = videoHandler.VideoList
 
-	socialService := service.NewSocialService(mysqlDb, mysqlDb)
-	socialHandler := social.NewSocialHandler(socialService)
-	social.FollowingList = socialHandler.FollowingList
-	social.FollowerList = socialHandler.FollowerList
-	social.FriendList = socialHandler.FriendList
-	social.RelationAction = socialHandler.RelationAction
+	socialSrv := socialService.NewSocialService(mysqlDb, mysqlDb)
+	socialHdlr := socialHandler.NewSocialHandler(socialSrv)
+	socialHandler.FollowingList = socialHdlr.FollowingList
+	socialHandler.FollowerList = socialHdlr.FollowerList
+	socialHandler.FriendList = socialHdlr.FriendList
+	socialHandler.RelationAction = socialHdlr.RelationAction
 
-	commentService := service.NewCommentService(mysqlDb)
-	commentHandler := react.NewCommentHandler(commentService)
+	commentSrv := commentService.NewCommentService(mysqlDb)
+	commentHandler := react.NewCommentHandler(commentSrv)
 	react.CommentDelete = commentHandler.CommentDelete
 	react.CommentPublish = commentHandler.CommentPublish
 	react.CommentList = commentHandler.CommentList
 
-	likeService := service.NewLikeVideoService(mysqlDb, mysqlDb, mysqlDb)
-	likeHandler := react.NewLikesHandler(likeService)
+	likeSrv := likeService.NewLikeVideoService(mysqlDb, mysqlDb, mysqlDb)
+	likeHandler := react.NewLikesHandler(likeSrv)
 	react.LikeList = likeHandler.LikeList
 	react.LikeAction = likeHandler.LikeAction
 
@@ -85,7 +92,7 @@ func main() {
 	h.Use(accesslog.New())
 	h.Use(middleware.AuthMiddleware)
 	router.GeneratedRegister(h)
-	go service.Manager.Start(mysqlDb, re)
+	go ws.Manager.Start(mysqlDb, re)
 
 	h.Spin()
 }

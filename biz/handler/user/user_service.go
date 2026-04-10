@@ -4,7 +4,7 @@ package user
 
 import (
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/service"
+	userService "Tiktok/biz/service/user"
 	"context"
 	"log"
 	"mime/multipart"
@@ -35,7 +35,7 @@ type UserHandler struct {
 	userService UserSever
 }
 
-func NewUserHandler(userService *service.UserService) *UserHandler {
+func NewUserHandler(userService *userService.UserService) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}
