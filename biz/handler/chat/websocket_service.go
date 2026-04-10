@@ -6,7 +6,7 @@ import (
 	"Tiktok/biz/dal/cache"
 	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/service"
+	ws "Tiktok/biz/service/websocket"
 	"Tiktok/pkg/utils"
 	"context"
 	"log"
@@ -69,7 +69,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
 			return
 		}
-		client := &service.Client{
+		client := &ws.Client{
 			ID:      utils.CreateId(uid, req.ToUserId),
 			SendID:  utils.CreateId(req.ToUserId, uid),
 			GroupId: req.GroupId,
@@ -77,7 +77,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			Send:    make(chan []byte, 128),
 		}
 		log.Println("WebSocket client:", client)
-		service.Manager.Register <- client
+		ws.Manager.Register <- client
 		go client.Read()
 		go client.Write()
 	})
