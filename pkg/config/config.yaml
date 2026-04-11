@@ -19,4 +19,4 @@ jwt:
   refresh_secret: "secret2"
 api:
   api_key: "sk-bf-5e881935-211d-4017-99a8-bb4f6497ee38"
-  base_url: "http://localhost:8080"
+  base_url: "http://localhost:8080/v1"

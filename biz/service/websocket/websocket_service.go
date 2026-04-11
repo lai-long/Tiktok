@@ -77,30 +77,9 @@ func (c *Client) Read() {
 		}
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
-			llm := ai.NewChatOpenAI(c.Ctx, "MiniMax-M2.7")
+			llm := ai.NewChatOpenAI(context.Background(), "MiniMax-M2.7")
 			go func(q string) {
 				resp, toolCall := llm.Chat(q)
-				if err != nil {
-					log.Println("AI chat error:", err)
-					replyMSg := chat.ReplyMsg{
-						From:    "AI",
-						Code:    consts.Success,
-						Content: "ai呢",
-					}
-					msg, _ := protojson.Marshal(&replyMSg)
-					c.Send <- msg
-					if c.SendID != "" {
-						Manager.mu.Lock()
-						for id, client := range Manager.Clients {
-							if id == c.SendID {
-								client.Send <- msg
-								break
-							}
-						}
-						Manager.mu.Unlock()
-					}
-					return
-				}
 				log.Println("AI chat:", resp)
 				if resp == "" && len(toolCall) == 0 {
 					replyMSg := chat.ReplyMsg{
