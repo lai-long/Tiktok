@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log"
+
 	"github.com/spf13/viper"
 )
 
@@ -51,6 +53,7 @@ func Load(confPath []string) (*Config, error) {
 	v.SetDefault("re.host", "localhost")
 	v.SetDefault("re.port", 6379)
 	v.SetDefault("re.password", "")
+
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
@@ -59,5 +62,6 @@ func Load(confPath []string) (*Config, error) {
 		return nil, err
 	}
 	Cfg = &cfg
+	log.Println("cfg", Cfg)
 	return &cfg, nil
 }
