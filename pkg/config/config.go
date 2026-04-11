@@ -25,7 +25,8 @@ type JwtConfig struct {
 	RefreshSecret string `mapstructure:"refresh_secret"`
 }
 type ApiConfig struct {
-	ApiKey string `mapstructure:"api_key"`
+	ApiKey  string `mapstructure:"api_key"`
+	BaseUrl string `mapstructure:"base_url"`
 }
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`

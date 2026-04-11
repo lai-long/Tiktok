@@ -7,6 +7,7 @@ import (
 	"Tiktok/biz/service/ai"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -32,6 +33,7 @@ type Client struct {
 	SendID  string
 	Socket  *websocket.Conn
 	Send    chan []byte
+	Ctx     context.Context
 }
 type Broadcast struct {
 	Clients  *Client
@@ -75,9 +77,9 @@ func (c *Client) Read() {
 		}
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
-			aiService := ai.NewAiService()
+			llm := ai.NewChatOpenAI(c.Ctx, "MiniMax-M2.7")
 			go func(q string) {
-				resp, err := aiService.ChatWithAi(q)
+				resp, toolCall := llm.Chat(q)
 				if err != nil {
 					log.Println("AI chat error:", err)
 					replyMSg := chat.ReplyMsg{
@@ -100,7 +102,7 @@ func (c *Client) Read() {
 					return
 				}
 				log.Println("AI chat:", resp)
-				if len(resp.Choices) == 0 || resp.Choices[0].Message == nil {
+				if resp == "" && len(toolCall) == 0 {
 					replyMSg := chat.ReplyMsg{
 						From:    "AI",
 						Code:    consts.Success,
@@ -120,10 +122,7 @@ func (c *Client) Read() {
 					}
 					return
 				}
-				replyContent := resp.Choices[0].Message.Content
-				if resp.Choices[0].Message.ReasoningContent != "" {
-					replyContent += "\n\n思考过程：" + resp.Choices[0].Message.ReasoningContent
-				}
+				replyContent := resp
 				replyMSg := chat.ReplyMsg{
 					From:    "AI",
 					Code:    consts.Success,
