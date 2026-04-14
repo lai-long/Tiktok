@@ -1,5 +1,6 @@
 package ai
 
+import "C"
 import (
 	"Tiktok/pkg/config"
 	"context"
@@ -81,27 +82,30 @@ func (c *ChatOpenAI) Chat(prompt string) (result string, toolCalls []openai.Tool
 		if content, ok := acc.JustFinishedContent(); ok {
 			result = content
 		}
-		if toolCall, ok := acc.JustFinishedToolCall(); ok {
-			log.Println("tool call", toolCall)
-			toolCalls = append(toolCalls, openai.ToolCallUnion{
-				ID: toolCall.ID,
+		log.Println("what tools====", acc.Choices[0].Message.ToolCalls)
+		if acc.Choices[0].Message.ToolCalls != nil {
+			toolTemp := openai.ToolCallUnion{
+				ID: acc.Choices[0].Message.ToolCalls[0].ID,
 				Function: openai.FunctionToolCallFunction{
-					Name:      toolCall.Name,
-					Arguments: toolCall.Arguments,
+					Arguments: acc.Choices[0].Message.ToolCalls[0].Function.Arguments,
+					Name:      acc.Choices[0].Message.ToolCalls[0].Function.Name,
 				},
-			})
+			}
+			toolCalls = append(toolCalls, toolTemp)
 		}
 	}
 	if stream.Err() != nil {
 		log.Println("error:", stream.Err())
 	}
-	log.Println(result + "result")
+	log.Println("历史消息：", c.Message)
+	log.Println(result + "---result")
 	return result, toolCalls
 }
 func ConvertMcpToOpenAITool(mcpTools []mcp.Tool) []openai.ChatCompletionToolParam {
 	openAITools := make([]openai.ChatCompletionToolParam, len(mcpTools))
-	for _, tool := range mcpTools {
-		openAITools = append(openAITools, openai.ChatCompletionToolParam{
+	for i, tool := range mcpTools {
+		log.Println("tool.name:", tool.Name, "tool.InputSchema", tool.InputSchema)
+		openAITools[i] = openai.ChatCompletionToolParam{
 			Function: shared.FunctionDefinitionParam{
 				Name:        tool.Name,
 				Description: openai.String(tool.Description),
@@ -111,7 +115,7 @@ func ConvertMcpToOpenAITool(mcpTools []mcp.Tool) []openai.ChatCompletionToolPara
 					"required":   tool.InputSchema.Required,
 				},
 			},
-		})
+		}
 	}
 	return openAITools
 }
