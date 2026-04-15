@@ -19,4 +19,4 @@ jwt:
   refresh_secret: "secret2"
 api:
   api_key: "sk-cp-8MewBrAg3keAlRHh_cPplYTLMk_LQZJ9gvBe_0Tu5XTSW2SgEbJa0Gnort61dq-6cUcSlATmmWR1bLRSK03peh6VWm6Enj5Wzg0cZ5s6qrkZaSuyAlfs_pY"
-  base_url: "https://api.minimaxi.com/v1"
+  base_url: "https://api.minimaxi.com"
