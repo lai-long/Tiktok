@@ -12,19 +12,23 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-var Manager = ClientManager{
-	Clients:        make(map[string]*Client),
-	Broadcast:      make(chan *Broadcast),
-	Groups:         make(map[string][]*Client),
-	GroupBroadcast: make(chan *GroupBroadcast),
-	Register:       make(chan *Client),
-	Unregister:     make(chan *Client),
+type WebsocketService struct {
+	mysql   *dao.MySQLdb
+	redis   *cache.Redis
+	Manager *clientManager
+}
+
+func NewWebsocketService(mysql *dao.MySQLdb, re *cache.Redis) *WebsocketService {
+	return &WebsocketService{
+		mysql:   mysql,
+		redis:   re,
+		Manager: NewClientManager(),
+	}
 }
 
 type Client struct {
@@ -47,19 +51,10 @@ type GroupBroadcast struct {
 	Message []byte
 	Type    string
 }
-type ClientManager struct {
-	Clients        map[string]*Client
-	Groups         map[string][]*Client
-	Broadcast      chan *Broadcast
-	GroupBroadcast chan *GroupBroadcast
-	Register       chan *Client
-	Unregister     chan *Client
-	mu             sync.RWMutex
-}
 
-func (c *Client) Read() {
+func (ws *WebsocketService) Read(c *Client) {
 	defer func() {
-		Manager.Unregister <- c
+		ws.Manager.Unregister <- c
 		_ = c.Socket.Close()
 	}()
 
@@ -71,17 +66,17 @@ func (c *Client) Read() {
 		err := c.Socket.ReadJSON(sendMsg)
 		if err != nil {
 			log.Println("client ReadJSON err", err)
-			Manager.Unregister <- c
+			ws.Manager.Unregister <- c
 			_ = c.Socket.Close()
 			break
 		}
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
-			llm := ai.NewChatOpenAI(context.Background(), "MiniMax-M2.7")
+			agent := ai.NewAgent(context.Background())
 			go func(q string) {
-				resp, toolCall := llm.Chat(q)
+				resp := agent.StartAction(question)
 				log.Println("AI chat:", resp)
-				if resp == "" && len(toolCall) == 0 {
+				if resp == "" {
 					replyMSg := chat.ReplyMsg{
 						From:    "AI",
 						Code:    consts.Success,
@@ -90,14 +85,14 @@ func (c *Client) Read() {
 					msg, _ := protojson.Marshal(&replyMSg)
 					c.Send <- msg
 					if c.SendID != "" {
-						Manager.mu.Lock()
-						for id, client := range Manager.Clients {
+						ws.Manager.mu.Lock()
+						for id, client := range ws.Manager.Clients {
 							if id == c.SendID {
 								client.Send <- msg
 								break
 							}
 						}
-						Manager.mu.Unlock()
+						ws.Manager.mu.Unlock()
 					}
 					return
 				}
@@ -110,48 +105,49 @@ func (c *Client) Read() {
 				msg, _ := protojson.Marshal(&replyMSg)
 				c.Send <- msg
 				if c.SendID != "" {
-					Manager.mu.Lock()
-					for id, client := range Manager.Clients {
+					ws.Manager.mu.Lock()
+					for id, client := range ws.Manager.Clients {
 						if id == c.SendID {
 							client.Send <- msg
 							break
 						}
 					}
-					Manager.mu.Unlock()
+					ws.Manager.mu.Unlock()
 				}
 			}(question)
 		}
 		if sendMsg.Type == "1" {
-			Manager.Broadcast <- &Broadcast{
+			ws.Manager.Broadcast <- &Broadcast{
 				Type:    "1",
 				Clients: c,
 				Message: []byte(sendMsg.Content),
 			}
 		} else if sendMsg.Type == "2" {
-			Manager.Broadcast <- &Broadcast{
+			ws.Manager.Broadcast <- &Broadcast{
 				Type:    "2",
 				Clients: c,
 			}
 		} else if sendMsg.Type == "3" {
-			Manager.Broadcast <- &Broadcast{
+			ws.Manager.Broadcast <- &Broadcast{
 				Type:     "3",
 				Clients:  c,
 				PageNum:  sendMsg.PageNum,
 				PageSize: sendMsg.PageSize,
 			}
 		} else if sendMsg.Type == "4" {
-			Manager.mu.Lock()
-			members, _ := Manager.Groups[c.GroupId]
-			Manager.GroupBroadcast <- &GroupBroadcast{
+			ws.Manager.mu.Lock()
+			members, _ := ws.Manager.Groups[c.GroupId]
+			ws.Manager.GroupBroadcast <- &GroupBroadcast{
 				Clients: members,
 				Message: []byte(sendMsg.Content),
 				Type:    sendMsg.Type,
 			}
-			Manager.mu.Unlock()
+			ws.Manager.mu.Unlock()
 		}
 	}
 }
-func (c *Client) Write() {
+
+func (ws *WebsocketService) Write(c *Client) {
 	defer func() {
 		_ = c.Socket.Close()
 	}()
@@ -171,17 +167,18 @@ func (c *Client) Write() {
 		}
 	}
 }
-func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
+
+func (ws *WebsocketService) Start() {
 	for {
 		select {
-		case client := <-manager.Register:
+		case client := <-ws.Manager.Register:
 			log.Println("建立websocket连接", client.ID)
 			if client.GroupId != "" {
-				manager.mu.Lock()
-				manager.Groups[client.GroupId] = append(manager.Groups[client.GroupId], client)
-				manager.mu.Unlock()
+				ws.Manager.mu.Lock()
+				ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId], client)
+				ws.Manager.mu.Unlock()
 			}
-			Manager.Clients[client.ID] = client
+			ws.Manager.Clients[client.ID] = client
 			replyMSg := chat.ReplyMsg{
 				From:    client.ID,
 				Code:    consts.Success,
@@ -189,19 +186,19 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 			}
 			msg, _ := protojson.Marshal(&replyMSg)
 			client.Send <- msg
-		case client := <-manager.Unregister:
+		case client := <-ws.Manager.Unregister:
 			log.Println("断开websocket连接", client.ID)
 			if client.GroupId != "" {
-				manager.mu.Lock()
-				for i, v := range manager.Groups[client.GroupId] {
+				ws.Manager.mu.Lock()
+				for i, v := range ws.Manager.Groups[client.GroupId] {
 					if v.ID == client.ID {
-						manager.Groups[client.GroupId] = append(manager.Groups[client.GroupId][:i], manager.Groups[client.GroupId][i+1:]...)
+						ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId][:i], ws.Manager.Groups[client.GroupId][i+1:]...)
 						break
 					}
 				}
-				manager.mu.Unlock()
+				ws.Manager.mu.Unlock()
 			}
-			if _, ok := Manager.Clients[client.ID]; ok {
+			if _, ok := ws.Manager.Clients[client.ID]; ok {
 				replyMSg := chat.ReplyMsg{
 					From:    client.ID,
 					Code:    consts.Success,
@@ -210,15 +207,15 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				msg, _ := protojson.Marshal(&replyMSg)
 				client.Send <- msg
 				close(client.Send)
-				delete(manager.Clients, client.ID)
+				delete(ws.Manager.Clients, client.ID)
 			}
-		case broadcast := <-manager.Broadcast:
+		case broadcast := <-ws.Manager.Broadcast:
 			if broadcast.Type == "1" {
 				message := broadcast.Message
 				sendId := broadcast.Clients.SendID
 				flag := false
-				manager.mu.Lock()
-				for id, client := range Manager.Clients {
+				ws.Manager.mu.Lock()
+				for id, client := range ws.Manager.Clients {
 					if id != sendId {
 						continue
 					}
@@ -233,10 +230,10 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 						flag = true
 					default:
 						close(client.Send)
-						delete(manager.Clients, client.ID)
+						delete(ws.Manager.Clients, client.ID)
 					}
 				}
-				manager.mu.Unlock()
+				ws.Manager.mu.Unlock()
 				id := broadcast.Clients.ID
 				if flag {
 					replyMSg := chat.ReplyMsg{
@@ -246,7 +243,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					}
 					msg, _ := protojson.Marshal(&replyMSg)
 					broadcast.Clients.Send <- msg
-					err := m.InsertMsg(id, string(message))
+					err := ws.mysql.InsertMsg(id, string(message))
 					if err != nil {
 						log.Println("Insert message error:", err)
 					}
@@ -256,11 +253,11 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 						Code:    consts.Success,
 						Content: "对方不在线",
 					}
-					err := m.InsertMsg(id, string(message))
+					err := ws.mysql.InsertMsg(id, string(message))
 					if err != nil {
 						log.Println("Insert message error:", err)
 					}
-					err = re.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
+					err = ws.redis.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
 					if err != nil {
 						log.Println("Save offline message error:", err)
 					}
@@ -268,7 +265,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					broadcast.Clients.Send <- msg
 				}
 			} else if broadcast.Type == "2" {
-				message, err := re.FetchOfflineMsg(broadcast.Clients.SendID)
+				message, err := ws.redis.FetchOfflineMsg(broadcast.Clients.SendID)
 				if err != nil {
 					log.Println("Fetch offline message error:", err)
 					replyMSg := chat.ReplyMsg{
@@ -299,7 +296,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 					pageSize, _ = strconv.Atoi(broadcast.PageSize)
 				}
 
-				msgs, err := m.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
+				msgs, err := ws.mysql.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
 				if err != nil || msgs == nil {
 					replyMSg := chat.ReplyMsg{
 						From:    "系统",
@@ -320,7 +317,7 @@ func (manager *ClientManager) Start(m *dao.MySQLdb, re *cache.Redis) {
 				msg, _ := protojson.Marshal(&replyMSg)
 				broadcast.Clients.Send <- msg
 			}
-		case groupBroadcast := <-manager.GroupBroadcast:
+		case groupBroadcast := <-ws.Manager.GroupBroadcast:
 			for _, client := range groupBroadcast.Clients {
 				replyMSg := chat.ReplyMsg{
 					From:    client.ID,

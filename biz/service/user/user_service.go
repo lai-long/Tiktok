@@ -4,6 +4,7 @@ import (
 	"Tiktok/biz/entity"
 	"Tiktok/biz/model/user"
 	"Tiktok/biz/service/mfa"
+	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
@@ -139,7 +140,7 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 		return consts.IOOsError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
 	}
 	filename := utils.IdGenerate()
-	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
+	err = os.MkdirAll(config.Cfg.Path.AvatarPath, os.ModePerm)
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "->userInfo os mkdir错误"), &user.UserInfo{}
 	}

@@ -20,14 +20,16 @@ import (
 )
 
 type WebsocketSever struct {
-	db *dao.MySQLdb
-	re *cache.Redis
+	db        *dao.MySQLdb
+	re        *cache.Redis
+	websocket *ws.WebsocketService
 }
 
-func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis) *WebsocketSever {
+func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis, ws *ws.WebsocketService) *WebsocketSever {
 	return &WebsocketSever{
-		db: db,
-		re: re,
+		db:        db,
+		re:        re,
+		websocket: ws,
 	}
 }
 
@@ -77,9 +79,9 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			Send:    make(chan []byte, 128),
 		}
 		log.Println("WebSocket client:", client)
-		ws.Manager.Register <- client
-		go client.Read()
-		go client.Write()
+		m.websocket.Manager.Register <- client
+		go m.websocket.Read(client)
+		go m.websocket.Write(client)
 	})
 	wsAdaptor := adaptor.HertzHandler(stdHandler)
 	wsAdaptor(ctx, c)

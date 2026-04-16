@@ -82,8 +82,10 @@ func main() {
 	react.LikeList = likeHandler.LikeList
 	react.LikeAction = likeHandler.LikeAction
 
-	websocketService := chat.NewWebsocketSever(mysqlDb, re)
+	wsService := ws.NewWebsocketService(mysqlDb, re)
+	websocketService := chat.NewWebsocketSever(mysqlDb, re, wsService)
 	chat.Websocket = websocketService.WebSocketHandler
+	go wsService.Start()
 
 	h := server.Default(
 		server.WithHostPorts(":8888"),
@@ -92,7 +94,6 @@ func main() {
 	h.Use(accesslog.New())
 	h.Use(middleware.AuthMiddleware)
 	router.GeneratedRegister(h)
-	go ws.Manager.Start(mysqlDb, re)
 
 	h.Spin()
 }
