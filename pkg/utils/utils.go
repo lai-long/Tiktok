@@ -89,3 +89,19 @@ func IsImage(file multipart.File) (bool, error) {
 		return false, nil
 	}
 }
+
+// ai关键词
+var triggerKeywords = []string{
+	"@AI",
+	"111",
+}
+
+func CheckAiKeyWord(message string) (bool, string) {
+	for _, keyword := range triggerKeywords {
+		if strings.Contains(message, keyword) {
+			question := strings.TrimSpace(strings.Replace(message, keyword, "", 1))
+			return true, question
+		}
+	}
+	return false, ""
+}

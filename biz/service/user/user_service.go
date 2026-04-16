@@ -1,8 +1,10 @@
-package service
+package user
 
 import (
 	"Tiktok/biz/entity"
 	"Tiktok/biz/model/user"
+	"Tiktok/biz/service/mfa"
+	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
@@ -32,11 +34,11 @@ type UserDatabase interface {
 
 type UserService struct {
 	userDb UserDatabase
-	mfaDb  MfaDatabase
+	mfaDb  mfa.MfaDatabase
 	redis  UserRedis
 }
 
-func NewUserService(userDb UserDatabase, mfaDb MfaDatabase, redis UserRedis) *UserService {
+func NewUserService(userDb UserDatabase, mfaDb mfa.MfaDatabase, redis UserRedis) *UserService {
 	return &UserService{userDb: userDb, mfaDb: mfaDb, redis: redis}
 }
 
@@ -138,7 +140,7 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 		return consts.IOOsError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
 	}
 	filename := utils.IdGenerate()
-	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
+	err = os.MkdirAll(config.Cfg.Path.AvatarPath, os.ModePerm)
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "->userInfo os mkdir错误"), &user.UserInfo{}
 	}

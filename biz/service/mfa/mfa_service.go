@@ -1,4 +1,4 @@
-package service
+package mfa
 
 import (
 	"Tiktok/pkg/consts"
@@ -14,7 +14,15 @@ type MfaDatabase interface {
 	CheckMfaBind(userId string) (error, int)
 }
 
-func (s *UserService) GenerateMfa(username string, userId string) (string, string, int32, error) {
+type MfaService struct {
+	mfaDb MfaDatabase
+}
+
+func NewMfaService(mfaDb MfaDatabase) *MfaService {
+	return &MfaService{mfaDb: mfaDb}
+}
+
+func (s *MfaService) GenerateMfa(username string, userId string) (string, string, int32, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
@@ -29,7 +37,8 @@ func (s *UserService) GenerateMfa(username string, userId string) (string, strin
 	}
 	return key.URL(), secret, consts.Success, nil
 }
-func (s *UserService) MfaBindByCode(code string, userId string) (int32, error) {
+
+func (s *MfaService) MfaBindByCode(code string, userId string) (int32, error) {
 	secret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
@@ -44,7 +53,8 @@ func (s *UserService) MfaBindByCode(code string, userId string) (int32, error) {
 	}
 	return consts.Success, nil
 }
-func (s *UserService) MfaBindBySecret(secret string, userId string) (int32, error) {
+
+func (s *MfaService) MfaBindBySecret(secret string, userId string) (int32, error) {
 	dbSecret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")

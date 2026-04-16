@@ -1,4 +1,4 @@
-package service
+package comment
 
 import (
 	"Tiktok/biz/entity"
@@ -90,7 +90,6 @@ func (s *CommentService) CommentDelete(commentId string, targetId string, userId
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
-		return consts.Success, nil
 	}
 	return consts.ReactReqValueError, nil
 }

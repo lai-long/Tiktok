@@ -6,9 +6,10 @@ import (
 	"Tiktok/biz/dal/cache"
 	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/service"
+	ws "Tiktok/biz/service/websocket"
 	"Tiktok/pkg/utils"
 	"context"
+	"log"
 	"net/http"
 
 	chat "Tiktok/biz/model/chat"
@@ -19,14 +20,16 @@ import (
 )
 
 type WebsocketSever struct {
-	db *dao.MySQLdb
-	re *cache.Redis
+	db        *dao.MySQLdb
+	re        *cache.Redis
+	websocket *ws.WebsocketService
 }
 
-func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis) *WebsocketSever {
+func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis, ws *ws.WebsocketService) *WebsocketSever {
 	return &WebsocketSever{
-		db: db,
-		re: re,
+		db:        db,
+		re:        re,
+		websocket: ws,
 	}
 }
 
@@ -37,15 +40,25 @@ var (
 // Websocket .
 // @router /ws [GET]
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid := ctx.Value("user_id").(string)
+	userid, ok := ctx.Value("user_id").(string)
+	if !ok || userid == "" {
+		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
+			Code: 200,
+			Msg:  "Unauthorized: user_id not found",
+		}})
+		return
+	}
+	log.Println("User connected:", userid)
 	uid := userid
 	req := new(chat.WebsocketReq)
 	err := c.BindAndValidate(req)
 	if err != nil {
+		log.Println("BindAndValidate error:", err)
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
 			Code: 0,
-			Msg:  "c.BindAndValidate(req) error",
+			Msg:  "Invalid request parameters",
 		}})
+		return
 	}
 	stdHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := (&websocket.Upgrader{
@@ -54,19 +67,21 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			},
 		}).Upgrade(w, r, nil)
 		if err != nil {
-			http.NotFound(w, r)
+			log.Println("WebSocket upgrade error:", err)
+			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
 			return
 		}
-		client := &service.Client{
+		client := &ws.Client{
 			ID:      utils.CreateId(uid, req.ToUserId),
 			SendID:  utils.CreateId(req.ToUserId, uid),
 			GroupId: req.GroupId,
 			Socket:  conn,
 			Send:    make(chan []byte, 128),
 		}
-		service.Manager.Register <- client
-		go client.Read()
-		go client.Write()
+		log.Println("WebSocket client:", client)
+		m.websocket.Manager.Register <- client
+		go m.websocket.Read(client)
+		go m.websocket.Write(client)
 	})
 	wsAdaptor := adaptor.HertzHandler(stdHandler)
 	wsAdaptor(ctx, c)

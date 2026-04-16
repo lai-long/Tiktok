@@ -1,8 +1,7 @@
-package service
+package like
 
 import (
 	"Tiktok/biz/entity"
-
 	"Tiktok/biz/model/video"
 	"Tiktok/pkg/consts"
 
@@ -38,7 +37,6 @@ func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabas
 }
 
 func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int32, error) {
-	//target type 1视频 2评论
 	if targetType == "1" {
 		if action == "1" {
 			err := s.likeDb.LikeCreate(userId, targetId, targetType)

@@ -3,7 +3,6 @@ mysql:
 #  host: "172.17.0.1"
   port: 3306
   user: "root"
-  password: "root"
   database: "tiktok"
   charset: "utf8"
   parse_time: true
@@ -12,8 +11,11 @@ redis:
   host: "localhost"
 #  host: "172.17.0.1"
   port: "6379"
-  password: ""
+  password: "root"
   db: 0
-jwt:
-  access_secret: "secret1"
-  refresh_secret: "secret2"
+api:
+  base_url: "https://api.minimaxi.com"
+path:
+  video_path: "/home/lai-long/Tiktok/a"
+  avatar_path: "/home/lai-long/Tiktok/a"
+  env_path: "/home/lai-long/Tiktok/.env"
