@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/hertz-contrib/logger/accesslog v0.0.0-20241107070745-e4ce8c54dd97
 	github.com/jmoiron/sqlx v1.4.0
+	github.com/joho/godotenv v1.5.1
 	github.com/mark3labs/mcp-go v0.47.1
 	github.com/maximhq/bifrost/core v1.5.1
 	github.com/pkg/errors v0.9.1
