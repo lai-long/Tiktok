@@ -89,13 +89,13 @@ func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) (er
 }
 
 func (m *MySQLdb) CommentDelete(commentId string) error {
-	sql := `DELETE FROM comments WHERE  comment_id = ?`
+	sql := `UPDATE comments SET deleted_at = NOW() WHERE comment_id = ? AND deleted_at IS NULL`
 	_, err := m.db.Exec(sql, commentId)
 	return err
 }
 
 func (m *MySQLdb) GetCommentById(commentId string) (entity.CommentEntity, error) {
-	sql := `SELECT * FROM comments WHERE comment_id = ?`
+	sql := `SELECT * FROM comments WHERE comment_id = ? AND deleted_at IS NULL`
 	var comment entity.CommentEntity
 	err := m.db.Get(&comment, sql, commentId)
 	return comment, err
