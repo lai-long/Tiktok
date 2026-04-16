@@ -3,9 +3,12 @@ package utils
 import (
 	"Tiktok/biz/model/user"
 	"Tiktok/pkg/config"
+	"Tiktok/pkg/consts"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -104,4 +107,22 @@ func CheckAiKeyWord(message string) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+func SaveUploadFile(dataFile multipart.File, dir string, filename string) (int32, error) {
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		log.Println(dir)
+		return consts.IOOsError, errors.Wrap(err, "saveUploadFile os mkdir错误")
+	}
+	file, err := os.Create(dir + filename)
+	if err != nil {
+		return consts.IOOsError, errors.Wrap(err, "saveUploadFile creat failed")
+	}
+	defer file.Close()
+	_, err = io.Copy(file, dataFile)
+	if err != nil {
+		return consts.IOOsError, errors.Wrap(err, "saveUploadFile io copy error")
+	}
+	return consts.Success, nil
 }

@@ -15,7 +15,7 @@ redis:
   db: 0
 api:
   base_url: "https://api.minimaxi.com"
-path:
-  video_path: "/home/lai-long/Tiktok/a"
-  avatar_path: "/home/lai-long/Tiktok/a"
+filepath:
+  video_path: "/home/lai-long/Tiktok/a/"
+  avatar_path: "/home/lai-long/Tiktok/a/"
   env_path: "/home/lai-long/Tiktok/.env"
