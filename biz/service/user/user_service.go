@@ -11,7 +11,6 @@ import (
 	"database/sql"
 	"io"
 	"mime/multipart"
-	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -140,20 +139,11 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 		return consts.IOOsError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
 	}
 	filename := utils.IdGenerate()
-	err = os.MkdirAll(config.Cfg.Path.AvatarPath, os.ModePerm)
+	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.AvatarPath, filename+filepath.Ext(data.Filename))
 	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->userInfo os mkdir错误"), &user.UserInfo{}
+		return code, errors.Wrap(err, "->userAvatar"), nil
 	}
-	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
-	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->userInfo os creat failed"), &user.UserInfo{}
-	}
-	defer file.Close()
-	_, err = io.Copy(file, dataFile)
-	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->userInfo io copy error"), &user.UserInfo{}
-	}
-	err = s.userDb.UpdateUserAvatar("/home/lai-long/Tiktok/a/"+filename+filepath.Ext(data.Filename), userId)
+	err = s.userDb.UpdateUserAvatar(config.Cfg.Path.AvatarPath+filename, userId)
 	if err != nil {
 		return consts.UserDBUpdateError, errors.Wrap(err, "->userinfo 更新头像错误"), &user.UserInfo{}
 	}

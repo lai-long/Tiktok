@@ -3,13 +3,12 @@ package video
 import (
 	"Tiktok/biz/entity"
 	"Tiktok/biz/model/video"
+	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
-	"io"
 	"math/rand"
 	"mime/multipart"
-	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -43,22 +42,14 @@ func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.
 	}
 	defer dataFile.Close()
 	filename := utils.IdGenerate()
-	err = os.MkdirAll("/home/lai-long/Tiktok/a", os.ModePerm)
+	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
 	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->VideoPublish os.MkdirAll err")
-	}
-	file, err := os.Create("/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename))
-	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->VideoPublish os.Create err")
-	}
-	defer file.Close()
-	if _, err := io.Copy(file, dataFile); err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->VideoPublish io.Copy err")
+		return code, errors.Wrap(err, " VideoPublish ")
 	}
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = videoInfo.Title
 	videoEntity.Description = videoInfo.Description
-	videoEntity.VideoURL = "/home/lai-long/Tiktok/a/" + filename + filepath.Ext(data.Filename)
+	videoEntity.VideoURL = config.Cfg.Path.VideoPath + filename
 	videoEntity.UserID = videoInfo.UserID
 	videoEntity.ID = filename
 	videoEntity.VisitCount = rand.Intn(100)

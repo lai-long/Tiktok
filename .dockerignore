@@ -1,0 +1,13 @@
+.env
+
+.git
+.gitignore
+
+*.sh
+*.md
+docs/
+script/
+
+.idea/
+
+a/

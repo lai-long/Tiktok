@@ -42,7 +42,7 @@ type Config struct {
 	Redis RedisConfig `mapstructure:"redis"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
 	Api   ApiConfig   `mapstructure:"api"`
-	Path  Path        `mapstructure:"path"`
+	Path  Path        `mapstructure:"filepath"`
 }
 
 var Cfg *Config
@@ -58,6 +58,7 @@ func Load(confPath []string) (*Config, error) {
 	for _, p := range confPath {
 		v.AddConfigPath(p)
 	}
+	v.AutomaticEnv()
 
 	err := v.BindEnv("mysql.password", "MYSQL_PASSWORD")
 	if err != nil {
@@ -80,7 +81,6 @@ func Load(confPath []string) (*Config, error) {
 		return nil, errors.Wrap(err, "jwt_refresh_secret bind env error")
 	}
 
-	v.AutomaticEnv()
 	v.SetDefault("mysql.host", "localhost")
 	v.SetDefault("mysql.port", 3306)
 	v.SetDefault("mysql.user", "test")
@@ -98,6 +98,5 @@ func Load(confPath []string) (*Config, error) {
 		return nil, errors.Wrap(err, "failed to unmarshal config")
 	}
 	Cfg = &cfg
-	log.Println("cfg", Cfg)
 	return &cfg, nil
 }
