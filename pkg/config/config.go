@@ -2,7 +2,9 @@ package config
 
 import (
 	"log"
+	"sync"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -46,12 +48,12 @@ type Config struct {
 }
 
 var Cfg *Config
+var lock sync.RWMutex
 
 func Load(confPath []string) (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("load env error:", err)
 	}
-
 	v := viper.New()
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
@@ -59,7 +61,6 @@ func Load(confPath []string) (*Config, error) {
 		v.AddConfigPath(p)
 	}
 	v.AutomaticEnv()
-
 	err := v.BindEnv("mysql.password", "MYSQL_PASSWORD")
 	if err != nil {
 		return nil, errors.Wrap(err, "mysql password bind env error")
@@ -97,6 +98,22 @@ func Load(confPath []string) (*Config, error) {
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal config")
 	}
+	lock.Lock()
 	Cfg = &cfg
+	lock.Unlock()
+
+	v.WatchConfig()
+	v.OnConfigChange(func(e fsnotify.Event) {
+		var newCfg Config
+		if err := v.Unmarshal(&newCfg); err != nil {
+			log.Println("failed to unmarshal config")
+			return
+		}
+		lock.Lock()
+		Cfg = &newCfg
+		lock.Unlock()
+		log.Println("config changed successfully")
+	})
+	log.Println("config init successfully")
 	return &cfg, nil
 }
