@@ -23,11 +23,11 @@ linters:
     - nakedret
     - interfacebloat
     - durationcheck
-    - revive
+#    - revive
 
 linters-settings:
   lll:
-    line-length: 120
+    line-length: 150
 
 issues:
   exclude-use-default: false

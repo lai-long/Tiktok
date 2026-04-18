@@ -75,45 +75,7 @@ func (ws *WebsocketService) Read(c *Client) {
 			agent := ai.NewAgent(context.Background())
 			go func(q string) {
 				resp := agent.StartAction(question)
-				log.Println("AI chat:", resp)
-				if resp == "" {
-					replyMSg := chat.ReplyMsg{
-						From:    "AI",
-						Code:    consts.Success,
-						Content: "ai不理你",
-					}
-					msg, _ := protojson.Marshal(&replyMSg)
-					c.Send <- msg
-					if c.SendID != "" {
-						ws.Manager.mu.Lock()
-						for id, client := range ws.Manager.Clients {
-							if id == c.SendID {
-								client.Send <- msg
-								break
-							}
-						}
-						ws.Manager.mu.Unlock()
-					}
-					return
-				}
-				replyContent := resp
-				replyMSg := chat.ReplyMsg{
-					From:    "AI",
-					Code:    consts.Success,
-					Content: replyContent,
-				}
-				msg, _ := protojson.Marshal(&replyMSg)
-				c.Send <- msg
-				if c.SendID != "" {
-					ws.Manager.mu.Lock()
-					for id, client := range ws.Manager.Clients {
-						if id == c.SendID {
-							client.Send <- msg
-							break
-						}
-					}
-					ws.Manager.mu.Unlock()
-				}
+				ws.aiReplyToClient(resp, c)
 			}(question)
 		}
 		switch sendMsg.Type {
@@ -356,4 +318,45 @@ func (ws *WebsocketService) startBroadcastOneError(broadcast *Broadcast) {
 	log.Println("请求类型不存在")
 	msg, _ := protojson.Marshal(&replyMSg)
 	broadcast.Clients.Send <- msg
+}
+
+func (ws *WebsocketService) aiReplyToClient(resp string, c *Client) {
+	if resp == "" {
+		replyMSg := chat.ReplyMsg{
+			From:    "AI",
+			Code:    consts.Success,
+			Content: "ai不理你",
+		}
+		msg, _ := protojson.Marshal(&replyMSg)
+		c.Send <- msg
+		if c.SendID != "" {
+			ws.Manager.mu.Lock()
+			for id, client := range ws.Manager.Clients {
+				if id == c.SendID {
+					client.Send <- msg
+					break
+				}
+			}
+			ws.Manager.mu.Unlock()
+		}
+		return
+	}
+	replyContent := resp
+	replyMSg := chat.ReplyMsg{
+		From:    "AI",
+		Code:    consts.Success,
+		Content: replyContent,
+	}
+	msg, _ := protojson.Marshal(&replyMSg)
+	c.Send <- msg
+	if c.SendID != "" {
+		ws.Manager.mu.Lock()
+		for id, client := range ws.Manager.Clients {
+			if id == c.SendID {
+				client.Send <- msg
+				break
+			}
+		}
+		ws.Manager.mu.Unlock()
+	}
 }

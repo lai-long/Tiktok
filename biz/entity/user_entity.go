@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// UserEntity is used to react with database
 type UserEntity struct {
 	ID         string       `db:"id"`
 	Username   string       `db:"username"`
@@ -18,6 +19,7 @@ type UserEntity struct {
 	MfaEnabled bool         `db:"mfa_enabled"`
 }
 
+// ToUserInfo is to exchange userEntity to UserInfo
 func (u *UserEntity) ToUserInfo() *user.UserInfo {
 	return &user.UserInfo{
 		ID:        u.ID,

@@ -95,7 +95,7 @@ func (c *ChatClient) Chat(prompt string) (content string, err error) {
 		log.Printf("ChatCompletionRequest err: %+v, Error: %+v\n", bifrostErr, bifrostErr.Error)
 		return "", bifrostErr.Error.Error
 	}
-	if resp.Choices == nil || len(resp.Choices) == 0 {
+	if len(resp.Choices) == 0 {
 		log.Println("choices is nil or empty")
 		return "", nil
 	}

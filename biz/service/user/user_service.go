@@ -63,7 +63,7 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 	if exists {
 		return consts.UserNameExists, nil
 	}
-	userEntity.Id = utils.IdGenerate()
+	userEntity.ID = utils.IdGenerate()
 	userEntity.Username = userinfo.UserName
 	userEntity.Password, err = utils.HashPassword(userinfo.Password)
 	if err != nil {

@@ -16,7 +16,8 @@ func (m *MySQLdb) DeleteFollowing(userID string, toUserID string) error {
 	return err
 }
 func (m *MySQLdb) FollowingList(userID string, pageNum int64, pageSize int64) ([]entity.UserEntity, error) {
-	sql := `SELECT * FROM users WHERE id IN (SELECT following_id FROM following WHERE user_id = ? AND deleted_at is null) LIMIT ? OFFSET ?`
+	sql := `SELECT * FROM users WHERE id IN (SELECT following_id FROM following WHERE user_id = ? AND deleted_at
+	is null) LIMIT ? OFFSET ?`
 	var users []entity.UserEntity
 	offset := pageNum * pageSize
 	err := m.db.Select(&users, sql, userID, pageSize, offset)
