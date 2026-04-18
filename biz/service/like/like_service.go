@@ -15,7 +15,7 @@ type LikeCommentDatabase interface {
 type LikeVideoDatabase interface {
 	VideoLikeCountUp(videoId string) error
 	VideoLikeCountDown(videoId string) error
-	LikeVideoIds(userId string, pageNum int64, pageSize int64) (error, []string)
+	LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error)
 	LikeVideos(videoId []string) (bool, []entity.VideoEntity)
 }
 type LikeDatabase interface {
@@ -92,18 +92,18 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 	return consts.ReactReqValueError, nil
 }
 
-func (s *LikeService) LikeList(userId string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
-	err, videoId := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
+func (s *LikeService) LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+	videoId, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
-		return consts.ReactDBSelectError, errors.Wrap(err, "->LikeList select LikeVideo error"), nil
+		return consts.ReactDBSelectError, nil, errors.Wrap(err, "->LikeList select LikeVideo error")
 	}
 	ok, videos := s.videoDb.LikeVideos(videoId)
 	if !ok {
-		return consts.ReactDBSelectError, errors.New("->LikeList LikeVideos err"), nil
+		return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
 	}
 	var videoInfos []*video.VideoInfo
 	for _, v := range videos {
 		videoInfos = append(videoInfos, v.ToVideoInfo())
 	}
-	return consts.Success, nil, videoInfos
+	return consts.Success, videoInfos, nil
 }

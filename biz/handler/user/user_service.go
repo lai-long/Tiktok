@@ -3,6 +3,7 @@
 package user
 
 import (
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	userService "Tiktok/biz/service/user"
 	"context"
@@ -26,9 +27,9 @@ var (
 
 type UserSever interface {
 	Register(registerReq *user.RegisterReq) (int32, error)
-	Login(username, password, mfaCode string, ctx context.Context) (int32, error, *user.UserInfo, string, string)
+	Login(username, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error)
 	UserInfo(userId string) (*user.UserInfo, int32, error)
-	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int32, error, *user.UserInfo)
+	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error)
 	RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error)
 }
 type UserHandler struct {
@@ -78,7 +79,7 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err, userInfo, reToken, acToken := h.userService.Login(req.UserName, req.Password, req.Code, ctx)
+	code, userInfo, reToken, acToken, err := h.userService.Login(req.UserName, req.Password, req.Code, ctx)
 	if err != nil {
 		log.Println("userService.Login error:", err)
 	}
@@ -142,8 +143,8 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
-	code, err, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
+	userId := ctx.Value(middleware.UserIDKey).(string)
+	code, userInfo, err := h.userService.UserAvatar(userAvatarReq, userId)
 	if err != nil {
 		log.Println("userService.UserAvatar error:", err)
 	}

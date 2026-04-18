@@ -24,24 +24,20 @@ linters:
     - interfacebloat
     - durationcheck
 #    - revive
-
-linters-settings:
-  lll:
-    line-length: 150
+  settings:
+    lll:
+      line-length: 150
 
 issues:
   exclude-use-default: false
-  max-issues-per-linter: 100
-  max-same-issues: 5
+  max-issues-per-linter: 1000
+  max-same-issues: 500
 
   exclude-files:
-      - "third_party/*.go"
-
-
+    - "third_party/*.go"
 
 output:
   format: colored-line-number
   print-issued-line: true
   print-linter-name: true
 
-cache-dir: .golangci-cache

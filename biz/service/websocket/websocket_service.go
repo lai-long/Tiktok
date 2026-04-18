@@ -20,7 +20,7 @@ import (
 type WebsocketService struct {
 	mysql   *dao.MySQLdb
 	redis   *cache.Redis
-	Manager *clientManager
+	Manager *ClientManager
 }
 
 func NewWebsocketService(mysql *dao.MySQLdb, re *cache.Redis) *WebsocketService {

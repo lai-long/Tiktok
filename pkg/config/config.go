@@ -10,11 +10,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Path 常用路径
 type Path struct {
 	VideoPath  string `mapstructure:"video_path"`
 	AvatarPath string `mapstructure:"avatar_path"`
 	EnvPath    string `mapstructure:"env_path"`
 }
+
+// MySQLConfig Mysql配置
 type MySQLConfig struct {
 	Host      string `mapstructure:"host"`
 	Port      int    `mapstructure:"port"`
@@ -25,31 +28,41 @@ type MySQLConfig struct {
 	ParseTime bool   `mapstructure:"parse_time"`
 	Loc       string `mapstructure:"loc"`
 }
+
+// RedisConfig Redis配置
 type RedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
 	Database int    `mapstructure:"database"`
 }
+
+// JwtConfig JWT密钥
 type JwtConfig struct {
 	AccessSecret  string `mapstructure:"access_secret"`
 	RefreshSecret string `mapstructure:"refresh_secret"`
 }
-type ApiConfig struct {
-	ApiKey  string `mapstructure:"api_key"`
-	BaseUrl string `mapstructure:"base_url"`
+
+// APIConfig AI相关配置
+type APIConfig struct {
+	APIKey  string `mapstructure:"api_key"`
+	BaseURL string `mapstructure:"base_url"`
 }
+
+// Config 总配置
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
 	Redis RedisConfig `mapstructure:"redis"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
-	Api   ApiConfig   `mapstructure:"api"`
+	API   APIConfig   `mapstructure:"api"`
 	Path  Path        `mapstructure:"filepath"`
 }
 
+// Cfg 调用配置
 var Cfg *Config
 var lock sync.RWMutex
 
+// Load 加载配置
 func Load(confPath []string) (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("load env error:", err)

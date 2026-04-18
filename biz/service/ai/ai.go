@@ -18,7 +18,7 @@ func (a *MyAccount) GetConfiguredProviders() ([]schemas.ModelProvider, error) {
 func (a *MyAccount) GetKeysForProvider(ctx context.Context, provider schemas.ModelProvider) ([]schemas.Key, error) {
 	return []schemas.Key{
 		{
-			Value:  *schemas.NewEnvVar(config.Cfg.Api.ApiKey),
+			Value:  *schemas.NewEnvVar(config.Cfg.API.APIKey),
 			Models: schemas.WhiteList{"MiniMax-M2.7"},
 			Weight: 1.0,
 		},
@@ -27,7 +27,7 @@ func (a *MyAccount) GetKeysForProvider(ctx context.Context, provider schemas.Mod
 func (a *MyAccount) GetConfigForProvider(_ schemas.ModelProvider) (*schemas.ProviderConfig, error) {
 	return &schemas.ProviderConfig{
 		NetworkConfig: schemas.NetworkConfig{
-			BaseURL: config.Cfg.Api.BaseUrl,
+			BaseURL: config.Cfg.API.BaseURL,
 		},
 		ConcurrencyAndBufferSize: schemas.DefaultConcurrencyAndBufferSize,
 	}, nil

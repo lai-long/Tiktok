@@ -51,11 +51,11 @@ func (m *MySQLdb) LikeDelete(userId, targetID, targetType string) error {
 	return nil
 }
 
-func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) (error, []string) {
+func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error) {
 	sql := `SELECT target_id FROM likes WHERE  user_id = ? AND target_type = 1  ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var videoId []string
 	err := m.db.Select(&videoId, sql, userId, pageSize, pageNum*pageSize)
-	return errors.Wrap(err, "dao Like video list"), videoId
+	return videoId, errors.Wrap(err, "dao Like video list")
 }
 
 func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity.VideoEntity) {
@@ -81,11 +81,11 @@ func (m *MySQLdb) CreateComment(commentId string, videoId string, userId string,
 	return err
 }
 
-func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) (error, []entity.CommentEntity) {
+func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
 	sql := `SELECT * FROM comments WHERE target_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var comments []entity.CommentEntity
 	err := m.db.Select(&comments, sql, videoId, pageSize, pageNum*pageSize)
-	return err, comments
+	return comments, err
 }
 
 func (m *MySQLdb) CommentDelete(commentId string) error {
