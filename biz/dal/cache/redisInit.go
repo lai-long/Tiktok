@@ -1,3 +1,5 @@
+// cache use redis
+
 package cache
 
 import (
@@ -9,10 +11,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// Redis is a struct encapsulation redis client
 type Redis struct {
 	redis *redis.Client
 }
 
+// NewRedis creat new Redis struct
 func NewRedis(client *redis.Client) *Redis {
 	return &Redis{redis: client}
 }

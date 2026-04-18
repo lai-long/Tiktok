@@ -19,7 +19,8 @@ func main() {
 	}
 }
 func registerTools(s *server.MCPServer) {
-	addTool := mcp.NewTool("add", mcp.WithDescription("把两个数加起来返回和"), mcp.WithNumber("number1", mcp.Required(), mcp.Description("第一个数字")),
+	addTool := mcp.NewTool("add", mcp.WithDescription("把两个数加起来返回和"),
+		mcp.WithNumber("number1", mcp.Required(), mcp.Description("第一个数字")),
 		mcp.WithNumber("number2", mcp.Required(), mcp.Description("第二个数字")))
 	s.AddTool(addTool, tools.AddTool)
 }

@@ -6,7 +6,8 @@ import (
 
 func (m *MySQLdb) CreatVideo(entity entity.VideoEntity) error {
 	sql := `INSERT INTO videos (title ,description,id,user_id,video_url,visit_count) VALUES(?,?,?,?,?,?)`
-	_, err := m.db.Exec(sql, entity.Title, entity.Description, entity.ID, entity.UserID, entity.VideoURL, entity.VisitCount)
+	_, err := m.db.Exec(sql, entity.Title, entity.Description, entity.ID, entity.UserID, entity.VideoURL,
+		entity.VisitCount)
 	return err
 }
 

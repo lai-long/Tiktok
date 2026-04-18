@@ -5,6 +5,7 @@ import (
 	"database/sql"
 )
 
+// CommentEntity is used to react with database
 type CommentEntity struct {
 	UserID       string       `db:"user_id"`
 	TargetID     string       `db:"target_id"`
@@ -18,6 +19,7 @@ type CommentEntity struct {
 	TargetType   string       `db:"target_type"`
 }
 
+// ToCommentInfo is used to exchange CommentEntity to commentInfo
 func (c *CommentEntity) ToCommentInfo() *react.CommentInfo {
 	return &react.CommentInfo{
 		UserId:       c.UserID,
