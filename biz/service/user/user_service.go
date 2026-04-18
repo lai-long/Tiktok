@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"io"
+	"log"
 	"mime/multipart"
 	"path/filepath"
 
@@ -44,7 +45,7 @@ func NewUserService(userDb UserDatabase, mfaDb mfa.MfaDatabase, redis UserRedis)
 func (s *UserService) IsUsernameExists(username string) (bool, error) {
 	_, err := s.userDb.GetUserByUsername(username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
 		return false, errors.Wrap(err, "get user by username")
@@ -76,9 +77,9 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 
 func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int32, error, *user.UserInfo, string, string) {
 	userEntity, err := s.userDb.GetUserByUsername(userName)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return consts.UserDBSelectError, errors.Wrap(err, "->Login GetUserByUsername数据库查询错误"), &user.UserInfo{}, "", ""
-	} else if err == sql.ErrNoRows {
+	} else if errors.Is(err, sql.ErrNoRows) {
 		return consts.UserNotExists, errors.Wrap(err, "->login用户不存在"), &user.UserInfo{}, "", ""
 	}
 	err = utils.CheckPasswordHash(userEntity.Password, password)
@@ -86,7 +87,7 @@ func (s *UserService) Login(userName, password, mfaCode string, ctx context.Cont
 		return consts.UserPasswordError, errors.Wrap(err, "->login: check password failed"), &user.UserInfo{}, "", ""
 	}
 	userInfo := userEntity.ToUserInfo()
-	err, enable := s.mfaDb.CheckMfaBind(userInfo.ID)
+	enable, err := s.mfaDb.CheckMfaBind(userInfo.ID)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "->login: check mfa bind failed"), &user.UserInfo{}, "", ""
 	}
@@ -127,7 +128,12 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "->UserInfo data open 错误"), &user.UserInfo{}
 	}
-	defer dataFile.Close()
+	defer func() {
+		err := dataFile.Close()
+		if err != nil {
+			log.Println(errors.Wrap(err, "-UserInfo data close"))
+		}
+	}()
 	ok, err := utils.IsImage(dataFile)
 	if err != nil {
 		return consts.FileError, errors.Wrap(err, "->userInfo check image failed"), &user.UserInfo{}

@@ -1,0 +1,47 @@
+version: 2
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+    - gocritic
+    - lll
+    - prealloc
+    - errorlint
+    - exhaustive
+    - nilerr
+    - nestif
+    - nakedret
+    - interfacebloat
+    - durationcheck
+    - revive
+
+linters-settings:
+  lll:
+    line-length: 120
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 100
+  max-same-issues: 5
+
+  exclude-files:
+      - "third_party/*.go"
+
+
+
+output:
+  format: colored-line-number
+  print-issued-line: true
+  print-linter-name: true
+
+cache-dir: .golangci-cache

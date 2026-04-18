@@ -7,6 +7,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+// 加法工具，获取两个属相加的结果
 func AddTool(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	log.Println("成功调用add tool")
 	args, _ := req.Params.Arguments.(map[string]any)

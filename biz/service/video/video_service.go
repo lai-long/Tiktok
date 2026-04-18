@@ -7,6 +7,7 @@ import (
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
+	"log"
 	"math/rand"
 	"mime/multipart"
 	"path/filepath"
@@ -40,7 +41,12 @@ func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "->VideoPublish data.Open err")
 	}
-	defer dataFile.Close()
+	defer func() {
+		err := dataFile.Close()
+		if err != nil {
+			log.Println(errors.Wrap(err, "VideoPublish data close"))
+		}
+	}()
 	filename := utils.IdGenerate()
 	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
 	if err != nil {

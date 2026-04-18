@@ -7,7 +7,7 @@ import (
 
 func (m *MySQLdb) CreateUser(user entity.UserEntity) error {
 	sql := `INSERT INTO users (username,  password, id) VALUES (?, ? ,?)`
-	_, err := m.db.Exec(sql, user.Username, user.Password, user.Id)
+	_, err := m.db.Exec(sql, user.Username, user.Password, user.ID)
 	return err
 }
 
@@ -18,18 +18,18 @@ func (m *MySQLdb) GetUserByUsername(username string) (entity.UserEntity, error) 
 	return user, err
 }
 
-func (m *MySQLdb) GetUserByUserId(userId string) (entity.UserEntity, error) {
+func (m *MySQLdb) GetUserByUserId(userID string) (entity.UserEntity, error) {
 	var user entity.UserEntity
 	sql := `SELECT * FROM users WHERE id = ?`
-	err := m.db.Get(&user, sql, userId)
+	err := m.db.Get(&user, sql, userID)
 	if err != nil {
 		log.Println(err)
 	}
 	return user, err
 }
 
-func (m *MySQLdb) UpdateUserAvatar(url string, userId interface{}) error {
+func (m *MySQLdb) UpdateUserAvatar(url string, userID interface{}) error {
 	sql := `UPDATE users SET avatar_url=? WHERE id=?`
-	_, err := m.db.Exec(sql, url, userId)
+	_, err := m.db.Exec(sql, url, userID)
 	return err
 }

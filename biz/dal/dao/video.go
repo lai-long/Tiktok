@@ -10,11 +10,11 @@ func (m *MySQLdb) CreatVideo(entity entity.VideoEntity) error {
 	return err
 }
 
-func (m *MySQLdb) GetVideoByUserID(userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error) {
+func (m *MySQLdb) GetVideoByUserID(userID string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error) {
 	var video []entity.VideoEntity
 	sql := `select * from videos where user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
 	offset := pageNum * pageSize
-	err := m.db.Select(&video, sql, userId, pageSize, offset)
+	err := m.db.Select(&video, sql, userID, pageSize, offset)
 	return video, err
 }
 
@@ -27,10 +27,10 @@ func (m *MySQLdb) GetVideoByKeyWord(keyword string, pageNum int64, pageSize int6
 	return video, err
 }
 
-func (m *MySQLdb) GetVideoByVideoId(videoId string) (entity.VideoEntity, error) {
+func (m *MySQLdb) GetVideoByVideoId(videoID string) (entity.VideoEntity, error) {
 	var video entity.VideoEntity
 	sql := `select * from videos where id= ?`
-	err := m.db.Get(&video, sql, videoId)
+	err := m.db.Get(&video, sql, videoID)
 	return video, err
 }
 

@@ -38,7 +38,7 @@ var (
 // LikeAction .
 // @router /like/action [POST]
 func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
-	//targetType 1、视频 2、评论
+	// targetType 1、视频 2、评论
 	var err error
 	var req react.LikeActionReq
 	err = c.BindAndValidate(&req)

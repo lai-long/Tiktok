@@ -25,7 +25,7 @@ func InitRedis() *redis.Client {
 		DB:       config.Cfg.Redis.Database,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("re 连接失败", err)
+		log.Fatalf("re 连接失败 错误: %v", err)
 	}
 	log.Println("re 连接成功")
 	return rdb

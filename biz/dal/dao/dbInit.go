@@ -12,8 +12,9 @@ import (
 func InitDb() *sqlx.DB {
 	var db *sqlx.DB
 	var err error
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset%v&parseTime=%v", config.Cfg.MySQL.User, config.Cfg.MySQL.Password, config.Cfg.MySQL.Host, config.Cfg.MySQL.Port, config.Cfg.MySQL.Database, config.Cfg.MySQL.Charset, config.Cfg.MySQL.ParseTime)
-	//	DSN       = "root:root@tcp(localhost:3306)/tiktok?charset=utf8&parseTime=True&loc=Local"
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset%v&parseTime=%v",
+		config.Cfg.MySQL.User, config.Cfg.MySQL.Password, config.Cfg.MySQL.Host, config.Cfg.MySQL.Port,
+		config.Cfg.MySQL.Database, config.Cfg.MySQL.Charset, config.Cfg.MySQL.ParseTime)
 	log.Println("dsn:", dsn)
 	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {

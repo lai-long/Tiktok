@@ -116,29 +116,29 @@ func (ws *WebsocketService) Read(c *Client) {
 				}
 			}(question)
 		}
-		if sendMsg.Type == "1" {
+		switch sendMsg.Type {
+		case "1":
 			ws.Manager.Broadcast <- &Broadcast{
 				Type:    "1",
 				Clients: c,
 				Message: []byte(sendMsg.Content),
 			}
-		} else if sendMsg.Type == "2" {
+		case "2":
 			ws.Manager.Broadcast <- &Broadcast{
 				Type:    "2",
 				Clients: c,
 			}
-		} else if sendMsg.Type == "3" {
+		case "3":
 			ws.Manager.Broadcast <- &Broadcast{
 				Type:     "3",
 				Clients:  c,
 				PageNum:  sendMsg.PageNum,
 				PageSize: sendMsg.PageSize,
 			}
-		} else if sendMsg.Type == "4" {
+		case "4":
 			ws.Manager.mu.Lock()
-			members, _ := ws.Manager.Groups[c.GroupId]
 			ws.Manager.GroupBroadcast <- &GroupBroadcast{
-				Clients: members,
+				Clients: ws.Manager.Groups[c.GroupId],
 				Message: []byte(sendMsg.Content),
 				Type:    sendMsg.Type,
 			}
@@ -151,20 +151,9 @@ func (ws *WebsocketService) Write(c *Client) {
 	defer func() {
 		_ = c.Socket.Close()
 	}()
-	for {
-		select {
-		case message, ok := <-c.Send:
-			if !ok {
-				closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "websocket connection closed")
-				err := c.Socket.WriteMessage(websocket.CloseMessage, closeMsg)
-				if err != nil {
-					log.Println("write closeMsg err", err)
-				}
-				log.Println("client Write err")
-				return
-			}
-			_ = c.Socket.WriteMessage(websocket.TextMessage, message)
-		}
+	for message := range c.Send {
+		_ = c.Socket.WriteMessage(websocket.TextMessage, message)
+
 	}
 }
 
@@ -176,12 +165,15 @@ func (ws *WebsocketService) Start() {
 		case client := <-ws.Manager.Unregister:
 			ws.startUnregister(client)
 		case broadcast := <-ws.Manager.Broadcast:
-			if broadcast.Type == "1" {
+			switch broadcast.Type {
+			case "1":
 				ws.startBroadcastOneOnline(broadcast)
-			} else if broadcast.Type == "2" {
+			case "2":
 				ws.startBroadcastOneOffline(broadcast)
-			} else if broadcast.Type == "3" {
+			case "3":
 				ws.startBroadcastOneHistory(broadcast)
+			default:
+				ws.startBroadcastOneError(broadcast)
 			}
 		case groupBroadcast := <-ws.Manager.GroupBroadcast:
 			ws.startBroadcastGroupOnline(groupBroadcast)
@@ -212,7 +204,8 @@ func (ws *WebsocketService) startUnregister(client *Client) {
 		ws.Manager.mu.Lock()
 		for i, v := range ws.Manager.Groups[client.GroupId] {
 			if v.ID == client.ID {
-				ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId][:i], ws.Manager.Groups[client.GroupId][i+1:]...)
+				ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId][:i],
+					ws.Manager.Groups[client.GroupId][i+1:]...)
 				break
 			}
 		}
@@ -352,4 +345,15 @@ func (ws *WebsocketService) startBroadcastGroupOnline(groupBroadcast *GroupBroad
 		msg, _ := protojson.Marshal(&replyMSg)
 		client.Send <- msg
 	}
+}
+
+func (ws *WebsocketService) startBroadcastOneError(broadcast *Broadcast) {
+	replyMSg := chat.ReplyMsg{
+		From:    "system",
+		Code:    consts.Success,
+		Content: "请求类型不存在",
+	}
+	log.Println("请求类型不存在")
+	msg, _ := protojson.Marshal(&replyMSg)
+	broadcast.Clients.Send <- msg
 }

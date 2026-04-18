@@ -144,6 +144,9 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 	}
 	userId := ctx.Value("user_id").(string)
 	code, err, userInfo := h.userService.UserAvatar(userAvatarReq, userId)
+	if err != nil {
+		log.Println("userService.UserAvatar error:", err)
+	}
 	resp := &user.UserAvatarResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: userInfo,
