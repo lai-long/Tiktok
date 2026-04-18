@@ -70,6 +70,9 @@ func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext)
 		return
 	}
 	code, err, commentInfos := h.service.CommentList(req.TargetAt, req.PageSize, req.PageNum)
+	if err != nil {
+		log.Println("CommentList err:", err)
+	}
 	resp := &react.CommentListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &react.CommentData{Items: commentInfos},

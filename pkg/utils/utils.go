@@ -119,7 +119,12 @@ func SaveUploadFile(dataFile multipart.File, dir string, filename string) (int32
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "saveUploadFile creat failed")
 	}
-	defer file.Close()
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Println("saveUploadFile close err", err)
+		}
+	}()
 	_, err = io.Copy(file, dataFile)
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "saveUploadFile io copy error")

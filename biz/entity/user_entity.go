@@ -7,7 +7,7 @@ import (
 )
 
 type UserEntity struct {
-	Id         string       `db:"id"`
+	ID         string       `db:"id"`
 	Username   string       `db:"username"`
 	Password   string       `db:"password"`
 	Avatar_url string       `db:"avatar_url"`
@@ -20,7 +20,7 @@ type UserEntity struct {
 
 func (u *UserEntity) ToUserInfo() *user.UserInfo {
 	return &user.UserInfo{
-		ID:        u.Id,
+		ID:        u.ID,
 		Username:  u.Username,
 		AvatarURL: u.Avatar_url,
 		CreatedAt: u.Created_at.String(),

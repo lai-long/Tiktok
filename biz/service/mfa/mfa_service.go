@@ -11,7 +11,7 @@ type MfaDatabase interface {
 	SaveMfaSecret(mfa string, userId string) error
 	GetMfaSecret(userId string) (string, error)
 	MfaBindUpdate(userId string) error
-	CheckMfaBind(userId string) (error, int)
+	CheckMfaBind(userId string) (int, error)
 }
 
 type MfaService struct {

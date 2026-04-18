@@ -73,6 +73,9 @@ func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext
 		return
 	}
 	code, err, userInfos := h.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	if err != nil {
+		log.Println("following list err", err)
+	}
 	resp := &social.FollowingListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &social.SocialData{Items: userInfos, Total: int64(len(userInfos))},

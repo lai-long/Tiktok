@@ -61,12 +61,12 @@ func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) (er
 func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity.VideoEntity) {
 	videos := make([]entity.VideoEntity, len(videoId))
 	var GetVideoErrors = 0
-	for i, _ := range videos {
+	for i := range videos {
 		var err error
 		videos[i], err = m.GetVideoByVideoId(videoId[i])
 		if err != nil {
 			log.Println("GetVideoByVideoId:", err)
-			GetVideoErrors = GetVideoErrors + 1
+			GetVideoErrors++
 		}
 	}
 	if GetVideoErrors == 0 {
@@ -101,26 +101,26 @@ func (m *MySQLdb) GetCommentById(commentId string) (entity.CommentEntity, error)
 	return comment, err
 }
 
-func (m *MySQLdb) VideoCommentCountUp(videoId string) error {
+func (m *MySQLdb) VideoCommentCountUp(videoID string) error {
 	sql := `UPDATE videos SET comment_count = comment_count + 1 WHERE id = ?`
-	_, err := m.db.Exec(sql, videoId)
+	_, err := m.db.Exec(sql, videoID)
 	return err
 }
 
-func (m *MySQLdb) CommentCommentCountUp(commentId string) error {
+func (m *MySQLdb) CommentCommentCountUp(commentID string) error {
 	sql := `UPDATE comments SET comment_count = comment_count + 1 WHERE comment_id = ?`
-	_, err := m.db.Exec(sql, commentId)
+	_, err := m.db.Exec(sql, commentID)
 	return err
 }
 
-func (m *MySQLdb) VideoCommentCountDown(videoId string) error {
+func (m *MySQLdb) VideoCommentCountDown(videoID string) error {
 	sql := `UPDATE videos SET comment_count = comment_count - 1 WHERE id = ?`
-	_, err := m.db.Exec(sql, videoId)
+	_, err := m.db.Exec(sql, videoID)
 	return err
 }
 
-func (m *MySQLdb) CommentCommentCountDown(commentId string) error {
+func (m *MySQLdb) CommentCommentCountDown(commentID string) error {
 	sql := `UPDATE comments SET comment_count = comment_count - 1 WHERE comment_id = ?`
-	_, err := m.db.Exec(sql, commentId)
+	_, err := m.db.Exec(sql, commentID)
 	return err
 }

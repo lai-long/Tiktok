@@ -8,7 +8,10 @@ import (
 )
 
 func TestAI(t *testing.T) {
-	config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
+	_, err := config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
+	if err != nil {
+		log.Println("config load err", err)
+	}
 	ctx := context.Background()
 	agent := NewAgent(ctx)
 	resp := agent.StartAction("1+1等于多少")

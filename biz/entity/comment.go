@@ -6,9 +6,9 @@ import (
 )
 
 type CommentEntity struct {
-	UserId       string       `db:"user_id"`
-	TargetId     string       `db:"target_id"`
-	CommentId    string       `db:"comment_id"`
+	UserID       string       `db:"user_id"`
+	TargetID     string       `db:"target_id"`
+	CommentID    string       `db:"comment_id"`
 	Content      string       `db:"content"`
 	LikeCount    int64        `db:"like_count"`
 	CommentCount int64        `db:"comment_count"`
@@ -20,9 +20,9 @@ type CommentEntity struct {
 
 func (c *CommentEntity) ToCommentInfo() *react.CommentInfo {
 	return &react.CommentInfo{
-		UserId:       c.UserId,
-		TargetId:     c.TargetId,
-		CommentId:    c.CommentId,
+		UserId:       c.UserID,
+		TargetId:     c.TargetID,
+		CommentId:    c.CommentID,
 		Content:      c.Content,
 		LikeCount:    c.LikeCount,
 		CreatedAt:    c.CreatedAt,

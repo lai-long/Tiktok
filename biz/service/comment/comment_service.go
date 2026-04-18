@@ -29,7 +29,8 @@ func NewCommentService(db CommentDatabase) *CommentService {
 }
 
 func (s *CommentService) CommentPublish(targetId, userId, content, targetType string) (int32, error) {
-	if targetType == "1" {
+	switch targetType {
+	case "1":
 		commentId := utils.IdGenerate()
 		err := s.db.CreateComment(commentId, targetId, userId, content, targetType)
 		if err != nil {
@@ -40,7 +41,7 @@ func (s *CommentService) CommentPublish(targetId, userId, content, targetType st
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentPublish Update comment count error ")
 		}
 		return consts.Success, nil
-	} else if targetType == "2" {
+	case "2":
 		commentId := utils.IdGenerate()
 		err := s.db.CreateComment(commentId, targetId, userId, content, targetType)
 		if err != nil {
@@ -72,20 +73,20 @@ func (s *CommentService) CommentDelete(commentId string, targetId string, userId
 	if err != nil {
 		return consts.ReactDBSelectError, errors.Wrap(err, "->CommentDelete select comment err")
 	}
-	if comment.UserId != userId {
+	if comment.UserID != userId {
 		return consts.ReactReqValueError, nil
 	}
 	err = s.db.CommentDelete(commentId)
 	if err != nil {
 		return consts.ReactDBDeleteError, errors.Wrap(err, "->CommentDelete delete comment err")
 	}
-	if targetType == "1" {
-		err = s.db.VideoCommentCountDown(targetId)
+	switch targetType {
+	case "1":
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
 		return consts.Success, nil
-	} else if targetType == "2" {
+	case "2":
 		err = s.db.CommentCommentCountDown(targetId)
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")

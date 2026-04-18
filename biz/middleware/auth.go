@@ -24,6 +24,10 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	}
 	req := new(user.AuthReq)
 	err := c.BindAndValidate(req)
+	if err != nil {
+		log.Println("AuthMiddleware BindAndValidate err", err)
+		return
+	}
 	if req.AccessToken == "" {
 		c.JSON(200, user.AuthResp{Base: &common.Base{
 			Code: consts.UserReqValidError,
