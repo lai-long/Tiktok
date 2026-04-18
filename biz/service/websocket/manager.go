@@ -2,7 +2,7 @@ package websocket
 
 import "sync"
 
-type clientManager struct {
+type ClientManager struct {
 	Clients        map[string]*Client
 	Groups         map[string][]*Client
 	Broadcast      chan *Broadcast
@@ -12,8 +12,8 @@ type clientManager struct {
 	mu             sync.RWMutex
 }
 
-func NewClientManager() *clientManager {
-	return &clientManager{
+func NewClientManager() *ClientManager {
+	return &ClientManager{
 		Clients:        make(map[string]*Client),
 		Groups:         make(map[string][]*Client),
 		Broadcast:      make(chan *Broadcast),

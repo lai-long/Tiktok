@@ -63,7 +63,7 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 	if exists {
 		return consts.UserNameExists, nil
 	}
-	userEntity.ID = utils.IdGenerate()
+	userEntity.ID = utils.IDGenerate()
 	userEntity.Username = userinfo.UserName
 	userEntity.Password, err = utils.HashPassword(userinfo.Password)
 	if err != nil {
@@ -75,43 +75,43 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 	return consts.Success, nil
 }
 
-func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int32, error, *user.UserInfo, string, string) {
+func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error) {
 	userEntity, err := s.userDb.GetUserByUsername(userName)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		return consts.UserDBSelectError, errors.Wrap(err, "->Login GetUserByUsername数据库查询错误"), &user.UserInfo{}, "", ""
+		return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->Login GetUserByUsername数据库查询错误")
 	} else if errors.Is(err, sql.ErrNoRows) {
-		return consts.UserNotExists, errors.Wrap(err, "->login用户不存在"), &user.UserInfo{}, "", ""
+		return consts.UserNotExists, &user.UserInfo{}, "", "", errors.Wrap(err, "->login用户不存在")
 	}
 	err = utils.CheckPasswordHash(userEntity.Password, password)
 	if err != nil {
-		return consts.UserPasswordError, errors.Wrap(err, "->login: check password failed"), &user.UserInfo{}, "", ""
+		return consts.UserPasswordError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check password failed")
 	}
 	userInfo := userEntity.ToUserInfo()
 	enable, err := s.mfaDb.CheckMfaBind(userInfo.ID)
 	if err != nil {
-		return consts.UserDBSelectError, errors.Wrap(err, "->login: check mfa bind failed"), &user.UserInfo{}, "", ""
+		return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check mfa bind failed")
 	}
 	if enable != 0 {
 		if mfaCode == "" {
-			return consts.MfaLack, nil, &user.UserInfo{}, "", ""
+			return consts.MfaLack, &user.UserInfo{}, "", "", nil
 		}
 		mfaSecret, err := s.mfaDb.GetMfaSecret(userInfo.ID)
 		if err != nil {
-			return consts.UserDBSelectError, errors.Wrap(err, "->login get mfa secret failed"), &user.UserInfo{}, "", ""
+			return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login get mfa secret failed")
 		}
 		if !totp.Validate(mfaCode, mfaSecret) {
-			return consts.MfaCodeFalse, nil, &user.UserInfo{}, "", ""
+			return consts.MfaCodeFalse, &user.UserInfo{}, "", "", nil
 		}
 	}
 	reToken, acToken, err := utils.GenerateTokens(userInfo)
 	if err != nil {
-		return consts.GenerateTokenError, errors.Wrap(err, "->login 生成token错误"), userInfo, reToken, acToken
+		return consts.GenerateTokenError, userInfo, reToken, acToken, errors.Wrap(err, "->login 生成token错误")
 	}
 	err = s.redis.UserTokenSet(ctx, reToken, userInfo.ID)
 	if err != nil {
-		return consts.UserRedisSetError, errors.Wrap(err, "->login 将refresh token存入redis错误"), &user.UserInfo{}, "", ""
+		return consts.UserRedisSetError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login 将refresh token存入redis错误")
 	}
-	return consts.Success, nil, userInfo, reToken, acToken
+	return consts.Success, userInfo, reToken, acToken, nil
 }
 
 func (s *UserService) UserInfo(userId string) (*user.UserInfo, int32, error) {
@@ -123,10 +123,10 @@ func (s *UserService) UserInfo(userId string) (*user.UserInfo, int32, error) {
 	return userInfo, consts.Success, nil
 }
 
-func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, error, *user.UserInfo) {
+func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error) {
 	dataFile, err := data.Open()
 	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->UserInfo data open 错误"), &user.UserInfo{}
+		return consts.IOOsError, &user.UserInfo{}, errors.Wrap(err, "->UserInfo data open 错误")
 	}
 	defer func() {
 		err := dataFile.Close()
@@ -136,29 +136,29 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 	}()
 	ok, err := utils.IsImage(dataFile)
 	if err != nil {
-		return consts.FileError, errors.Wrap(err, "->userInfo check image failed"), &user.UserInfo{}
+		return consts.FileError, &user.UserInfo{}, errors.Wrap(err, "->userInfo check image failed")
 	}
 	if !ok {
-		return consts.ImageFalse, nil, &user.UserInfo{}
+		return consts.ImageFalse, nil, nil
 	}
 	if _, err := dataFile.Seek(0, io.SeekStart); err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->userInfo dataFile error"), &user.UserInfo{}
+		return consts.IOOsError, &user.UserInfo{}, errors.Wrap(err, "->userInfo dataFile error")
 	}
-	filename := utils.IdGenerate()
+	filename := utils.IDGenerate()
 	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.AvatarPath, filename+filepath.Ext(data.Filename))
 	if err != nil {
-		return code, errors.Wrap(err, "->userAvatar"), nil
+		return code, &user.UserInfo{}, errors.Wrap(err, "->userAvatar")
 	}
 	err = s.userDb.UpdateUserAvatar(config.Cfg.Path.AvatarPath+filename, userId)
 	if err != nil {
-		return consts.UserDBUpdateError, errors.Wrap(err, "->userinfo 更新头像错误"), &user.UserInfo{}
+		return consts.UserDBUpdateError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 更新头像错误")
 	}
 	userEntity, err := s.userDb.GetUserByUserId(userId.(string))
 	if err != nil {
-		return consts.UserDBSelectError, errors.Wrap(err, "->userinfo get user by userid failed"), &user.UserInfo{}
+		return consts.UserDBSelectError, &user.UserInfo{}, errors.Wrap(err, "->userinfo get user by userid failed")
 	}
 	userInfo := userEntity.ToUserInfo()
-	return consts.Success, nil, userInfo
+	return consts.Success, userInfo, nil
 }
 
 func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error) {

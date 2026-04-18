@@ -1,3 +1,4 @@
+// Package utils 放一些公共函数
 package utils
 
 import (
@@ -18,11 +19,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// websocket
-func CreateId(uid, toUid string) string {
-	return uid + "->" + toUid
+// CreateID 生成websocket的clientID
+func CreateID(uid, toUID string) string {
+	return uid + "->" + toUID
 }
-func GetId(id string) (string, string) {
+
+// GetID 将websocket的clientID拆成两个用户id
+func GetID(id string) (string, string) {
 	log.Println(id)
 	parts := strings.Split(id, "->")
 	log.Println("begin")
@@ -34,17 +37,19 @@ func GetId(id string) (string, string) {
 	return "", ""
 }
 
-// password hash
+// HashPassword 加密密码
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
+
+// CheckPasswordHash 检测密码
 func CheckPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(hash))
 	return errors.Wrap(err, "CheckPasswordHash error")
 }
 
-// jwt generate token
+// GenerateTokens generate accessToken and refreshToken
 func GenerateTokens(userDto *user.UserInfo) (string, string, error) {
 	refreshTime := 288 * time.Hour
 	accessTime := 24 * time.Hour
@@ -58,6 +63,8 @@ func GenerateTokens(userDto *user.UserInfo) (string, string, error) {
 	}
 	return refreshToken, accessToken, nil
 }
+
+// GetToken 生成单个ai
 func GetToken(username string, userid string, t time.Duration, secret string) (string, error) {
 	jwtClaims := &jwt.MapClaims{
 		"username": username,
@@ -72,12 +79,12 @@ func GetToken(username string, userid string, t time.Duration, secret string) (s
 	return tokenString, nil
 }
 
-// IdGenerate
-func IdGenerate() string {
+// IDGenerate 生成id
+func IDGenerate() string {
 	return xid.New().String()
 }
 
-// check image
+// IsImage 检测文件是否是图片
 func IsImage(file multipart.File) (bool, error) {
 	head := make([]byte, 512)
 	_, err := file.Read(head)
@@ -99,6 +106,7 @@ var triggerKeywords = []string{
 	"111",
 }
 
+// CheckAiKeyWord 检测用户是否要用ai
 func CheckAiKeyWord(message string) (bool, string) {
 	for _, keyword := range triggerKeywords {
 		if strings.Contains(message, keyword) {
@@ -109,6 +117,7 @@ func CheckAiKeyWord(message string) (bool, string) {
 	return false, ""
 }
 
+// SaveUploadFile 保存上传的文件（视频、头像）
 func SaveUploadFile(dataFile multipart.File, dir string, filename string) (int32, error) {
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {

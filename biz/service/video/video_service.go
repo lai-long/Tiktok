@@ -47,7 +47,7 @@ func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.
 			log.Println(errors.Wrap(err, "VideoPublish data close"))
 		}
 	}()
-	filename := utils.IdGenerate()
+	filename := utils.IDGenerate()
 	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
 	if err != nil {
 		return code, errors.Wrap(err, " VideoPublish ")
@@ -70,57 +70,57 @@ func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.
 	return consts.Success, nil
 }
 
-func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (int32, error, []*video.VideoInfo) {
+func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error) {
 	videoList, err := s.videoDb.GetVideoByUserID(userId, pageSize, pageNum)
 	if err != nil {
-		return consts.VideoDBSelectError, errors.Wrap(err, "->VideoList GetVideo err"), nil
+		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoList GetVideo err")
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i := 0; i < len(videoList); i++ {
 		videoInfos = append(videoInfos, videoList[i].ToVideoInfo())
 	}
-	return consts.Success, nil, videoInfos
+	return consts.Success, videoInfos, nil
 }
 
-func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
+func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
 	videoEntity, err := s.videoDb.GetVideoByKeyWord(keyword, pageNum, pageSize)
 	if err != nil {
-		return consts.VideoDBSelectError, errors.Wrap(err, "->VideoSearch GetVideo Error"), nil
+		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoSearch GetVideo Error")
 	}
 	videoInfos := []*video.VideoInfo{}
 	for i := 0; i < len(videoEntity); i++ {
 		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
-	return consts.Success, nil, videoInfos
+	return consts.Success, videoInfos, nil
 }
 
-func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
+func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
 	z, err := s.VideoRedis.VideoHotGet(ctx, "videoHot", pageNum, pageSize)
 	if err != nil {
-		return consts.VideoRedisGetError, errors.Wrap(err, "->VideoPopular GetVideoHot error"), nil
+		return consts.VideoRedisGetError, nil, errors.Wrap(err, "->VideoPopular GetVideoHot error")
 	}
 	videoEntity := make([]entity.VideoEntity, len(z))
-	for i, _ := range z {
+	for i := range z {
 		videoEntity[i], err = s.videoDb.GetVideoByVideoId(z[i].Member.(string))
 		if err != nil {
-			return consts.VideoDBSelectError, errors.Wrap(err, "->video popular select video"), nil
+			return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video popular select video")
 		}
 	}
 	var videoInfos []*video.VideoInfo
 	for i := 0; i < len(z); i++ {
 		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
-	return consts.Success, nil, videoInfos
+	return consts.Success, videoInfos, nil
 }
 
-func (s *VideoService) VideoStream() (int32, error, []*video.VideoInfo) {
+func (s *VideoService) VideoStream() (int32, []*video.VideoInfo, error) {
 	videoEntity, err := s.videoDb.GetVideoStream()
 	if err != nil {
-		return consts.VideoDBSelectError, errors.Wrap(err, "->video stream select video error"), nil
+		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video stream select video error")
 	}
 	videoInfos := []*video.VideoInfo{}
-	for i, _ := range videoEntity {
+	for i := range videoEntity {
 		videoInfos = append(videoInfos, videoEntity[i].ToVideoInfo())
 	}
-	return consts.Success, nil, videoInfos
+	return consts.Success, videoInfos, nil
 }

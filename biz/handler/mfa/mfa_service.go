@@ -3,6 +3,7 @@
 package mfa
 
 import (
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	"context"
 	"log"
@@ -47,8 +48,8 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
-	userName := ctx.Value("username").(string)
+	userId := ctx.Value(middleware.UserIDKey).(string)
+	userName := ctx.Value(middleware.UsernameKey).(string)
 	key, secret, code, err := h.MfaService.GenerateMfa(userName, userId)
 	if err != nil {
 		log.Println("MfaQrcode err: ", err)
@@ -75,7 +76,7 @@ func (h *MfaHandler) MfaBind(ctx context.Context, c *app.RequestContext) {
 	}
 	resp := new(mfa.MfaBindResp)
 	var code int32
-	userId := ctx.Value("user_id").(string)
+	userId := ctx.Value(middleware.UserIDKey).(string)
 	if req.Secret != "" {
 		code, err = h.MfaService.MfaBindBySecret(req.Secret, userId)
 	} else {

@@ -45,38 +45,38 @@ func (s *SocialService) RelationAction(toUserId string, actionType string, userI
 	return consts.SocialReqValueError, nil
 }
 
-func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int64) (int32, error, []*userModel.UserInfo) {
+func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
 	followings, err := s.social.FollowingList(userId, pageNum, pageSize)
 	if err != nil {
-		return consts.SocialDBSelectError, errors.Wrap(err, "->Following List Get Following List err"), nil
+		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->Following List Get Following List err")
 	}
 	userInfos := []*userModel.UserInfo{}
 	for i := 0; i < len(followings); i++ {
 		userInfos = append(userInfos, followings[i].ToUserInfo())
 	}
-	return consts.Success, nil, userInfos
+	return consts.Success, userInfos, nil
 }
 
-func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int64) (int32, error, []*userModel.UserInfo) {
+func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
 	followers, err := s.social.FollowerList(userId, pageNum, pageSize)
 	if err != nil {
-		return consts.SocialDBSelectError, errors.Wrap(err, "->FollowerList Get List err"), nil
+		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowerList Get List err")
 	}
 	userInfos := []*userModel.UserInfo{}
 	for i := 0; i < len(followers); i++ {
 		userInfos = append(userInfos, followers[i].ToUserInfo())
 	}
-	return consts.Success, nil, userInfos
+	return consts.Success, userInfos, nil
 }
 
-func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64) (int32, error, []*userModel.UserInfo) {
+func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
 	entityFriend, ok := s.social.FriendList(userId, pageNum, pageSize)
 	if !ok {
-		return consts.SocialDBSelectError, errors.New("->FriendList Get List err"), nil
+		return consts.SocialDBSelectError, nil, errors.New("->FriendList Get List err")
 	}
 	userInfos := []*userModel.UserInfo{}
-	for i, _ := range entityFriend {
+	for i := range entityFriend {
 		userInfos = append(userInfos, entityFriend[i].ToUserInfo())
 	}
-	return consts.Success, nil, userInfos
+	return consts.Success, userInfos, nil
 }

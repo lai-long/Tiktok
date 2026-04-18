@@ -1,3 +1,4 @@
+// Package consts 放置错误码以及错误信息等常量
 package consts
 
 // 00通用
@@ -7,7 +8,7 @@ const (
 	IOOsError int32 = 200003 // io os错误
 )
 
-// 01用户模块
+// 01 用户模块
 const (
 	UserNameExists     int32 = 101001 // 用户名已存在
 	UserPasswordError  int32 = 101002 // 密码错误
@@ -29,7 +30,7 @@ const (
 	MfaBindError       int32 = 201011 // mfa绑定错误
 )
 
-// 02视频
+// 02 视频
 const (
 	VideoReqValidError int32 = 102001 // 视频模块参数绑定错误
 	VideoRedisSetError int32 = 202001 // 视频模块redis set错误
@@ -40,7 +41,7 @@ const (
 	VideoRedisGetError int32 = 202006 // 视频模块redis get错误
 )
 
-// 03react模块
+// 03 react模块
 const (
 	ReactReqValidError int32 = 103001 // 互动模块视频绑定错误
 	ReactReqValueError int32 = 103002 // 互动模块传入参数错误
@@ -103,6 +104,7 @@ var mapErrorMsg = map[int32]string{
 	SocialDBSelectError: "社交模块模块数据库select错误",
 }
 
+// GetErrorCodeMsg 根据code获取对应错误信息
 func GetErrorCodeMsg(code int32) string {
 	if msg, ok := mapErrorMsg[code]; ok {
 		return msg
