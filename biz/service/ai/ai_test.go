@@ -14,6 +14,6 @@ func TestAI(t *testing.T) {
 	}
 	ctx := context.Background()
 	agent := NewAgent(ctx)
-	resp := agent.StartAction("能不能告诉我福州最近的天气怎么样，有使用calltool的话告诉我")
+	resp := agent.StartAction("能不能告诉我永泰最近的天气怎么样，把你的全部思考过程和工具调用情况都告诉我")
 	log.Println("action resp:", resp)
 }
