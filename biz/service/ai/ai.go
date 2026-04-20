@@ -51,7 +51,6 @@ func NewChatClient(ctx context.Context) (*ChatClient, error) {
 					StdioConfig: &schemas.MCPStdioConfig{
 						Command: "/home/lai-long/Tiktok/mcp_service/mcp_service",
 						Args:    []string{},
-						Envs:    []string{},
 					},
 					ToolsToExecute:     schemas.WhiteList{"*"},
 					ToolsToAutoExecute: schemas.WhiteList{"*"},

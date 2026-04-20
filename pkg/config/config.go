@@ -43,10 +43,11 @@ type JwtConfig struct {
 	RefreshSecret string `mapstructure:"refresh_secret"`
 }
 
-// APIConfig AI相关配置
+// APIConfig a
 type APIConfig struct {
 	APIKey  string `mapstructure:"api_key"`
 	BaseURL string `mapstructure:"base_url"`
+	MapAPI  string `mapstructure:"map_api"`
 }
 
 // Config 总配置
@@ -64,7 +65,7 @@ var lock sync.RWMutex
 
 // Load 加载配置
 func Load(confPath []string) (*Config, error) {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
 		log.Println("load env error:", err)
 	}
 	v := viper.New()
