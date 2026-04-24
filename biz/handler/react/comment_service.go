@@ -3,6 +3,7 @@
 package react
 
 import (
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	react "Tiktok/biz/model/react"
 	"context"
@@ -15,7 +16,7 @@ import (
 
 type CommentSever interface {
 	CommentPublish(targetId, userId, content, targetType string) (int32, error)
-	CommentList(targetId string, pageSize int64, pageNum int64) (int32, error, []*react.CommentInfo)
+	CommentList(targetId string, pageSize int64, pageNum int64) (int32, []*react.CommentInfo, error)
 	CommentDelete(commentId string, target string, userId string, targetType string) (int32, error)
 }
 type CommentHandler struct {
@@ -46,7 +47,7 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
+	userId := ctx.Value(middleware.UserIDKey).(string)
 	code, err := h.service.CommentPublish(req.TargetAt, userId, req.Content, req.TargetType)
 	if err != nil {
 		log.Println("CommentPublish err:", err)
@@ -69,7 +70,10 @@ func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext)
 		c.JSON(200, resp)
 		return
 	}
-	code, err, commentInfos := h.service.CommentList(req.TargetAt, req.PageSize, req.PageNum)
+	code, commentInfos, err := h.service.CommentList(req.TargetAt, req.PageSize, req.PageNum)
+	if err != nil {
+		log.Println("CommentList err:", err)
+	}
 	resp := &react.CommentListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &react.CommentData{Items: commentInfos},
@@ -90,7 +94,7 @@ func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContex
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
+	userId := ctx.Value(middleware.UserIDKey).(string)
 	code, err := h.service.CommentDelete(req.CommentId, req.TargetAt, userId, req.TargetType)
 	if err != nil {
 		log.Println("CommentDelete err:", err)

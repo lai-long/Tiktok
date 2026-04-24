@@ -4,43 +4,45 @@ import (
 	"Tiktok/biz/entity"
 	"fmt"
 	"log"
+
+	"github.com/pkg/errors"
 )
 
 func (m *MySQLdb) VideoLikeCountUp(videoId string) error {
 	sql := `UPDATE videos SET like_count=like_count + 1 WHERE id = ?`
 	_, err := m.db.Exec(sql, videoId)
-	return err
+	return errors.Wrap(err, "dao VideoLikeCountUp")
 }
 
 func (m *MySQLdb) CommentLikeCountUp(commentId string) error {
 	sql := `UPDATE comments SET like_count=like_count + 1 WHERE comment_id = ?`
 	_, err := m.db.Exec(sql, commentId)
-	return err
+	return errors.Wrap(err, "dao CommentLikeCountUp")
 }
 
 func (m *MySQLdb) LikeCreate(userId string, targetId string, targetType string) error {
 	sql := `INSERT INTO likes (target_id, user_id,target_type) VALUES (?, ?,?)`
 	_, err := m.db.Exec(sql, targetId, userId, targetType)
-	return err
+	return errors.Wrap(err, "dao LikeCreate")
 }
 
 func (m *MySQLdb) VideoLikeCountDown(videoId string) error {
 	sql := `UPDATE videos SET like_count=like_count - 1 WHERE id = ?`
 	_, err := m.db.Exec(sql, videoId)
-	return err
+	return errors.Wrap(err, "dao VideoLikeCountDown")
 }
 
 func (m *MySQLdb) CommentLikeCountDown(commentId string) error {
 	sql := `UPDATE comments SET like_count=like_count - 1 WHERE comment_id = ?`
 	_, err := m.db.Exec(sql, commentId)
-	return err
+	return errors.Wrap(err, "dao CommentLikeCountDown")
 }
 
 func (m *MySQLdb) LikeDelete(userId, targetID, targetType string) error {
 	sql := `DELETE FROM likes WHERE user_id=? AND target_id = ? AND target_type = ? LIMIT 1`
 	result, err := m.db.Exec(sql, userId, targetID, targetType)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "dao LikeDelete")
 	}
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
@@ -49,23 +51,22 @@ func (m *MySQLdb) LikeDelete(userId, targetID, targetType string) error {
 	return nil
 }
 
-func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) (error, []string) {
+func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error) {
 	sql := `SELECT target_id FROM likes WHERE  user_id = ? AND target_type = 1  ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var videoId []string
-	offset := pageNum * pageSize
-	err := m.db.Select(&videoId, sql, userId, pageSize, offset)
-	return err, videoId
+	err := m.db.Select(&videoId, sql, userId, pageSize, pageNum*pageSize)
+	return videoId, errors.Wrap(err, "dao Like video list")
 }
 
 func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity.VideoEntity) {
 	videos := make([]entity.VideoEntity, len(videoId))
 	var GetVideoErrors = 0
-	for i, _ := range videos {
+	for i := range videos {
 		var err error
 		videos[i], err = m.GetVideoByVideoId(videoId[i])
 		if err != nil {
 			log.Println("GetVideoByVideoId:", err)
-			GetVideoErrors = GetVideoErrors + 1
+			GetVideoErrors++
 		}
 	}
 	if GetVideoErrors == 0 {
@@ -80,47 +81,46 @@ func (m *MySQLdb) CreateComment(commentId string, videoId string, userId string,
 	return err
 }
 
-func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) (error, []entity.CommentEntity) {
+func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
 	sql := `SELECT * FROM comments WHERE target_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
-	offset := pageNum * pageSize
 	var comments []entity.CommentEntity
-	err := m.db.Select(&comments, sql, videoId, pageSize, offset)
-	return err, comments
+	err := m.db.Select(&comments, sql, videoId, pageSize, pageNum*pageSize)
+	return comments, err
 }
 
 func (m *MySQLdb) CommentDelete(commentId string) error {
-	sql := `DELETE FROM comments WHERE  comment_id = ?`
+	sql := `UPDATE comments SET deleted_at = NOW() WHERE comment_id = ? AND deleted_at IS NULL`
 	_, err := m.db.Exec(sql, commentId)
 	return err
 }
 
 func (m *MySQLdb) GetCommentById(commentId string) (entity.CommentEntity, error) {
-	sql := `SELECT * FROM comments WHERE comment_id = ?`
+	sql := `SELECT * FROM comments WHERE comment_id = ? AND deleted_at IS NULL`
 	var comment entity.CommentEntity
 	err := m.db.Get(&comment, sql, commentId)
 	return comment, err
 }
 
-func (m *MySQLdb) VideoCommentCountUp(videoId string) error {
+func (m *MySQLdb) VideoCommentCountUp(videoID string) error {
 	sql := `UPDATE videos SET comment_count = comment_count + 1 WHERE id = ?`
-	_, err := m.db.Exec(sql, videoId)
+	_, err := m.db.Exec(sql, videoID)
 	return err
 }
 
-func (m *MySQLdb) CommentCommentCountUp(commentId string) error {
+func (m *MySQLdb) CommentCommentCountUp(commentID string) error {
 	sql := `UPDATE comments SET comment_count = comment_count + 1 WHERE comment_id = ?`
-	_, err := m.db.Exec(sql, commentId)
+	_, err := m.db.Exec(sql, commentID)
 	return err
 }
 
-func (m *MySQLdb) VideoCommentCountDown(videoId string) error {
+func (m *MySQLdb) VideoCommentCountDown(videoID string) error {
 	sql := `UPDATE videos SET comment_count = comment_count - 1 WHERE id = ?`
-	_, err := m.db.Exec(sql, videoId)
+	_, err := m.db.Exec(sql, videoID)
 	return err
 }
 
-func (m *MySQLdb) CommentCommentCountDown(commentId string) error {
+func (m *MySQLdb) CommentCommentCountDown(commentID string) error {
 	sql := `UPDATE comments SET comment_count = comment_count - 1 WHERE comment_id = ?`
-	_, err := m.db.Exec(sql, commentId)
+	_, err := m.db.Exec(sql, commentID)
 	return err
 }

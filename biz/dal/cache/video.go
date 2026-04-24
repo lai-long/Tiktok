@@ -16,7 +16,7 @@ func (rdb *Redis) VideoHotSet(ctx context.Context, key string, member interface{
 	return nil
 }
 func (rdb *Redis) VideoHotGet(ctx context.Context, key string, pageNum int64, pageSize int64) ([]redis.Z, error) {
-	z, err := rdb.redis.ZRevRangeWithScores(ctx, key, int64(pageSize*pageNum), int64(pageSize+pageSize*pageNum)).Result()
+	z, err := rdb.redis.ZRevRangeWithScores(ctx, key, pageSize*pageNum, pageSize+pageSize*pageNum).Result()
 	if err != nil {
 		return nil, err
 	}

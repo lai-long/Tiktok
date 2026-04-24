@@ -17,10 +17,10 @@ import (
 
 type VideoSever interface {
 	VideoPublish(video *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int32, error)
-	VideoList(userId string, pageSize int64, pageNum int64) (int32, error, []*video.VideoInfo)
-	VideoSearch(keyword string, pageNun, pageSize int64) (int32, error, []*video.VideoInfo)
-	VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo)
-	VideoStream() (int32, error, []*video.VideoInfo)
+	VideoList(userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error)
+	VideoSearch(keyword string, pageNun, pageSize int64) (int32, []*video.VideoInfo, error)
+	VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error)
+	VideoStream() (int32, []*video.VideoInfo, error)
 }
 type VideoHandler struct {
 	videoService VideoSever
@@ -85,7 +85,7 @@ func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err, videoInfos := h.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
+	code, videoInfos, err := h.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
 	if err != nil {
 		log.Println("video list err:", err)
 	}
@@ -110,7 +110,7 @@ func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err, videoInfos := h.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
+	code, videoInfos, err := h.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
 	if err != nil {
 		log.Println("video search err:", err)
 	}
@@ -135,7 +135,7 @@ func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) 
 		c.JSON(200, resp)
 		return
 	}
-	code, err, videoInfos := h.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
+	code, videoInfos, err := h.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
 	if err != nil {
 		log.Println("video popular err:", err)
 	}
@@ -160,7 +160,7 @@ func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err, videoInfos := h.videoService.VideoStream()
+	code, videoInfos, err := h.videoService.VideoStream()
 	if err != nil {
 		log.Println("video stream err:", err)
 	}

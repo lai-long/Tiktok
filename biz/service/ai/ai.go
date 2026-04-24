@@ -18,7 +18,7 @@ func (a *MyAccount) GetConfiguredProviders() ([]schemas.ModelProvider, error) {
 func (a *MyAccount) GetKeysForProvider(ctx context.Context, provider schemas.ModelProvider) ([]schemas.Key, error) {
 	return []schemas.Key{
 		{
-			Value:  *schemas.NewEnvVar(config.Cfg.Api.ApiKey),
+			Value:  *schemas.NewEnvVar(config.Cfg.API.APIKey),
 			Models: schemas.WhiteList{"MiniMax-M2.7"},
 			Weight: 1.0,
 		},
@@ -27,7 +27,7 @@ func (a *MyAccount) GetKeysForProvider(ctx context.Context, provider schemas.Mod
 func (a *MyAccount) GetConfigForProvider(_ schemas.ModelProvider) (*schemas.ProviderConfig, error) {
 	return &schemas.ProviderConfig{
 		NetworkConfig: schemas.NetworkConfig{
-			BaseURL: config.Cfg.Api.BaseUrl,
+			BaseURL: config.Cfg.API.BaseURL,
 		},
 		ConcurrencyAndBufferSize: schemas.DefaultConcurrencyAndBufferSize,
 	}, nil
@@ -51,7 +51,6 @@ func NewChatClient(ctx context.Context) (*ChatClient, error) {
 					StdioConfig: &schemas.MCPStdioConfig{
 						Command: "/home/lai-long/Tiktok/mcp_service/mcp_service",
 						Args:    []string{},
-						Envs:    []string{},
 					},
 					ToolsToExecute:     schemas.WhiteList{"*"},
 					ToolsToAutoExecute: schemas.WhiteList{"*"},
@@ -95,7 +94,7 @@ func (c *ChatClient) Chat(prompt string) (content string, err error) {
 		log.Printf("ChatCompletionRequest err: %+v, Error: %+v\n", bifrostErr, bifrostErr.Error)
 		return "", bifrostErr.Error.Error
 	}
-	if resp.Choices == nil || len(resp.Choices) == 0 || resp == nil {
+	if len(resp.Choices) == 0 {
 		log.Println("choices is nil or empty")
 		return "", nil
 	}

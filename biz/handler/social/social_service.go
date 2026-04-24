@@ -3,6 +3,7 @@
 package social
 
 import (
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/user"
 	"context"
@@ -17,9 +18,9 @@ import (
 
 type SocialSever interface {
 	RelationAction(toUserId string, actionType string, userId string) (int32, error)
-	FollowingList(userId string, pageNum int64, pageSize int64) (int32, error, []*user.UserInfo)
-	FollowerList(userId string, pageNum int64, pageSize int64) (int32, error, []*user.UserInfo)
-	FriendList(userId string, pageNum int64, pageSize int64) (int32, error, []*user.UserInfo)
+	FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*user.UserInfo, error)
+	FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*user.UserInfo, error)
+	FriendList(userId string, pageNum int64, pageSize int64) (int32, []*user.UserInfo, error)
 }
 type SocialHandler struct {
 	socialService SocialSever
@@ -49,7 +50,7 @@ func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContex
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
+	userId := ctx.Value(middleware.UserIDKey).(string)
 	code, err := h.socialService.RelationAction(req.ToUserId, req.ActionType, userId)
 	if err != nil {
 		log.Println("relation action err", err)
@@ -72,7 +73,10 @@ func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext
 		c.JSON(200, resp)
 		return
 	}
-	code, err, userInfos := h.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, err := h.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	if err != nil {
+		log.Println("following list err", err)
+	}
 	resp := &social.FollowingListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		Data: &social.SocialData{Items: userInfos, Total: int64(len(userInfos))},
@@ -93,7 +97,7 @@ func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext)
 		c.JSON(200, resp)
 		return
 	}
-	code, err, userInfos := h.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, err := h.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
 	if err != nil {
 		log.Println("follower list err", err)
 	}
@@ -117,8 +121,8 @@ func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
-	code, err, userInfos := h.socialService.FriendList(userId, req.PageNum, req.PageSize)
+	userId := ctx.Value(middleware.UserIDKey).(string)
+	code, userInfos, err := h.socialService.FriendList(userId, req.PageNum, req.PageSize)
 	if err != nil {
 		log.Println("friend list err", err)
 	}

@@ -16,9 +16,9 @@ func (m *MySQLdb) MfaBindUpdate(userId string) error {
 	_, err := m.db.Exec(sql, userId)
 	return err
 }
-func (m *MySQLdb) CheckMfaBind(userId string) (error, int) {
+func (m *MySQLdb) CheckMfaBind(userId string) (int, error) {
 	sql := `SELECT mfa_enabled FROM users WHERE id = ?`
 	var ok int
 	err := m.db.Get(&ok, sql, userId)
-	return err, ok
+	return ok, err
 }

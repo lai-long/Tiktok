@@ -13,6 +13,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type ContextKey string
+
+const (
+	UserIDKey   ContextKey = "user_id"
+	UsernameKey ContextKey = "username"
+)
+
 func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	path := string(c.Request.URI().Path())
 	switch path {
@@ -24,6 +31,10 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	}
 	req := new(user.AuthReq)
 	err := c.BindAndValidate(req)
+	if err != nil {
+		log.Println("AuthMiddleware BindAndValidate err", err)
+		return
+	}
 	if req.AccessToken == "" {
 		c.JSON(200, user.AuthResp{Base: &common.Base{
 			Code: consts.UserReqValidError,
@@ -67,7 +78,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	}
 	userid, _ := (*claims)["userid"].(string)
 	username, _ := (*claims)["username"].(string)
-	newCtx := context.WithValue(ctx, "user_id", userid)
-	newCtx = context.WithValue(newCtx, "username", username)
+	newCtx := context.WithValue(ctx, UserIDKey, userid)
+	newCtx = context.WithValue(newCtx, UsernameKey, username)
 	c.Next(newCtx)
 }

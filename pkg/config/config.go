@@ -2,17 +2,39 @@ package config
 
 import (
 	"log"
+	"sync"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
+// Path 常用路径
 type Path struct {
 	VideoPath  string `mapstructure:"video_path"`
 	AvatarPath string `mapstructure:"avatar_path"`
 	EnvPath    string `mapstructure:"env_path"`
 }
+type MCPConfig struct {
+	Clients           []McpClientConfig `mapstructure:"clients"`
+	ToolManagerConfig ToolManagerConfig `mapstructure:"tool_manager_config"`
+}
+type ToolManagerConfig struct {
+	MaxTime  int64 `mapstructure:"tool_execution_timeout"`
+	MaxDepth int64 `mapstructure:"max_agent_depth"`
+}
+type McpClientConfig struct {
+	ID                 string   `mapstructure:"id"`
+	Name               string   `mapstructure:"name"`
+	ConnectionType     string   `mapstructure:"connection_type"`
+	Command            string   `mapstructure:"command"`
+	Args               []string `mapstructure:"args"`
+	ToolsToExecute     []string `mapstructure:"tools_to_execute"`
+	ToolsToAutoExecute []string `mapstructure:"tools_to_auto_execute"`
+}
+
+// MySQLConfig Mysql配置
 type MySQLConfig struct {
 	Host      string `mapstructure:"host"`
 	Port      int    `mapstructure:"port"`
@@ -23,42 +45,54 @@ type MySQLConfig struct {
 	ParseTime bool   `mapstructure:"parse_time"`
 	Loc       string `mapstructure:"loc"`
 }
+
+// RedisConfig Redis配置
 type RedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
 	Database int    `mapstructure:"database"`
 }
+
+// JwtConfig JWT密钥
 type JwtConfig struct {
 	AccessSecret  string `mapstructure:"access_secret"`
 	RefreshSecret string `mapstructure:"refresh_secret"`
 }
-type ApiConfig struct {
-	ApiKey  string `mapstructure:"api_key"`
-	BaseUrl string `mapstructure:"base_url"`
+
+// APIConfig a
+type APIConfig struct {
+	APIKey  string `mapstructure:"api_key"`
+	BaseURL string `mapstructure:"base_url"`
+	MapAPI  string `mapstructure:"map_api"`
 }
+
+// Config 总配置
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
 	Redis RedisConfig `mapstructure:"redis"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
-	Api   ApiConfig   `mapstructure:"api"`
-	Path  Path        `mapstructure:"path"`
+	API   APIConfig   `mapstructure:"api"`
+	Path  Path        `mapstructure:"filepath"`
+	Mcp   MCPConfig   `mapstructure:"mcp"`
 }
 
+// Cfg 调用配置
 var Cfg *Config
+var lock sync.RWMutex
 
+// Load 加载配置
 func Load(confPath []string) (*Config, error) {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
 		log.Println("load env error:", err)
 	}
-
 	v := viper.New()
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
 	for _, p := range confPath {
 		v.AddConfigPath(p)
 	}
-
+	v.AutomaticEnv()
 	err := v.BindEnv("mysql.password", "MYSQL_PASSWORD")
 	if err != nil {
 		return nil, errors.Wrap(err, "mysql password bind env error")
@@ -80,7 +114,6 @@ func Load(confPath []string) (*Config, error) {
 		return nil, errors.Wrap(err, "jwt_refresh_secret bind env error")
 	}
 
-	v.AutomaticEnv()
 	v.SetDefault("mysql.host", "localhost")
 	v.SetDefault("mysql.port", 3306)
 	v.SetDefault("mysql.user", "test")
@@ -97,7 +130,22 @@ func Load(confPath []string) (*Config, error) {
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal config")
 	}
+	lock.Lock()
 	Cfg = &cfg
-	log.Println("cfg", Cfg)
+	lock.Unlock()
+
+	v.WatchConfig()
+	v.OnConfigChange(func(e fsnotify.Event) {
+		var newCfg Config
+		if err := v.Unmarshal(&newCfg); err != nil {
+			log.Println("failed to unmarshal config")
+			return
+		}
+		lock.Lock()
+		Cfg = &newCfg
+		lock.Unlock()
+		log.Println("config changed successfully")
+	})
+	log.Println("config init successfully")
 	return &cfg, nil
 }

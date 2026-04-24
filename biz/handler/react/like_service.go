@@ -3,6 +3,7 @@
 package react
 
 import (
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/video"
 	"context"
@@ -17,7 +18,7 @@ import (
 
 type LikeSever interface {
 	LikeAction(userId string, videoId string, action string, targetType string) (int32, error)
-	LikeList(userId string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo)
+	LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error)
 }
 
 type LikesHandler struct {
@@ -38,7 +39,7 @@ var (
 // LikeAction .
 // @router /like/action [POST]
 func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
-	//targetType 1、视频 2、评论
+	// targetType 1、视频 2、评论
 	var err error
 	var req react.LikeActionReq
 	err = c.BindAndValidate(&req)
@@ -49,7 +50,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value("user_id").(string)
+	userId := ctx.Value(middleware.UserIDKey).(string)
 	if req.TargetType == "" {
 		c.JSON(200, react.LikeActionResp{Base: &common.Base{
 			Code: 0,
@@ -79,7 +80,7 @@ func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err, videoInfos := h.likeService.LikeList(req.UserId, req.PageNum, req.PageSize)
+	code, videoInfos, err := h.likeService.LikeList(req.UserId, req.PageNum, req.PageSize)
 	if err != nil {
 		log.Println("likeService.LikeList:", err)
 	}

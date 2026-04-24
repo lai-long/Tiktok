@@ -5,6 +5,7 @@ package chat
 import (
 	"Tiktok/biz/dal/cache"
 	"Tiktok/biz/dal/dao"
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	ws "Tiktok/biz/service/websocket"
 	"Tiktok/pkg/utils"
@@ -40,7 +41,7 @@ var (
 // Websocket .
 // @router /ws [GET]
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid, ok := ctx.Value("user_id").(string)
+	userid, ok := ctx.Value(middleware.UserIDKey).(string)
 	if !ok || userid == "" {
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
 			Code: 200,
@@ -72,8 +73,8 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			return
 		}
 		client := &ws.Client{
-			ID:      utils.CreateId(uid, req.ToUserId),
-			SendID:  utils.CreateId(req.ToUserId, uid),
+			ID:      utils.CreateID(uid, req.ToUserId),
+			SendID:  utils.CreateID(req.ToUserId, uid),
 			GroupId: req.GroupId,
 			Socket:  conn,
 			Send:    make(chan []byte, 128),

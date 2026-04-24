@@ -15,7 +15,7 @@ type LikeCommentDatabase interface {
 type LikeVideoDatabase interface {
 	VideoLikeCountUp(videoId string) error
 	VideoLikeCountDown(videoId string) error
-	LikeVideoIds(userId string, pageNum int64, pageSize int64) (error, []string)
+	LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error)
 	LikeVideos(videoId []string) (bool, []entity.VideoEntity)
 }
 type LikeDatabase interface {
@@ -37,8 +37,10 @@ func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabas
 }
 
 func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int32, error) {
-	if targetType == "1" {
-		if action == "1" {
+	switch targetType {
+	case "1":
+		switch action {
+		case "1":
 			err := s.likeDb.LikeCreate(userId, targetId, targetType)
 			if err != nil {
 				return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
@@ -48,8 +50,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction VideoLikeCount up error")
 			}
 			return consts.Success, nil
-		}
-		if action == "2" {
+		case "2":
 			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
 				return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
@@ -59,10 +60,12 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction VideoLikeCount down error")
 			}
 			return consts.Success, nil
+		default:
+			return consts.ReactReqValueError, errors.Errorf("invalid action type: %s", action)
 		}
-		return consts.ReactReqValueError, nil
-	} else if targetType == "2" {
-		if action == "1" {
+	case "2":
+		switch action {
+		case "1":
 			err := s.likeDb.LikeCreate(userId, targetId, targetType)
 			if err != nil {
 				return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
@@ -71,8 +74,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 			if err != nil {
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount up error")
 			}
-		}
-		if action == "2" {
+		case "2":
 			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
 				return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
@@ -81,24 +83,27 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 			if err != nil {
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount down error")
 			}
+		default:
+			return consts.ReactReqValueError, errors.New("->LikeAction action type error")
 		}
-		return consts.Success, nil
+	default:
+		return consts.ReactReqValueError, errors.New("->LikeAction targetType is not valid")
 	}
 	return consts.ReactReqValueError, nil
 }
 
-func (s *LikeService) LikeList(userId string, pageNum int64, pageSize int64) (int32, error, []*video.VideoInfo) {
-	err, videoId := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
+func (s *LikeService) LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+	videoId, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
-		return consts.ReactDBSelectError, errors.Wrap(err, "->LikeList select LikeVideo error"), nil
+		return consts.ReactDBSelectError, nil, errors.Wrap(err, "->LikeList select LikeVideo error")
 	}
 	ok, videos := s.videoDb.LikeVideos(videoId)
 	if !ok {
-		return consts.ReactDBSelectError, errors.New("->LikeList LikeVideos err"), nil
+		return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
 	}
 	var videoInfos []*video.VideoInfo
 	for _, v := range videos {
 		videoInfos = append(videoInfos, v.ToVideoInfo())
 	}
-	return consts.Success, nil, videoInfos
+	return consts.Success, videoInfos, nil
 }

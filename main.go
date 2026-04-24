@@ -38,10 +38,20 @@ func main() {
 
 	rdb := cache.InitRedis()
 	re := cache.NewRedis(rdb)
-	defer rdb.Close()
+	defer func() {
+		err := rdb.Close()
+		if err != nil {
+			log.Println("main redis close err", err)
+		}
+	}()
 
 	ddb := dao.InitDb()
-	defer ddb.Close()
+	defer func() {
+		err := ddb.Close()
+		if err != nil {
+			log.Println("main database close err", err)
+		}
+	}()
 	mysqlDb := dao.NewMySQLdb(ddb)
 
 	userSrv := userService.NewUserService(mysqlDb, mysqlDb, re)

@@ -1,0 +1,34 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+    - gocritic
+    - lll
+    - prealloc
+    - errorlint
+    - exhaustive
+    - nilerr
+    - nestif
+    - nakedret
+    - interfacebloat
+    - durationcheck
+  settings:
+    lll:
+      line-length: 150
+
+issues:
+  max-issues-per-linter: 1000
+  max-same-issues: 500
+
+
