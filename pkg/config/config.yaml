@@ -20,3 +20,15 @@ filepath:
   video_path: "/home/lai-long/Tiktok/a/"
   avatar_path: "/home/lai-long/Tiktok/a/"
   env_path: "/home/lai-long/Tiktok/.env"
+mcp:
+  clients:
+    -id: "mcp_client_1"
+    name: "mcp"
+    connection_type: "stdio"
+    command: "/home/lai-long/Tiktok/mcp_service/mcp_service"
+    args: []
+    tools_to_execute: ["*"]
+    tools_to_auto_execute: ["*"]
+  tool_manager:
+    tool_execution_timeout: 200
+    max_agent_depth: 10
