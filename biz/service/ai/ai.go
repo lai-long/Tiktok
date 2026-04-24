@@ -91,7 +91,6 @@ func (c *ChatClient) Chat(prompt string) (content string, err error) {
 	}
 	resp, bifrostErr := c.client.ChatCompletionRequest(bifrostContext, req)
 	if bifrostErr != nil {
-		log.Printf("ChatCompletionRequest err: %+v, Error: %+v\n", bifrostErr, bifrostErr.Error)
 		return "", bifrostErr.Error.Error
 	}
 	if len(resp.Choices) == 0 {

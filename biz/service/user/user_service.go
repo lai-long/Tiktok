@@ -79,8 +79,6 @@ func (s *UserService) Login(userName, password, mfaCode string, ctx context.Cont
 	userEntity, err := s.userDb.GetUserByUsername(userName)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->Login GetUserByUsername数据库查询错误")
-	} else if errors.Is(err, sql.ErrNoRows) {
-		return consts.UserNotExists, &user.UserInfo{}, "", "", errors.Wrap(err, "->login用户不存在")
 	}
 	err = utils.CheckPasswordHash(userEntity.Password, password)
 	if err != nil {
