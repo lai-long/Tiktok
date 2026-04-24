@@ -22,15 +22,15 @@ message VideoData{
 }
 
 message VideoPublishReq{
-  string Title=1[(api.body)="title"];
-  string Description=2[(api.body)="description"];
+  string Title=1[(api.body)="title",(api.vd)="required,min=1,max=100"];
+  string Description=2[(api.body)="description",(api.vd)="max=500"];
 }
 message VideoPublishResp{
   common.Base Base=1[(api.go_tag)="json:\"base\""];
 }
 
 message VideoListReq{
-  string UserId=1[(api.body)="user_id"];
+  string UserId=1[(api.body)="user_id",(api.vd)="required"];
   int64 PageNum=2[(api.body)="page_num"];
   int64 PageSize=3[(api.body)="page_size"];
 }
