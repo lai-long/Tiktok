@@ -1,12 +1,52 @@
-name: workflow.yml
-on: [push]
+name: CI
 
+on:
+  push:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 0'
 jobs:
   golangci-lint:
+    name: Lint Code
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
-
       - uses: golangci-lint-action@v6
+  codeql:
+    name: Code Scan
+    runs-on: ubuntu-latest
+
+    # 权限配置 (permissions)
+    # - GitHub Actions 默认是最小权限原则
+    # - security-events: write — 允许上传安全扫描结果
+    # - actions: read — 允许读取 action 元数据
+    # - contents: read — 允许读取仓库内容
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+          queries: security-and-quality
+      - name: Build
+        run: go build ./...
+      - name: Perform Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:go"
+          upload: true
+          output: codeql-results.sarif
+      - name: Upload SARIF to Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: codeql-results.sarif
+          category: "CodeQL-Go"

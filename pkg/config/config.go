@@ -16,6 +16,23 @@ type Path struct {
 	AvatarPath string `mapstructure:"avatar_path"`
 	EnvPath    string `mapstructure:"env_path"`
 }
+type MCPConfig struct {
+	Clients           []McpClientConfig `mapstructure:"clients"`
+	ToolManagerConfig ToolManagerConfig `mapstructure:"tool_manager_config"`
+}
+type ToolManagerConfig struct {
+	MaxTime  int64 `mapstructure:"tool_execution_timeout"`
+	MaxDepth int64 `mapstructure:"max_agent_depth"`
+}
+type McpClientConfig struct {
+	ID                 string   `mapstructure:"id"`
+	Name               string   `mapstructure:"name"`
+	ConnectionType     string   `mapstructure:"connection_type"`
+	Command            string   `mapstructure:"command"`
+	Args               []string `mapstructure:"args"`
+	ToolsToExecute     []string `mapstructure:"tools_to_execute"`
+	ToolsToAutoExecute []string `mapstructure:"tools_to_auto_execute"`
+}
 
 // MySQLConfig Mysql配置
 type MySQLConfig struct {
@@ -57,6 +74,7 @@ type Config struct {
 	Jwt   JwtConfig   `mapstructure:"jwt"`
 	API   APIConfig   `mapstructure:"api"`
 	Path  Path        `mapstructure:"filepath"`
+	Mcp   MCPConfig   `mapstructure:"mcp"`
 }
 
 // Cfg 调用配置
