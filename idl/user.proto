@@ -15,16 +15,16 @@ message UserInfo{
 
 
 message RegisterReq{
-   string UserName=1[(api.body)="username",(api.go_tag)=" binding:\"required\""];
-   string Password=2[(api.body)="password",(api.go_tag)=" binding:\"required\""];
+   string UserName=1[(api.body)="username",(api.vd)="required,min=1,max=20"];
+   string Password=2[(api.body)="password",(api.vd)="required,min=5,max=20"];
 }
 message RegisterResp{
    common.Base Base=1[(api.go_tag)="json:\"base\""];
 }
 
 message LoginReq{
-   string UserName=1[(api.body)="username",(api.go_tag)=" binding:\"required\""];
-   string Password=2[(api.body)="password",(api.go_tag)=" binding:\"required\""];
+   string UserName=1[(api.body)="username",(api.vd)="required,min=1,max=20"];
+   string Password=2[(api.body)="password",(api.vd)="required,min=5,max=20"];
    string Code=3[(api.body)="code"];
 }
 message LoginResp{
@@ -35,7 +35,7 @@ message LoginResp{
 }
 
 message UserInfoReq{
-   string UserId=1[(api.body)="user_id"];
+   string UserId=1[(api.body)="user_id",(api.vd)="required"];
 }
 message UserInfoResp{
    common.Base Base=1[(api.go_tag)="json:\"base\""];
