@@ -13,16 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-      - uses: golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v6
   codeql:
     name: Code Scan
     runs-on: ubuntu-latest
-
-    # 权限配置 (permissions)
-    # - GitHub Actions 默认是最小权限原则
-    # - security-events: write — 允许上传安全扫描结果
-    # - actions: read — 允许读取 action 元数据
-    # - contents: read — 允许读取仓库内容
     permissions:
       security-events: write
       actions: read
