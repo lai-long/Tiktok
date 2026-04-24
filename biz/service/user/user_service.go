@@ -77,8 +77,11 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 
 func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error) {
 	userEntity, err := s.userDb.GetUserByUsername(userName)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->Login GetUserByUsername数据库查询错误")
+	if errors.Is(err, sql.ErrNoRows) {
+		return consts.UserNotExists, &user.UserInfo{}, "", "", nil
+	}
+	if err != nil {
+		return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "GetUserByUsername failed")
 	}
 	err = utils.CheckPasswordHash(userEntity.Password, password)
 	if err != nil {
