@@ -15,7 +15,7 @@ func InitDb() *sqlx.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset%v&parseTime=%v",
 		config.Cfg.MySQL.User, config.Cfg.MySQL.Password, config.Cfg.MySQL.Host, config.Cfg.MySQL.Port,
 		config.Cfg.MySQL.Database, config.Cfg.MySQL.Charset, config.Cfg.MySQL.ParseTime)
-	log.Println("dsn:", dsn)
+	log.Println("dsn: [REDACTED]")
 	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
 		log.Fatalf("InitDb err: %v", err)
