@@ -27,16 +27,16 @@ type VideoDatabase interface {
 	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
 	GetVideoStream() ([]entity.VideoEntity, error)
 }
-type VideoService struct {
+type VideoRepo struct {
 	videoDb    VideoDatabase
 	VideoRedis VideoRedis
 }
 
-func NewVideoService(videoDb VideoDatabase, videoRedis VideoRedis) *VideoService {
-	return &VideoService{videoDb: videoDb, VideoRedis: videoRedis}
+func NewVideoRepo(videoDb VideoDatabase, videoRedis VideoRedis) *VideoRepo {
+	return &VideoRepo{videoDb: videoDb, VideoRedis: videoRedis}
 }
 
-func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int32, error) {
+func (s *VideoRepo) VideoPublish(videoInfo *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int32, error) {
 	dataFile, err := data.Open()
 	if err != nil {
 		return consts.IOOsError, errors.Wrap(err, "->VideoPublish data.Open err")
@@ -70,7 +70,7 @@ func (s *VideoService) VideoPublish(videoInfo *video.VideoInfo, data *multipart.
 	return consts.Success, nil
 }
 
-func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error) {
+func (s *VideoRepo) VideoList(userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error) {
 	videoList, err := s.videoDb.GetVideoByUserID(userId, pageSize, pageNum)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoList GetVideo err")
@@ -82,7 +82,7 @@ func (s *VideoService) VideoList(userId string, pageSize int64, pageNum int64) (
 	return consts.Success, videoInfos, nil
 }
 
-func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+func (s *VideoRepo) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
 	videoEntity, err := s.videoDb.GetVideoByKeyWord(keyword, pageNum, pageSize)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoSearch GetVideo Error")
@@ -94,7 +94,7 @@ func (s *VideoService) VideoSearch(keyword string, pageNum int64, pageSize int64
 	return consts.Success, videoInfos, nil
 }
 
-func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
 	z, err := s.VideoRedis.VideoHotGet(ctx, "videoHot", pageNum, pageSize)
 	if err != nil {
 		return consts.VideoRedisGetError, nil, errors.Wrap(err, "->VideoPopular GetVideoHot error")
@@ -113,7 +113,7 @@ func (s *VideoService) VideoPopular(ctx context.Context, pageNum int64, pageSize
 	return consts.Success, videoInfos, nil
 }
 
-func (s *VideoService) VideoStream() (int32, []*video.VideoInfo, error) {
+func (s *VideoRepo) VideoStream() (int32, []*video.VideoInfo, error) {
 	videoEntity, err := s.videoDb.GetVideoStream()
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video stream select video error")

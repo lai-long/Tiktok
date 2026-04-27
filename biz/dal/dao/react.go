@@ -81,10 +81,10 @@ func (m *MySQLdb) CreateComment(commentId string, videoId string, userId string,
 	return err
 }
 
-func (m *MySQLdb) GetComments(videoId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
+func (m *MySQLdb) GetComments(targetId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
 	sql := `SELECT * FROM comments WHERE target_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	var comments []entity.CommentEntity
-	err := m.db.Select(&comments, sql, videoId, pageSize, pageNum*pageSize)
+	err := m.db.Select(&comments, sql, targetId, pageSize, pageNum*pageSize)
 	return comments, err
 }
 
