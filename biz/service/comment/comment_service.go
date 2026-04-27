@@ -82,7 +82,7 @@ func (s *CommentRepo) CommentDelete(commentId string, targetId string, userId st
 	}
 	switch targetType {
 	case "1":
-		err = s.db.VideoCommentCountDown(commentId)
+		err = s.db.VideoCommentCountDown(targetId)
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
