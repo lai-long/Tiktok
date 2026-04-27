@@ -54,19 +54,19 @@ func main() {
 	}()
 	mysqlDb := dao.NewMySQLdb(ddb)
 
-	userSrv := userService.NewUserService(mysqlDb, mysqlDb, re)
+	userSrv := userService.NewUserRepo(mysqlDb, mysqlDb, re)
 	userHandler := user.NewUserHandler(userSrv)
 	user.UserInfo = userHandler.UserInfo
 	user.UserRegister = userHandler.UserRegister
 	user.UserLogin = userHandler.UserLogin
 	user.RefreshToken = userHandler.RefreshToken
 	user.UserAvatar = userHandler.UserAvatar
-	mfaSrv := mfaService.NewMfaService(mysqlDb)
+	mfaSrv := mfaService.NewMfaRepo(mysqlDb)
 	mfaHandler := mfa.NewMfaHandler(mfaSrv)
 	mfa.MfaBind = mfaHandler.MfaBind
 	mfa.MfaQrcode = mfaHandler.MfaQrcode
 
-	videoSrv := videoService.NewVideoService(mysqlDb, re)
+	videoSrv := videoService.NewVideoRepo(mysqlDb, re)
 	videoHandler := video.NewVideoHandler(videoSrv)
 	video.VideoPublish = videoHandler.VideoPublish
 	video.VideoStream = videoHandler.VideoStream
@@ -74,7 +74,7 @@ func main() {
 	video.VideoPopular = videoHandler.VideoPopular
 	video.VideoList = videoHandler.VideoList
 
-	socialSrv := socialService.NewSocialService(mysqlDb, mysqlDb)
+	socialSrv := socialService.NewSocialRepo(mysqlDb, mysqlDb)
 	socialHdlr := socialHandler.NewSocialHandler(socialSrv)
 	socialHandler.FollowingList = socialHdlr.FollowingList
 	socialHandler.FollowerList = socialHdlr.FollowerList
@@ -87,7 +87,7 @@ func main() {
 	react.CommentPublish = commentHandler.CommentPublish
 	react.CommentList = commentHandler.CommentList
 
-	likeSrv := likeService.NewLikeVideoService(mysqlDb, mysqlDb, mysqlDb)
+	likeSrv := likeService.NewLikeRepo(mysqlDb, mysqlDb, mysqlDb)
 	likeHandler := react.NewLikesHandler(likeSrv)
 	react.LikeList = likeHandler.LikeList
 	react.LikeAction = likeHandler.LikeAction

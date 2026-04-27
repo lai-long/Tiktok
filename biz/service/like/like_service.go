@@ -22,21 +22,21 @@ type LikeDatabase interface {
 	LikeCreate(userId string, targetId string, targetType string) error
 	LikeDelete(userId, targetId, targetType string) error
 }
-type LikeService struct {
+type LikeRepo struct {
 	videoDb   LikeVideoDatabase
 	commentDb LikeCommentDatabase
 	likeDb    LikeDatabase
 }
 
-func NewLikeVideoService(videoDb LikeVideoDatabase, commentDb LikeCommentDatabase, likeDb LikeDatabase) *LikeService {
-	return &LikeService{
+func NewLikeRepo(videoDb LikeVideoDatabase, commentDb LikeCommentDatabase, likeDb LikeDatabase) *LikeRepo {
+	return &LikeRepo{
 		videoDb:   videoDb,
 		commentDb: commentDb,
 		likeDb:    likeDb,
 	}
 }
 
-func (s *LikeService) LikeAction(userId string, targetId string, action string, targetType string) (int32, error) {
+func (s *LikeRepo) LikeAction(userId string, targetId string, action string, targetType string) (int32, error) {
 	switch targetType {
 	case "1":
 		switch action {
@@ -92,7 +92,7 @@ func (s *LikeService) LikeAction(userId string, targetId string, action string, 
 	return consts.ReactReqValueError, nil
 }
 
-func (s *LikeService) LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+func (s *LikeRepo) LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
 	videoId, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
 		return consts.ReactDBSelectError, nil, errors.Wrap(err, "->LikeList select LikeVideo error")

@@ -16,18 +16,18 @@ type SocialDatabase interface {
 	FollowerList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
 	FriendList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, bool)
 }
-type SocialService struct {
+type SocialRepo struct {
 	social SocialDatabase
 	user   user.UserDatabase
 }
 
-func NewSocialService(social SocialDatabase, userDb user.UserDatabase) *SocialService {
-	return &SocialService{
+func NewSocialRepo(social SocialDatabase, userDb user.UserDatabase) *SocialRepo {
+	return &SocialRepo{
 		social: social,
 		user:   userDb,
 	}
 }
-func (s *SocialService) RelationAction(toUserId string, actionType string, userId string) (int32, error) {
+func (s *SocialRepo) RelationAction(toUserId string, actionType string, userId string) (int32, error) {
 	if actionType == "0" {
 		err := s.social.CreateFollowing(userId, toUserId)
 		if err != nil {
@@ -45,7 +45,7 @@ func (s *SocialService) RelationAction(toUserId string, actionType string, userI
 	return consts.SocialReqValueError, nil
 }
 
-func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
+func (s *SocialRepo) FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
 	followings, err := s.social.FollowingList(userId, pageNum, pageSize)
 	if err != nil {
 		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->Following List Get Following List err")
@@ -57,7 +57,7 @@ func (s *SocialService) FollowingList(userId string, pageNum int64, pageSize int
 	return consts.Success, userInfos, nil
 }
 
-func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
+func (s *SocialRepo) FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
 	followers, err := s.social.FollowerList(userId, pageNum, pageSize)
 	if err != nil {
 		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowerList Get List err")
@@ -69,7 +69,7 @@ func (s *SocialService) FollowerList(userId string, pageNum int64, pageSize int6
 	return consts.Success, userInfos, nil
 }
 
-func (s *SocialService) FriendList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
+func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (int32, []*userModel.UserInfo, error) {
 	entityFriend, ok := s.social.FriendList(userId, pageNum, pageSize)
 	if !ok {
 		return consts.SocialDBSelectError, nil, errors.New("->FriendList Get List err")

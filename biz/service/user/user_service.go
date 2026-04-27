@@ -32,17 +32,17 @@ type UserDatabase interface {
 	UpdateUserAvatar(url string, userId interface{}) error
 }
 
-type UserService struct {
+type UserRepo struct {
 	userDb UserDatabase
 	mfaDb  mfa.MfaDatabase
 	redis  UserRedis
 }
 
-func NewUserService(userDb UserDatabase, mfaDb mfa.MfaDatabase, redis UserRedis) *UserService {
-	return &UserService{userDb: userDb, mfaDb: mfaDb, redis: redis}
+func NewUserRepo(userDb UserDatabase, mfaDb mfa.MfaDatabase, redis UserRedis) *UserRepo {
+	return &UserRepo{userDb: userDb, mfaDb: mfaDb, redis: redis}
 }
 
-func (s *UserService) IsUsernameExists(username string) (bool, error) {
+func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
 	_, err := s.userDb.GetUserByUsername(username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -53,7 +53,7 @@ func (s *UserService) IsUsernameExists(username string) (bool, error) {
 	return true, nil
 }
 
-func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
+func (s *UserRepo) Register(userinfo *user.RegisterReq) (int32, error) {
 	var userEntity entity.UserEntity
 	var err error
 	exists, err := s.IsUsernameExists(userinfo.UserName)
@@ -75,7 +75,7 @@ func (s *UserService) Register(userinfo *user.RegisterReq) (int32, error) {
 	return consts.Success, nil
 }
 
-func (s *UserService) Login(userName, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error) {
+func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error) {
 	userEntity, err := s.userDb.GetUserByUsername(userName)
 	if errors.Is(err, sql.ErrNoRows) {
 		return consts.UserNotExists, &user.UserInfo{}, "", "", nil
@@ -115,7 +115,7 @@ func (s *UserService) Login(userName, password, mfaCode string, ctx context.Cont
 	return consts.Success, userInfo, reToken, acToken, nil
 }
 
-func (s *UserService) UserInfo(userId string) (*user.UserInfo, int32, error) {
+func (s *UserRepo) UserInfo(userId string) (*user.UserInfo, int32, error) {
 	userEntity, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo GetUserByUserId error")
@@ -124,7 +124,7 @@ func (s *UserService) UserInfo(userId string) (*user.UserInfo, int32, error) {
 	return userInfo, consts.Success, nil
 }
 
-func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error) {
+func (s *UserRepo) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error) {
 	dataFile, err := data.Open()
 	if err != nil {
 		return consts.IOOsError, &user.UserInfo{}, errors.Wrap(err, "->UserInfo data open 错误")
@@ -162,7 +162,7 @@ func (s *UserService) UserAvatar(data *multipart.FileHeader, userId interface{})
 	return consts.Success, userInfo, nil
 }
 
-func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error) {
+func (s *UserRepo) RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error) {
 	userId, err := s.redis.UserGetByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return consts.UserRedisGetError, "", "", errors.Wrap(err, "->RefreshToken GetUserIDByRefreshToken error")
