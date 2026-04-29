@@ -74,6 +74,7 @@ func (s *LikeRepo) LikeAction(userId string, targetId string, action string, tar
 			if err != nil {
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount up error")
 			}
+			return consts.Success, nil
 		case "2":
 			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
