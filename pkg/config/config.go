@@ -18,7 +18,7 @@ type Path struct {
 }
 type MCPConfig struct {
 	Clients           []McpClientConfig `mapstructure:"clients"`
-	ToolManagerConfig ToolManagerConfig `mapstructure:"tool_manager_config"`
+	ToolManagerConfig ToolManagerConfig `mapstructure:"tool_manager"`
 }
 type ToolManagerConfig struct {
 	MaxTime  int64 `mapstructure:"tool_execution_timeout"`
