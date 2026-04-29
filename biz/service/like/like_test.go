@@ -86,7 +86,7 @@ func TestLikeAction(t *testing.T) {
 			wantCode: consts.Success,
 		},
 		{
-			name:       "Fail_likeVideo",
+			name:       "Fail_likeVideo1",
 			userId:     "userID",
 			targetId:   "targetID",
 			action:     "1",
@@ -96,6 +96,31 @@ func TestLikeAction(t *testing.T) {
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBInsertError,
+		},
+		{
+			name:       "Fail_likeComment1",
+			userId:     "userID",
+			targetId:   "targetID",
+			action:     "1",
+			targetType: "2",
+			mockSetUp: func(m *MockLike) {
+				m.On("LikeCreate", "userID", "targetID", "2").Return(errors.New("fail"))
+			},
+			wantCode: consts.ReactDBInsertError,
+			wantErr:  true,
+		},
+		{
+			name:       "Success_dislikeComment",
+			userId:     "userID",
+			targetId:   "targetID",
+			action:     "2",
+			targetType: "2",
+			mockSetUp: func(m *MockLike) {
+				m.On("CommentLikeCountDown", "targetID").Return(nil)
+				m.On("LikeDelete", "userID", "targetID", "2").Return(nil)
+			},
+			wantErr:  false,
+			wantCode: consts.Success,
 		},
 	}
 	for _, tt := range tests {
@@ -134,12 +159,24 @@ func TestLikeList(t *testing.T) {
 			wantCode: consts.Success,
 		},
 		{
-			name:     "Fail_likeList",
+			name:     "Fail_likeList1",
 			userId:   "userID",
 			pageNum:  1,
 			pageSize: 10,
 			mockSetUp: func(m *MockLike) {
 				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, errors.New("fail"))
+			},
+			wantErr:  true,
+			wantCode: consts.ReactDBSelectError,
+		},
+		{
+			name:     "Fail_likeList2",
+			userId:   "userID",
+			pageNum:  1,
+			pageSize: 10,
+			mockSetUp: func(m *MockLike) {
+				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
+				m.On("LikeVideos", []string{"1", "2"}).Return(false, []entity.VideoEntity{})
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBSelectError,
