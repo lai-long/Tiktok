@@ -14,15 +14,15 @@ type MfaDatabase interface {
 	CheckMfaBind(userId string) (int, error)
 }
 
-type MfaService struct {
+type MfaRepo struct {
 	mfaDb MfaDatabase
 }
 
-func NewMfaService(mfaDb MfaDatabase) *MfaService {
-	return &MfaService{mfaDb: mfaDb}
+func NewMfaRepo(mfaDb MfaDatabase) *MfaRepo {
+	return &MfaRepo{mfaDb: mfaDb}
 }
 
-func (s *MfaService) GenerateMfa(username string, userId string) (string, string, int32, error) {
+func (s *MfaRepo) GenerateMfa(username string, userId string) (string, string, int32, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
@@ -38,7 +38,7 @@ func (s *MfaService) GenerateMfa(username string, userId string) (string, string
 	return key.URL(), secret, consts.Success, nil
 }
 
-func (s *MfaService) MfaBindByCode(code string, userId string) (int32, error) {
+func (s *MfaRepo) MfaBindByCode(code string, userId string) (int32, error) {
 	secret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
@@ -54,7 +54,7 @@ func (s *MfaService) MfaBindByCode(code string, userId string) (int32, error) {
 	return consts.Success, nil
 }
 
-func (s *MfaService) MfaBindBySecret(secret string, userId string) (int32, error) {
+func (s *MfaRepo) MfaBindBySecret(secret string, userId string) (int32, error) {
 	dbSecret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")

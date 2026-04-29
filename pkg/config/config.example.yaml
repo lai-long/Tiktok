@@ -1,0 +1,39 @@
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "your_password"
+  database: "tiktok"
+  charset: "utf8"
+  parse_time: true
+  loc: "Local"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: "your_password"
+  db: 0
+
+api:
+  #支持openAI规范
+  base_url: "your_base_url"
+  map_api: "your_map_api_key"
+
+filepath:
+  video_path: "./videos/"
+  avatar_path: "./avatars/"
+  env_path: "./.env"
+
+mcp:
+  #mcp client配置 可以同时配置多个mcp client
+  clients:
+  - id: ""
+    name: ""
+    connection_type: ""
+    command: ""
+    args: []
+    tools_to_execute: ["*"]
+    tools_to_auto_execute: ["*"]
+  tool_manager:
+    tool_execution_timeout: 200
+    max_agent_depth: 10

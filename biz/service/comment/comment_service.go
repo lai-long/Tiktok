@@ -10,7 +10,7 @@ import (
 )
 
 type CommentDatabase interface {
-	GetComments(videoId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error)
+	GetComments(targetId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error)
 	CommentDelete(commentId string) error
 	GetCommentById(commentId string) (entity.CommentEntity, error)
 	VideoCommentCountUp(videoId string) error
@@ -20,15 +20,15 @@ type CommentDatabase interface {
 	CreateComment(commentId string, videoId string, userId string, content string, targetType string) error
 }
 
-type CommentService struct {
+type CommentRepo struct {
 	db CommentDatabase
 }
 
-func NewCommentService(db CommentDatabase) *CommentService {
-	return &CommentService{db: db}
+func NewCommentService(db CommentDatabase) *CommentRepo {
+	return &CommentRepo{db: db}
 }
 
-func (s *CommentService) CommentPublish(targetId, userId, content, targetType string) (int32, error) {
+func (s *CommentRepo) CommentPublish(targetId, userId, content, targetType string) (int32, error) {
 	switch targetType {
 	case "1":
 		commentId := utils.IDGenerate()
@@ -51,12 +51,12 @@ func (s *CommentService) CommentPublish(targetId, userId, content, targetType st
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentPublish update comment count error ")
 		}
+		return consts.Success, nil
 	}
 	return consts.ReactReqValueError, nil
 }
 
-func (s *CommentService) CommentList(targetId string, pageSize int64, pageNum int64) (int32, []*react.CommentInfo, error) {
-
+func (s *CommentRepo) CommentList(targetId string, pageSize int64, pageNum int64) (int32, []*react.CommentInfo, error) {
 	commentEntity, err := s.db.GetComments(targetId, pageNum, pageSize)
 	if err != nil {
 		return consts.ReactDBSelectError, nil, errors.Wrap(err, "->CommentList select comment err")
@@ -68,7 +68,7 @@ func (s *CommentService) CommentList(targetId string, pageSize int64, pageNum in
 	return consts.Success, comments, nil
 }
 
-func (s *CommentService) CommentDelete(commentId string, targetId string, userId string, targetType string) (int32, error) {
+func (s *CommentRepo) CommentDelete(commentId string, targetId string, userId string, targetType string) (int32, error) {
 	comment, err := s.db.GetCommentById(commentId)
 	if err != nil {
 		return consts.ReactDBSelectError, errors.Wrap(err, "->CommentDelete select comment err")
@@ -82,6 +82,7 @@ func (s *CommentService) CommentDelete(commentId string, targetId string, userId
 	}
 	switch targetType {
 	case "1":
+		err = s.db.VideoCommentCountDown(targetId)
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}

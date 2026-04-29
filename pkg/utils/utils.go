@@ -64,7 +64,7 @@ func GenerateTokens(userDto *user.UserInfo) (string, string, error) {
 	return refreshToken, accessToken, nil
 }
 
-// GetToken 生成单个ai
+// GetToken 生成单个token
 func GetToken(username string, userid string, t time.Duration, secret string) (string, error) {
 	jwtClaims := &jwt.MapClaims{
 		"username": username,
