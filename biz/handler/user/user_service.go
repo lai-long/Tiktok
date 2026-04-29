@@ -36,7 +36,7 @@ type UserHandler struct {
 	userService UserSever
 }
 
-func NewUserHandler(userService *userService.UserService) *UserHandler {
+func NewUserHandler(userService *userService.UserRepo) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}
