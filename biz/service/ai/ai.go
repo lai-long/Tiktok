@@ -39,27 +39,37 @@ type ChatClient struct {
 	client  *bifrost.Bifrost
 }
 
+var ConnectType = map[string]schemas.MCPConnectionType{
+	"stdio":     schemas.MCPConnectionTypeSTDIO,
+	"http":      schemas.MCPConnectionTypeHTTP,
+	"sse":       schemas.MCPConnectionTypeSSE,
+	"inprocess": schemas.MCPConnectionTypeInProcess,
+}
+
 func NewChatClient(ctx context.Context) (*ChatClient, error) {
+	clientCfg := make([]*schemas.MCPClientConfig, len(config.Cfg.Mcp.Clients))
+	for i := range config.Cfg.Mcp.Clients {
+		clientCfg[i] = &schemas.MCPClientConfig{
+			ID:             config.Cfg.Mcp.Clients[i].ID,
+			Name:           config.Cfg.Mcp.Clients[i].Name,
+			ConnectionType: ConnectType[config.Cfg.Mcp.Clients[i].ConnectionType],
+			StdioConfig: &schemas.MCPStdioConfig{
+				Command: config.Cfg.Mcp.Clients[i].Command,
+				Args:    config.Cfg.Mcp.Clients[i].Args,
+			},
+			ToolsToExecute:     config.Cfg.Mcp.Clients[i].ToolsToExecute,
+			ToolsToAutoExecute: config.Cfg.Mcp.Clients[i].ToolsToAutoExecute,
+		}
+	}
+	toolManagerCfg := &schemas.MCPToolManagerConfig{
+		ToolExecutionTimeout: time.Duration(config.Cfg.Mcp.ToolManagerConfig.MaxTime) * time.Second,
+		MaxAgentDepth:        int(config.Cfg.Mcp.ToolManagerConfig.MaxDepth),
+	}
 	client, err := bifrost.Init(ctx, schemas.BifrostConfig{
 		Account: &MyAccount{},
 		MCPConfig: &schemas.MCPConfig{
-			ClientConfigs: []*schemas.MCPClientConfig{
-				{
-					ID:             "mcp_client",
-					Name:           "mcp_client",
-					ConnectionType: schemas.MCPConnectionTypeSTDIO,
-					StdioConfig: &schemas.MCPStdioConfig{
-						Command: "/home/lai-long/Tiktok/mcp_service/mcp_service",
-						Args:    []string{},
-					},
-					ToolsToExecute:     schemas.WhiteList{"*"},
-					ToolsToAutoExecute: schemas.WhiteList{"*"},
-				},
-			},
-			ToolManagerConfig: &schemas.MCPToolManagerConfig{
-				ToolExecutionTimeout: 200 * time.Second,
-				MaxAgentDepth:        10,
-			},
+			ClientConfigs:     clientCfg,
+			ToolManagerConfig: toolManagerCfg,
 		},
 	})
 	if err != nil {
