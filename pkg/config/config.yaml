@@ -22,7 +22,7 @@ filepath:
   env_path: "/home/lai-long/Tiktok/.env"
 mcp:
   clients:
-    id: "mcp_client_1"
+  - id: "mcp_client_1"
     name: "mcp"
     connection_type: "stdio"
     command: "/home/lai-long/Tiktok/mcp_service/mcp_service"
