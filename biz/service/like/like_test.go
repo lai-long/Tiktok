@@ -122,6 +122,31 @@ func TestLikeAction(t *testing.T) {
 			wantErr:  false,
 			wantCode: consts.Success,
 		},
+		{
+			name:       "Fail_dislikeVideo1",
+			userId:     "userID",
+			targetId:   "targetID",
+			action:     "2",
+			targetType: "1",
+			mockSetUp: func(m *MockLike) {
+				m.On("LikeDelete", "userID", "targetID", "1").Return(errors.New("fail"))
+			},
+			wantErr:  true,
+			wantCode: consts.ReactDBDeleteError,
+		},
+		{
+			name:       "Fail_dislikeVideo2",
+			userId:     "userID",
+			targetId:   "targetID",
+			action:     "2",
+			targetType: "1",
+			mockSetUp: func(m *MockLike) {
+				m.On("LikeDelete", "userID", "targetID", "1").Return(nil)
+				m.On("VideoLikeCountDown", "targetID").Return(errors.New("fail"))
+			},
+			wantErr:  true,
+			wantCode: consts.ReactDBUpdateError,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
