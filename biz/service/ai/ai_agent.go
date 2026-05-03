@@ -1,17 +1,18 @@
 package ai
 
 import (
+	"Tiktok/biz/service/chat"
 	"context"
 	"log"
 )
 
 type Agent struct {
-	chatCli *ChatClient
+	chatCli *chat.ChatClient
 	ctx     context.Context
 }
 
 func NewAgent(ctx context.Context) *Agent {
-	llm, err := NewChatClient(ctx)
+	llm, err := chat.NewChatClient(ctx)
 	if err != nil {
 		log.Println("mcp NewChatClient fail", err)
 		return nil

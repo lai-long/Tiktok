@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.0
 // 	protoc        v3.21.12
-// source: websocket.proto
+// source: chat.proto
 
 package chat
 

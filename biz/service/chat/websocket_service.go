@@ -1,4 +1,4 @@
-package websocket
+package chat
 
 import (
 	"Tiktok/biz/dal/cache"
@@ -153,8 +153,8 @@ func (ws *WebsocketService) startRegister(client *Client) {
 	ws.Manager.Clients[client.ID] = client
 	replyMSg := chat.ReplyMsg{
 		From:    client.ID,
-		Code:    consts.Success,
-		Content: "连接成功",
+		Code:    consts.WsConnectSuccess,
+		Content: consts.GetErrorCodeMsg(consts.WsConnectSuccess),
 	}
 	msg, _ := protojson.Marshal(&replyMSg)
 	client.Send <- msg
@@ -176,8 +176,8 @@ func (ws *WebsocketService) startUnregister(client *Client) {
 	if _, ok := ws.Manager.Clients[client.ID]; ok {
 		replyMSg := chat.ReplyMsg{
 			From:    client.ID,
-			Code:    consts.Success,
-			Content: "连接中断",
+			Code:    consts.WsDisconnect,
+			Content: consts.GetErrorCodeMsg(consts.WsDisconnect),
 		}
 		msg, _ := protojson.Marshal(&replyMSg)
 		client.Send <- msg
@@ -214,8 +214,8 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 	if flag {
 		replyMSg := chat.ReplyMsg{
 			From:    broadcast.Clients.ID,
-			Code:    consts.Success,
-			Content: "对方在线",
+			Code:    consts.WsClientOnline,
+			Content: consts.GetErrorCodeMsg(consts.WsClientOnline),
 		}
 		msg, _ := protojson.Marshal(&replyMSg)
 		broadcast.Clients.Send <- msg
@@ -226,8 +226,8 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 	} else {
 		replyMSg := chat.ReplyMsg{
 			From:    broadcast.Clients.ID,
-			Code:    consts.Success,
-			Content: "对方不在线",
+			Code:    consts.WsClientNotOnline,
+			Content: consts.GetErrorCodeMsg(consts.WsClientNotOnline),
 		}
 		err := ws.mysql.InsertMsg(id, string(message))
 		if err != nil {
@@ -248,8 +248,8 @@ func (ws *WebsocketService) startBroadcastOneOffline(broadcast *Broadcast) {
 		log.Println("Fetch offline message error:", err)
 		replyMSg := chat.ReplyMsg{
 			From:    "系统",
-			Code:    consts.Success,
-			Content: "获取离线消息失败",
+			Code:    consts.WsGetOfflineError,
+			Content: consts.GetErrorCodeMsg(consts.WsGetOfflineError),
 		}
 		msg, _ := protojson.Marshal(&replyMSg)
 		broadcast.Clients.Send <- msg
@@ -279,8 +279,8 @@ func (ws *WebsocketService) startBroadcastOneHistory(broadcast *Broadcast) {
 	if err != nil || msgs == nil {
 		replyMSg := chat.ReplyMsg{
 			From:    "系统",
-			Code:    consts.Success,
-			Content: "获取历史消息失败",
+			Code:    consts.WsGetHistoryError,
+			Content: consts.GetErrorCodeMsg(consts.WsGetHistoryError),
 		}
 		msg, _ := protojson.Marshal(&replyMSg)
 		broadcast.Clients.Send <- msg
@@ -312,8 +312,8 @@ func (ws *WebsocketService) startBroadcastGroupOnline(groupBroadcast *GroupBroad
 func (ws *WebsocketService) startBroadcastOneError(broadcast *Broadcast) {
 	replyMSg := chat.ReplyMsg{
 		From:    "system",
-		Code:    consts.Success,
-		Content: "请求类型不存在",
+		Code:    consts.WsReqValidError,
+		Content: consts.GetErrorCodeMsg(consts.WsReqValidError),
 	}
 	log.Println("请求类型不存在")
 	msg, _ := protojson.Marshal(&replyMSg)
@@ -324,8 +324,8 @@ func (ws *WebsocketService) aiReplyToClient(resp string, c *Client) {
 	if resp == "" {
 		replyMSg := chat.ReplyMsg{
 			From:    "AI",
-			Code:    consts.Success,
-			Content: "ai不理你",
+			Code:    consts.WsAIReplyEmpty,
+			Content: consts.GetErrorCodeMsg(consts.WsAIReplyEmpty),
 		}
 		msg, _ := protojson.Marshal(&replyMSg)
 		c.Send <- msg

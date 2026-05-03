@@ -26,7 +26,7 @@ var (
 )
 
 type UserSever interface {
-	Register(registerReq *user.RegisterReq) (int32, error)
+	Register(userName string, password string) (int32, error)
 	Login(username, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error)
 	UserInfo(userId string) (*user.UserInfo, int32, error)
 	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error)
@@ -56,7 +56,7 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err := h.userService.Register(&req)
+	code, err := h.userService.Register(req.UserName, req.Password)
 	if err != nil {
 		log.Println("userService.Register error:", err)
 	}

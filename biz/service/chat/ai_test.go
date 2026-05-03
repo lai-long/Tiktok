@@ -1,4 +1,4 @@
-package ai
+package chat
 
 import (
 	"Tiktok/pkg/config"

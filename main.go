@@ -14,13 +14,13 @@ import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
 
+	ws "Tiktok/biz/service/chat"
 	commentService "Tiktok/biz/service/comment"
 	likeService "Tiktok/biz/service/like"
 	mfaService "Tiktok/biz/service/mfa"
 	socialService "Tiktok/biz/service/social"
 	userService "Tiktok/biz/service/user"
 	videoService "Tiktok/biz/service/video"
-	ws "Tiktok/biz/service/websocket"
 	"Tiktok/pkg/config"
 
 	"log"
