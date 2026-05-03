@@ -16,7 +16,6 @@ linters:
     - gocritic
     - lll
     - prealloc
-    - errorlint
     - exhaustive
     - nestif
     - interfacebloat
