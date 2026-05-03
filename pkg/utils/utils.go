@@ -44,8 +44,8 @@ func HashPassword(password string) (string, error) {
 }
 
 // CheckPasswordHash 检测密码
-func CheckPasswordHash(password, hash string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(hash))
+func CheckPasswordHash(hash, password string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return errors.Wrap(err, "CheckPasswordHash error")
 }
 
