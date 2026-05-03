@@ -116,8 +116,6 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-//func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error) {
-
 func TestLogin(t *testing.T) {
 	_, err := config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
 	if err != nil {
