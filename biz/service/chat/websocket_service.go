@@ -4,7 +4,6 @@ import (
 	"Tiktok/biz/dal/cache"
 	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/model/chat"
-	"Tiktok/biz/service/ai"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/utils"
 	"context"
@@ -72,7 +71,7 @@ func (ws *WebsocketService) Read(c *Client) {
 		}
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
-			agent := ai.NewAgent(context.Background())
+			agent := NewAgent(context.Background())
 			go func(q string) {
 				resp := agent.StartAction(question)
 				ws.aiReplyToClient(resp, c)

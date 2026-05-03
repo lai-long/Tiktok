@@ -121,12 +121,12 @@ func (c *ChatClient) Close() {
 }
 
 type Agent struct {
-	chatCli *chat.ChatClient
+	chatCli *ChatClient
 	ctx     context.Context
 }
 
 func NewAgent(ctx context.Context) *Agent {
-	llm, err := chat.NewChatClient(ctx)
+	llm, err := NewChatClient(ctx)
 	if err != nil {
 		log.Println("mcp NewChatClient fail", err)
 		return nil
