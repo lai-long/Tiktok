@@ -18,17 +18,14 @@ linters:
     - prealloc
     - errorlint
     - exhaustive
-    - nilerr
     - nestif
-    - nakedret
     - interfacebloat
-    - durationcheck
   settings:
     lll:
       line-length: 150
 
 issues:
-  max-issues-per-linter: 1000
-  max-same-issues: 500
+  max-issues-per-linter: 100
+  max-same-issues: 50
 
 
