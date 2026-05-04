@@ -14,6 +14,7 @@ import (
 
 	"Tiktok/pkg/consts"
 
+	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -45,9 +46,15 @@ func NewUserHandler(userService *userService.UserRepo) *UserHandler {
 // UserRegister .
 // @router /user/register [POST]
 func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/user/register")
+	if blockErr != nil {
+		c.JSON(200, &user.RegisterResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req user.RegisterReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		code := consts.UserReqValidError
 		resp := &user.RegisterResp{
@@ -68,9 +75,15 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 // UserLogin .
 // @router /user/login [POST]
 func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/user/login")
+	if blockErr != nil {
+		c.JSON(200, &user.LoginResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req user.LoginReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("userService.Login bind error:", err)
 		resp := &user.LoginResp{
@@ -95,9 +108,15 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 // UserInfo .
 // @router /user/info [GET]
 func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/user/info")
+	if blockErr != nil {
+		c.JSON(200, &user.UserInfoResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req user.UserInfoReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("userService.Login bind error:", err)
 		resp := &user.UserInfoResp{
@@ -123,9 +142,15 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 // UserAvatar .
 // @router /user/avatar/upload [PUT]
 func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/user/avatar/upload")
+	if blockErr != nil {
+		c.JSON(200, &user.UserAvatarResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req user.UserAvatarReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("userService.UserAvatar bind req error:", err)
 		resp := &user.UserAvatarResp{
@@ -158,9 +183,15 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 // RefreshToken .
 // @router /user/refresh [POST]
 func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/user/refresh")
+	if blockErr != nil {
+		c.JSON(200, &user.RefreshTokenResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req user.RefreshTokenReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("userService.RefreshToken bind req error:", err)
 		resp := &user.RefreshTokenResp{
