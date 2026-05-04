@@ -4,8 +4,9 @@ import (
 	"log"
 	"sync"
 
+	"github.com/alibaba/sentinel-golang/core/circuitbreaker"
+	"github.com/alibaba/sentinel-golang/core/flow"
 	"github.com/fsnotify/fsnotify"
-	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
@@ -83,9 +84,6 @@ var lock sync.RWMutex
 
 // Load 加载配置
 func Load(confPath []string) (*Config, error) {
-	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		log.Println("load env error:", err)
-	}
 	v := viper.New()
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
@@ -148,4 +146,118 @@ func Load(confPath []string) (*Config, error) {
 	})
 	log.Println("config init successfully")
 	return &cfg, nil
+}
+
+type FlowRuleConfig struct {
+	Resource          string `mapstructure:"resource"`
+	Threshold         int    `mapstructure:"threshold"`
+	ControlBehavior   int    `mapstructure:"controlBehavior"`
+	MaxQueueingTimeMs uint32 `mapstructure:"maxQueueingTimeMs"`
+	WarmUpPeriodSec   uint32 `mapstructure:"warmUpPeriodSec"`
+}
+
+type CircuitBreakerConfig struct {
+	Resource         string  `mapstructure:"resource"`
+	Threshold        float64 `mapstructure:"threshold"`
+	Strategy         string  `mapstructure:"strategy"`
+	RetryTimeoutMs   uint32  `mapstructure:"retryTimeoutMs"`
+	MinRequestAmount uint64  `mapstructure:"minRequestAmount"`
+	MaxAllowedRtMs   uint64  `mapstructure:"maxAllowedRtMs"`
+}
+
+type RulesConfig struct {
+	Flow           []FlowRuleConfig       `mapstructure:"flow"`
+	CircuitBreaker []CircuitBreakerConfig `mapstructure:"circuitBreaker"`
+}
+
+func LoadRules(configPath []string) error {
+	v := viper.New()
+	v.SetConfigName("sentinel")
+	v.SetConfigType("yaml")
+	for _, p := range configPath {
+		v.AddConfigPath(p)
+	}
+	if err := v.ReadInConfig(); err != nil {
+		return errors.Wrap(err, "failed to read config")
+	}
+	var cfg RulesConfig
+	if err := v.Unmarshal(&cfg); err != nil {
+		return errors.Wrap(err, "failed to unmarshal config")
+	}
+	if err := loadFlowRules(cfg.Flow); err != nil {
+		return errors.Wrap(err, "failed to load flow rules")
+	}
+	if err := loadCircuitBreakerRules(cfg.CircuitBreaker); err != nil {
+		return errors.Wrap(err, "failed to load circuit breaker rules")
+	}
+	log.Println("Sentinel rules loaded successfully")
+	return nil
+}
+
+func loadFlowRules(flowRules []FlowRuleConfig) error {
+	if len(flowRules) == 0 {
+		return nil
+	}
+	sentinelRules := make([]*flow.Rule, 0, len(flowRules))
+	for _, r := range flowRules {
+		rule := &flow.Rule{
+			Resource:        r.Resource,
+			Threshold:       float64(r.Threshold),
+			ControlBehavior: flow.ControlBehavior(r.ControlBehavior),
+		}
+		switch flow.ControlBehavior(r.ControlBehavior) {
+		case flow.Throttling:
+			rule.MaxQueueingTimeMs = r.MaxQueueingTimeMs
+		case flow.Reject:
+			if r.WarmUpPeriodSec > 0 {
+				rule.TokenCalculateStrategy = flow.WarmUp
+				rule.WarmUpPeriodSec = r.WarmUpPeriodSec
+			}
+		}
+		sentinelRules = append(sentinelRules, rule)
+	}
+	_, err := flow.LoadRules(sentinelRules)
+	if err != nil {
+		return errors.Wrap(err, "failed to load flow rules")
+	}
+	log.Printf("loaded %d flow rules", len(sentinelRules))
+	return nil
+}
+
+func loadCircuitBreakerRules(cbRules []CircuitBreakerConfig) error {
+	if len(cbRules) == 0 {
+		return nil
+	}
+	sentinelRules := make([]*circuitbreaker.Rule, 0, len(cbRules))
+	for _, r := range cbRules {
+		rule := &circuitbreaker.Rule{
+			Resource:         r.Resource,
+			Threshold:        r.Threshold,
+			Strategy:         parseStrategy(r.Strategy),
+			RetryTimeoutMs:   r.RetryTimeoutMs,
+			MinRequestAmount: r.MinRequestAmount,
+			MaxAllowedRtMs:   r.MaxAllowedRtMs,
+		}
+		sentinelRules = append(sentinelRules, rule)
+	}
+	_, err := circuitbreaker.LoadRules(sentinelRules)
+	if err != nil {
+		return errors.Wrap(err, "failed to load circuit breaker rules")
+	}
+
+	log.Printf("loaded %d circuit breaker rules", len(sentinelRules))
+	return nil
+}
+
+func parseStrategy(s string) circuitbreaker.Strategy {
+	switch s {
+	case "slowRequestRatio":
+		return circuitbreaker.SlowRequestRatio
+	case "errorRatio":
+		return circuitbreaker.ErrorRatio
+	case "errorCount":
+		return circuitbreaker.ErrorCount
+	default:
+		return circuitbreaker.SlowRequestRatio
+	}
 }

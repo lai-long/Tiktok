@@ -1,0 +1,276 @@
+flow:
+  - resource: "/user/register"
+    threshold: 50
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/user/login"
+    threshold: 100
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/user/info"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/user/avatar/upload"
+    threshold: 20
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/user/refresh"
+    threshold: 100
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/video/publish"
+    threshold: 10
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/video/list"
+    threshold: 300
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/video/search"
+    threshold: 100
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/video/popular"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/video/feed"
+    threshold: 500
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/relation/action"
+    threshold: 50
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/following/list"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/follower/list"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/friend/list"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/like/action"
+    threshold: 100
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/like/list"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/comment/publish"
+    threshold: 50
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/comment/list"
+    threshold: 200
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/comment/delete"
+    threshold: 50
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/auth/mfa/qrcode"
+    threshold: 20
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+  - resource: "/auth/mfa/bind"
+    threshold: 20
+    controlBehavior: 0
+    maxQueueingTimeMs: 0
+    warmUpPeriodSec: 0
+
+
+circuitBreaker:
+
+  - resource: "/user/register"
+    threshold: 0.3
+    strategy: errorRatio
+    retryTimeoutMs: 5000
+    minRequestAmount: 10
+    maxAllowedRtMs: 0
+
+  - resource: "/user/login"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/user/info"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/user/avatar/upload"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 5000
+    minRequestAmount: 3
+    maxAllowedRtMs: 3000
+
+  - resource: "/user/refresh"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 500
+
+  - resource: "/video/publish"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 5000
+    minRequestAmount: 3
+    maxAllowedRtMs: 5000
+
+  - resource: "/video/list"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/video/search"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 2000
+
+  - resource: "/video/popular"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 2000
+
+  - resource: "/video/feed"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 10
+    maxAllowedRtMs: 2000
+
+  - resource: "/relation/action"
+    threshold: 0.3
+    strategy: errorRatio
+    retryTimeoutMs: 5000
+    minRequestAmount: 5
+    maxAllowedRtMs: 0
+
+  - resource: "/following/list"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/follower/list"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/friend/list"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/like/action"
+    threshold: 0.3
+    strategy: errorRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 0
+
+  - resource: "/like/list"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/comment/publish"
+    threshold: 0.3
+    strategy: errorRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 0
+
+  - resource: "/comment/list"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/comment/delete"
+    threshold: 0.3
+    strategy: errorRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 0
+
+  - resource: "/auth/mfa/qrcode"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 1000
+
+  - resource: "/auth/mfa/bind"
+    threshold: 0.3
+    strategy: errorRatio
+    retryTimeoutMs: 3000
+    minRequestAmount: 5
+    maxAllowedRtMs: 0

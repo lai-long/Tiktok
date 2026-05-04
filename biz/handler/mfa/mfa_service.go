@@ -12,6 +12,7 @@ import (
 
 	"Tiktok/pkg/consts"
 
+	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -38,9 +39,15 @@ func NewMfaHandler(mfaService MfaServer) *MfaHandler {
 // MfaQrcode .
 // @router /auth/mfa/qrcode [GET]
 func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/auth/mfa/qrcode")
+	if blockErr != nil {
+		c.JSON(200, &mfa.MfaQrcodeResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req mfa.MfaQrcodeReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError},
@@ -64,9 +71,15 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 // MfaBind .
 // @router /auth/mfa/bind [POST]
 func (h *MfaHandler) MfaBind(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/auth/mfa/bind")
+	if blockErr != nil {
+		c.JSON(200, &mfa.MfaBindResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req mfa.MfaBindReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError},

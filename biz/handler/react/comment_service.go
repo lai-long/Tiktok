@@ -11,6 +11,7 @@ import (
 
 	"Tiktok/pkg/consts"
 
+	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -38,6 +39,13 @@ var (
 // CommentPublish .
 // @router /comment/publish [POST]
 func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestContext) {
+	entry, blockErr := api.Entry("/comment/publish")
+	if blockErr != nil {
+		c.JSON(200, &react.CommentPublishResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req react.CommentPublishReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -61,6 +69,13 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 // CommentList .
 // @router /comment/list [GET]
 func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext) {
+	entry, blockErr := api.Entry("/comment/list")
+	if blockErr != nil {
+		c.JSON(200, &react.CommentListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req react.CommentListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -84,9 +99,15 @@ func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext)
 // CommentDelete .
 // @router /comment/delete [DELETE]
 func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/comment/delete")
+	if blockErr != nil {
+		c.JSON(200, &react.CommentDeleteResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req react.CommentDeleteReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &react.CommentPublishResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},

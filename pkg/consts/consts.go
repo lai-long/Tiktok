@@ -3,9 +3,10 @@ package consts
 
 // 00通用
 const (
-	Success   int32 = 0
-	FileError int32 = 100002 // FILE错误
-	IOOsError int32 = 200003 // io os错误
+	Success       int32 = 0
+	FileError     int32 = 100002 // FILE错误
+	IOOsError     int32 = 200003 // io os错误
+	SentinelBlock int32 = 100003 // sentinel限流
 )
 
 // 01 用户模块
@@ -77,6 +78,7 @@ var mapErrorMsg = map[int32]string{
 	Success:             "success",
 	FileError:           "FILE错误",
 	IOOsError:           "io os错误",
+	SentinelBlock:       "sentinel限流",
 	UserNameExists:      "用户名已存在",
 	UserPasswordError:   "密码错误",
 	UserNotExists:       "用户不存在",
