@@ -7,7 +7,7 @@ import (
 	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
-	ws "Tiktok/biz/service/websocket"
+	ws "Tiktok/biz/service/chat"
 	"Tiktok/pkg/utils"
 	"context"
 	"log"

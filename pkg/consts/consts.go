@@ -3,9 +3,10 @@ package consts
 
 // 00通用
 const (
-	Success   int32 = 0
-	FileError int32 = 100002 // FILE错误
-	IOOsError int32 = 200003 // io os错误
+	Success       int32 = 0
+	FileError     int32 = 100002 // FILE错误
+	IOOsError     int32 = 200003 // io os错误
+	SentinelBlock int32 = 100003 // sentinel限流
 )
 
 // 01 用户模块
@@ -61,10 +62,23 @@ const (
 	SocialDBSelectError int32 = 204005 // 社交模块模块数据库select错误
 )
 
+// 05 websocket模块
+const (
+	WsReqValidError   int32 = 105001 // websocket参数错误
+	WsClientNotOnline int32 = 105002 // 对方不在线
+	WsClientOnline    int32 = 105003 // 对方在线
+	WsDisconnect      int32 = 105004 // 连接中断
+	WsConnectSuccess  int32 = 105005 // 连接成功
+	WsAIReplyEmpty    int32 = 105006 // AI无响应
+	WsGetOfflineError int32 = 205001 // 获取离线消息错误
+	WsGetHistoryError int32 = 205002 // 获取历史消息错误
+)
+
 var mapErrorMsg = map[int32]string{
 	Success:             "success",
 	FileError:           "FILE错误",
 	IOOsError:           "io os错误",
+	SentinelBlock:       "sentinel限流",
 	UserNameExists:      "用户名已存在",
 	UserPasswordError:   "密码错误",
 	UserNotExists:       "用户不存在",
@@ -102,6 +116,14 @@ var mapErrorMsg = map[int32]string{
 	SocialDBUpdateError: "社交模块模块数据库update错误",
 	SocialDBDeleteError: "社交模块模块数据库delete错误",
 	SocialDBSelectError: "社交模块模块数据库select错误",
+	WsReqValidError:     " websocket参数错误",
+	WsClientNotOnline:   " 对方不在线",
+	WsClientOnline:      " 对方在线",
+	WsDisconnect:        " 连接中断",
+	WsConnectSuccess:    " 连接成功",
+	WsAIReplyEmpty:      " AI无响应",
+	WsGetOfflineError:   " 获取离线消息错误",
+	WsGetHistoryError:   " 获取历史消息错误",
 }
 
 // GetErrorCodeMsg 根据code获取对应错误信息

@@ -74,6 +74,7 @@ func (s *LikeRepo) LikeAction(userId string, targetId string, action string, tar
 			if err != nil {
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount up error")
 			}
+			return consts.Success, nil
 		case "2":
 			err := s.likeDb.LikeDelete(userId, targetId, targetType)
 			if err != nil {
@@ -83,13 +84,13 @@ func (s *LikeRepo) LikeAction(userId string, targetId string, action string, tar
 			if err != nil {
 				return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount down error")
 			}
+			return consts.Success, nil
 		default:
 			return consts.ReactReqValueError, errors.New("->LikeAction action type error")
 		}
 	default:
 		return consts.ReactReqValueError, errors.New("->LikeAction targetType is not valid")
 	}
-	return consts.ReactReqValueError, nil
 }
 
 func (s *LikeRepo) LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {

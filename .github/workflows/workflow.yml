@@ -4,8 +4,6 @@ on:
   push:
   pull_request:
     branches: [main]
-  schedule:
-    - cron: '0 2 * * 0'
 jobs:
   golangci-lint:
     name: Lint Code
@@ -26,11 +24,9 @@ jobs:
       security-events: write
       actions: read
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:

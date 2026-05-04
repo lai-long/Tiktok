@@ -53,10 +53,10 @@ func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
 	return true, nil
 }
 
-func (s *UserRepo) Register(userinfo *user.RegisterReq) (int32, error) {
+func (s *UserRepo) Register(userName string, password string) (int32, error) {
 	var userEntity entity.UserEntity
 	var err error
-	exists, err := s.IsUsernameExists(userinfo.UserName)
+	exists, err := s.IsUsernameExists(userName)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "IsUsernameExists error")
 	}
@@ -64,8 +64,8 @@ func (s *UserRepo) Register(userinfo *user.RegisterReq) (int32, error) {
 		return consts.UserNameExists, nil
 	}
 	userEntity.ID = utils.IDGenerate()
-	userEntity.Username = userinfo.UserName
-	userEntity.Password, err = utils.HashPassword(userinfo.Password)
+	userEntity.Username = userName
+	userEntity.Password, err = utils.HashPassword(password)
 	if err != nil {
 		return consts.UserHashError, errors.Wrap(err, "utils.HashPassword error")
 	}

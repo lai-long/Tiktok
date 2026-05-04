@@ -13,6 +13,7 @@ import (
 
 	"Tiktok/pkg/consts"
 
+	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -40,9 +41,15 @@ var (
 // RelationAction .
 // @router /relation/action [POST]
 func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/relation/action")
+	if blockErr != nil {
+		c.JSON(200, &social.RelationActionResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req social.RelationActionReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &social.RelationActionResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -63,9 +70,15 @@ func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContex
 // FollowingList .
 // @router /following/list [GET]
 func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/following/list")
+	if blockErr != nil {
+		c.JSON(200, &social.FollowingListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req social.FollowingListReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &social.RelationActionResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -87,9 +100,15 @@ func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext
 // FollowerList .
 // @router /follower/list [GET]
 func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/follower/list")
+	if blockErr != nil {
+		c.JSON(200, &social.FollowingListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req social.FollowerListReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &social.RelationActionResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -111,9 +130,15 @@ func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext)
 // FriendList .
 // @router /friend/list [GET]
 func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/friend/list")
+	if blockErr != nil {
+		c.JSON(200, &social.FollowingListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req social.FriendListReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &social.RelationActionResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},

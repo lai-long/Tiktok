@@ -12,6 +12,7 @@ import (
 
 	"Tiktok/pkg/consts"
 
+	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -41,9 +42,15 @@ var (
 // VideoPublish .
 // @router /video/publish [POST]
 func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/video/publish")
+	if blockErr != nil {
+		c.JSON(200, &video.VideoPublishResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req video.VideoPublishReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("video publish  bind err:", err)
 		resp := &video.VideoPublishResp{
@@ -74,9 +81,15 @@ func (h *VideoHandler) VideoPublish(ctx context.Context, c *app.RequestContext) 
 // VideoList .
 // @router /video/list [GET]
 func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/video/list")
+	if blockErr != nil {
+		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req video.VideoListReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("video list  bind err:", err)
 		resp := &video.VideoPublishResp{
@@ -99,9 +112,15 @@ func (h *VideoHandler) VideoList(ctx context.Context, c *app.RequestContext) {
 // VideoSearch .
 // @router /video/search [POST]
 func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/video/search")
+	if blockErr != nil {
+		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req video.VideoSearchReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("video search  bind err:", err)
 		resp := &video.VideoPublishResp{
@@ -124,9 +143,15 @@ func (h *VideoHandler) VideoSearch(ctx context.Context, c *app.RequestContext) {
 // VideoPopular .
 // @router /video/popular [GET]
 func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/video/popular")
+	if blockErr != nil {
+		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req video.VideoHotReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("video popular  bind err:", err)
 		resp := &video.VideoPublishResp{
@@ -149,9 +174,15 @@ func (h *VideoHandler) VideoPopular(ctx context.Context, c *app.RequestContext) 
 // VideoStream .
 // @router /video/feed [GET]
 func (h *VideoHandler) VideoStream(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/video/feed")
+	if blockErr != nil {
+		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req video.VideoStreamReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		log.Println("video stream  bind err:", err)
 		resp := &video.VideoPublishResp{

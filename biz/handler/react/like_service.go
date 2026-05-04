@@ -13,6 +13,7 @@ import (
 
 	"Tiktok/pkg/consts"
 
+	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -39,10 +40,15 @@ var (
 // LikeAction .
 // @router /like/action [POST]
 func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
-	// targetType 1、视频 2、评论
-	var err error
+	entry, blockErr := api.Entry("/like/action")
+	if blockErr != nil {
+		c.JSON(200, &react.LikeActionResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req react.LikeActionReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &react.CommentPublishResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
@@ -70,9 +76,15 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 // LikeList .
 // @router /like/list [GET]
 func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
-	var err error
+	entry, blockErr := api.Entry("/like/list")
+	if blockErr != nil {
+		c.JSON(200, &react.LikeListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
+		return
+	}
+	defer entry.Exit()
+
 	var req react.LikeListReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &react.CommentPublishResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
