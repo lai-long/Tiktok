@@ -62,7 +62,14 @@ func (m *MockUser) CheckMfaBind(userId string) (int, error) {
 	args := m.Called(userId)
 	return args.Int(0), args.Error(1)
 }
-
+func (m *MockUser) GetCachedUserInfo(ctx context.Context, userId string) (*entity.UserEntity, error) {
+	args := m.Called(ctx, userId)
+	return args.Get(0).(*entity.UserEntity), args.Error(1)
+}
+func (m *MockUser) SetCachedUserInfo(ctx context.Context, userId string, info *entity.UserEntity) error {
+	args := m.Called(ctx, userId, info)
+	return args.Error(0)
+}
 func TestRegister(t *testing.T) {
 	tests := []struct {
 		name     string
