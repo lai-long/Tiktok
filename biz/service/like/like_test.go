@@ -152,7 +152,7 @@ func TestLikeAction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
-			like := NewLikeRepo(mockLike, mockLike, mockLike)
+			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
 			code, err := like.LikeAction(tt.userId, tt.targetId, tt.action, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -211,7 +211,7 @@ func TestLikeList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
-			like := NewLikeRepo(mockLike, mockLike, mockLike)
+			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
 			code, _, err := like.LikeList(tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)

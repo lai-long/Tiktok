@@ -29,7 +29,7 @@ var (
 type UserSever interface {
 	Register(userName string, password string) (int32, error)
 	Login(username, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error)
-	UserInfo(userId string) (*user.UserInfo, int32, error)
+	UserInfo(ctx context.Context, userId string) (*user.UserInfo, int32, error)
 	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error)
 	RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error)
 }
@@ -125,7 +125,7 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userInfo, code, err := h.userService.UserInfo(req.UserId)
+	userInfo, code, err := h.userService.UserInfo(ctx, req.UserId)
 	if err != nil {
 		log.Println("userService.UserInfo error:", err)
 	}

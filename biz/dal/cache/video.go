@@ -1,8 +1,13 @@
 package cache
 
 import (
+	"Tiktok/biz/entity"
 	"context"
+	"encoding/json"
+	"math/rand"
+	"time"
 
+	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -21,4 +26,31 @@ func (rdb *Redis) VideoHotGet(ctx context.Context, key string, pageNum int64, pa
 		return nil, err
 	}
 	return z, nil
+}
+
+func (rdb *Redis) VideoInfoSet(ctx context.Context, VideoID string, video *entity.VideoEntity) error {
+	data, err := json.Marshal(video)
+	if err != nil {
+		return errors.Wrap(err, "json marshal")
+	}
+	duration := 30*time.Minute + time.Duration(rand.Intn(5))*time.Second
+	key := "video:info:" + VideoID
+	err = rdb.redis.Set(ctx, key, data, duration).Err()
+	if err != nil {
+		return errors.Wrap(err, "set cache video")
+	}
+	return nil
+}
+func (rdb *Redis) VideoInfoGet(ctx context.Context, VideoID string) (*entity.VideoEntity, error) {
+	key := "video:info:" + VideoID
+	data, err := rdb.redis.Get(ctx, key).Bytes()
+	if err != nil {
+		return nil, errors.Wrap(err, "get cache video")
+	}
+	var videoEntity entity.VideoEntity
+	err = json.Unmarshal(data, &videoEntity)
+	if err != nil {
+		return nil, errors.Wrap(err, "json unmarshal")
+	}
+	return &videoEntity, nil
 }
