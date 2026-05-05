@@ -23,6 +23,8 @@ type UserRedis interface {
 	UserTokenSet(ctx context.Context, refreshToken string, userId string) error
 	UserGetByRefreshToken(ctx context.Context, refreshToken string) (userId string, err error)
 	UserTokenDelete(ctx context.Context, refreshToken string) error
+	GetCachedUserInfo(ctx context.Context, userId string) (*entity.UserEntity, error)
+	SetCachedUserInfo(ctx context.Context, userId string, info *entity.UserEntity) error
 }
 
 type UserDatabase interface {
@@ -115,12 +117,20 @@ func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context
 	return consts.Success, userInfo, reToken, acToken, nil
 }
 
-func (s *UserRepo) UserInfo(userId string) (*user.UserInfo, int32, error) {
-	userEntity, err := s.userDb.GetUserByUserId(userId)
+func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo, int32, error) {
+	userEntity, err := s.redis.GetCachedUserInfo(ctx, userId)
+	if err == nil && userEntity != nil {
+		return userEntity.ToUserInfo(), consts.Success, nil
+	}
+	userEntity2, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo GetUserByUserId error")
 	}
-	userInfo := userEntity.ToUserInfo()
+	userInfo := userEntity2.ToUserInfo()
+	err = s.redis.SetCachedUserInfo(ctx, userId, &userEntity2)
+	if err != nil {
+		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo SetCachedUserInfo error")
+	}
 	return userInfo, consts.Success, nil
 }
 

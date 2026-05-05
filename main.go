@@ -99,7 +99,7 @@ func main() {
 	react.CommentPublish = commentHandler.CommentPublish
 	react.CommentList = commentHandler.CommentList
 
-	likeSrv := likeService.NewLikeRepo(mysqlDb, mysqlDb, mysqlDb)
+	likeSrv := likeService.NewLikeRepo(mysqlDb, mysqlDb, mysqlDb, re)
 	likeHandler := react.NewLikesHandler(likeSrv)
 	react.LikeList = likeHandler.LikeList
 	react.LikeAction = likeHandler.LikeAction
