@@ -28,21 +28,21 @@ func (rdb *Redis) VideoHotGet(ctx context.Context, key string, pageNum int64, pa
 	return z, nil
 }
 
-func (rdb *Redis) VideoInfoSet(ctx context.Context, VideoID string, video *entity.VideoEntity) error {
+func (rdb *Redis) VideoInfoSet(ctx context.Context, videoID string, video *entity.VideoEntity) error {
 	data, err := json.Marshal(video)
 	if err != nil {
 		return errors.Wrap(err, "json marshal")
 	}
 	duration := 30*time.Minute + time.Duration(rand.Intn(5))*time.Second
-	key := "video:info:" + VideoID
+	key := "video:info:" + videoID
 	err = rdb.redis.Set(ctx, key, data, duration).Err()
 	if err != nil {
 		return errors.Wrap(err, "set cache video")
 	}
 	return nil
 }
-func (rdb *Redis) VideoInfoGet(ctx context.Context, VideoID string) (*entity.VideoEntity, error) {
-	key := "video:info:" + VideoID
+func (rdb *Redis) VideoInfoGet(ctx context.Context, videoID string) (*entity.VideoEntity, error) {
+	key := "video:info:" + videoID
 	data, err := rdb.redis.Get(ctx, key).Bytes()
 	if err != nil {
 		return nil, errors.Wrap(err, "get cache video")
