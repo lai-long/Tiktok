@@ -19,6 +19,8 @@ import (
 type VideoRedis interface {
 	VideoHotSet(ctx context.Context, key string, member interface{}, score float64) error
 	VideoHotGet(ctx context.Context, key string, pageNum int64, pageSize int64) ([]redis.Z, error)
+	VideoInfoSet(ctx context.Context, VideoID string, video *entity.VideoEntity) error
+	VideoInfoGet(ctx context.Context, VideoID string) (*entity.VideoEntity, error)
 }
 type VideoDatabase interface {
 	CreatVideo(entity entity.VideoEntity) error
@@ -67,6 +69,7 @@ func (s *VideoRepo) VideoPublish(videoInfo *video.VideoInfo, data *multipart.Fil
 	if err != nil {
 		return consts.VideoDBInsertError, errors.Wrap(err, "->VideoPublish create video err")
 	}
+	_ = s.VideoRedis.VideoInfoSet(ctx, videoEntity.ID, &videoEntity)
 	return consts.Success, nil
 }
 
@@ -101,9 +104,15 @@ func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize in
 	}
 	videoEntity := make([]entity.VideoEntity, len(z))
 	for i := range z {
-		videoEntity[i], err = s.videoDb.GetVideoByVideoId(z[i].Member.(string))
-		if err != nil {
-			return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video popular select video")
+		videoEntityTemp, err := s.VideoRedis.VideoInfoGet(ctx, z[i].Member.(string))
+		if err == nil {
+			videoEntity[i] = *videoEntityTemp
+		} else {
+			videoEntity[i], err = s.videoDb.GetVideoByVideoId(z[i].Member.(string))
+			if err != nil {
+				return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video popular select video")
+			}
+			_ = s.VideoRedis.VideoInfoSet(ctx, z[i].Member.(string), &videoEntity[i])
 		}
 	}
 	var videoInfos []*video.VideoInfo

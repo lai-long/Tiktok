@@ -2,6 +2,7 @@ package like
 
 import (
 	"Tiktok/biz/entity"
+	"context"
 
 	"Tiktok/pkg/consts"
 	"errors"
@@ -42,6 +43,16 @@ func (m *MockLike) LikeCreate(userId string, targetID string, targetType string)
 func (m *MockLike) LikeDelete(userId, targetId string, targetType string) error {
 	args := m.Called(userId, targetId, targetType)
 	return args.Error(0)
+}
+func (m *MockLike) VideoLikeSAdd(ctx context.Context, userId string, videoId string) error {
+	return nil
+}
+func (m *MockLike) VideoDislikeSRem(ctx context.Context, userId string, videoId string) error {
+	return nil
+}
+func (m *MockLike) VideoLikeGet(ctx context.Context, userId string) ([]string, error) {
+	args := m.Called(ctx, userId)
+	return args.Get(0).([]string), args.Error(1)
 }
 
 type MockLike struct {
@@ -152,8 +163,8 @@ func TestLikeAction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
-			like := NewLikeRepo(mockLike, mockLike, mockLike)
-			code, err := like.LikeAction(tt.userId, tt.targetId, tt.action, tt.targetType)
+			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
+			code, err := like.LikeAction(context.Background(), tt.userId, tt.targetId, tt.action, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockLike.AssertExpectations(t)
@@ -177,6 +188,7 @@ func TestLikeList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetUp: func(m *MockLike) {
+				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
 				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
 				m.On("LikeVideos", []string{"1", "2"}).Return(true, []entity.VideoEntity{})
 			},
@@ -189,6 +201,7 @@ func TestLikeList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetUp: func(m *MockLike) {
+				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
 				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, errors.New("fail"))
 			},
 			wantErr:  true,
@@ -200,6 +213,7 @@ func TestLikeList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetUp: func(m *MockLike) {
+				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
 				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
 				m.On("LikeVideos", []string{"1", "2"}).Return(false, []entity.VideoEntity{})
 			},
@@ -211,8 +225,8 @@ func TestLikeList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
-			like := NewLikeRepo(mockLike, mockLike, mockLike)
-			code, _, err := like.LikeList(tt.userId, tt.pageNum, tt.pageSize)
+			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
+			code, _, err := like.LikeList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockLike.AssertExpectations(t)

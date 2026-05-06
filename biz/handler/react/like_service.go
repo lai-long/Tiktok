@@ -18,8 +18,8 @@ import (
 )
 
 type LikeSever interface {
-	LikeAction(userId string, videoId string, action string, targetType string) (int32, error)
-	LikeList(userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error)
+	LikeAction(ctx context.Context, userId string, videoId string, action string, targetType string) (int32, error)
+	LikeList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error)
 }
 
 type LikesHandler struct {
@@ -64,7 +64,7 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 		return
 	}
-	code, err := h.likeService.LikeAction(userId, req.TargetAt, req.ActionType, req.TargetType)
+	code, err := h.likeService.LikeAction(ctx, userId, req.TargetAt, req.ActionType, req.TargetType)
 	if err != nil {
 		log.Println("likeService.LikeAction:", err)
 	}
@@ -92,7 +92,7 @@ func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, videoInfos, err := h.likeService.LikeList(req.UserId, req.PageNum, req.PageSize)
+	code, videoInfos, err := h.likeService.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
 	if err != nil {
 		log.Println("likeService.LikeList:", err)
 	}

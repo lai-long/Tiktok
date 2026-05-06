@@ -37,7 +37,7 @@ func (m *MySQLdb) GetVideoByVideoId(videoID string) (entity.VideoEntity, error) 
 
 func (m *MySQLdb) GetVideoStream() ([]entity.VideoEntity, error) {
 	var video []entity.VideoEntity
-	sql := `select * from videos  ORDER BY RAND() LIMIT 10`
+	sql := `SELECT * FROM videos ORDER BY created_at DESC LIMIT 10`
 	err := m.db.Select(&video, sql)
 	if err != nil {
 		return video, err
