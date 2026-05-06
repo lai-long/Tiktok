@@ -13,11 +13,10 @@ import (
 	"Tiktok/biz/handler/video"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
+	likeService "Tiktok/biz/service/react"
 	"os"
 
 	ws "Tiktok/biz/service/chat"
-	commentService "Tiktok/biz/service/comment"
-	likeService "Tiktok/biz/service/like"
 	mfaService "Tiktok/biz/service/mfa"
 	socialService "Tiktok/biz/service/social"
 	userService "Tiktok/biz/service/user"
@@ -93,7 +92,7 @@ func main() {
 	socialHandler.FriendList = socialHdlr.FriendList
 	socialHandler.RelationAction = socialHdlr.RelationAction
 
-	commentSrv := commentService.NewCommentService(mysqlDb)
+	commentSrv := likeService.NewCommentService(mysqlDb)
 	commentHandler := react.NewCommentHandler(commentSrv)
 	react.CommentDelete = commentHandler.CommentDelete
 	react.CommentPublish = commentHandler.CommentPublish

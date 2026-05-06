@@ -1,4 +1,4 @@
-package like
+package react
 
 import (
 	"Tiktok/biz/entity"

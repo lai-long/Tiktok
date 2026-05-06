@@ -1,4 +1,4 @@
-package comment
+package react
 
 import (
 	"Tiktok/biz/entity"
