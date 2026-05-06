@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  tiktok:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tiktok
+    ports:
+      - "8888:8888"
+    env_file:
+      - .env
+    volumes:
+#      挂载sentinel.yaml和config.yaml，config.yaml可以自己添加mcp_service
+      - ./pkg/config/config.yaml:/app/config/config.yaml:ro
+      - ./pkg/config/sentinel.yaml:/app/config/sentinel.yaml:ro
+      - tiktok_data:/app/a
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tiktok-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: tiktok-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tiktok
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./pkg/config/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - tiktok-network
+
+  redis:
+    image: redis:7
+    container_name: tiktok-redis
+    command: redis-server --requirepass root
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "root", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - tiktok-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  tiktok_a:
+
+networks:
+  tiktok-network:
+    driver: bridge

@@ -20,7 +20,7 @@
     [x] 刷新token。
 ### 视频模块：
 
-    [] 视频流
+    [x] 视频流
     [x] 发布视频。
     [x] 视频列表。
     [x] 热门排行榜。
@@ -34,7 +34,7 @@
     [x] 删除评论。
 ### 社交模块：
 
-    [ ] websocket聊天(仅实现一对一聊天,在线群聊)
+    [x] websocket聊天(仅实现一对一聊天,在线群聊)
     [x] 关注操作。
     [x] 关注列表。
     [x] 粉丝列表。
@@ -74,25 +74,41 @@
     │   │   ├── user
     │   │   └── video
     │   └── service
-    │       ├── ai
-    │       ├── comment
-    │       ├── like
+    │       ├── chat
     │       ├── mfa
+    │       ├── react
     │       ├── social
     │       ├── user
-    │       ├── video
-    │       └── websocket
-    ├── docs
+    │       └── video
+    ├── build.sh
+    ├── Dockerfile
+    ├── go.mod
+    ├── go.sum
     ├── idl
     ├── mcp_service
+    │   ├── mcp_service
     │   └── tools
     ├── pkg
     │   ├── config
+    │   │   ├── config.example.yaml
+    │   │   ├── config.yaml
+    │   │   ├── init.sql
+    │   │   └── sentinel.yaml
     │   ├── consts
     │   └── utils
-    └── script
+    └── README.md
+
 ## 接口文档
 k7wl3pn34m.apifox.cn
 
+## 快速开始
+一、使用docker快速部署(.env与config.yaml可以自己修改)
+1. 创建环境变量文件
+`    cp .env.example .env `
 
+2. 创建与编辑config.yaml
+`   cp pkg/config/config-docker.example.yaml pkg/config/config.yaml`
 
+3. 启动服务
+`   docker-compose up -d
+`
