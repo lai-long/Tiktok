@@ -69,7 +69,9 @@ func (s *VideoRepo) VideoPublish(videoInfo *video.VideoInfo, data *multipart.Fil
 	if err != nil {
 		return consts.VideoDBInsertError, errors.Wrap(err, "->VideoPublish create video err")
 	}
-	_ = s.VideoRedis.VideoInfoSet(ctx, videoEntity.ID, &videoEntity)
+	go func() {
+		_ = s.VideoRedis.VideoInfoSet(ctx, videoEntity.ID, &videoEntity)
+	}()
 	return consts.Success, nil
 }
 
