@@ -1,18 +1,13 @@
-package user
+package service
 
 import (
-	"Tiktok/biz/entity"
-	"Tiktok/biz/model/user"
 	"Tiktok/biz/service/mfa"
-	"Tiktok/pkg/config"
+	"Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/entity"
 	"Tiktok/pkg/utils"
 	"context"
 	"database/sql"
-	"io"
-	"log"
-	"mime/multipart"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -134,37 +129,12 @@ func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo,
 	return userInfo, consts.Success, nil
 }
 
-func (s *UserRepo) UserAvatar(data *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error) {
-	dataFile, err := data.Open()
-	if err != nil {
-		return consts.IOOsError, &user.UserInfo{}, errors.Wrap(err, "->UserInfo data open 错误")
-	}
-	defer func() {
-		err := dataFile.Close()
-		if err != nil {
-			log.Println(errors.Wrap(err, "-UserInfo data close"))
-		}
-	}()
-	ok, err := utils.IsImage(dataFile)
-	if err != nil {
-		return consts.FileError, &user.UserInfo{}, errors.Wrap(err, "->userInfo check image failed")
-	}
-	if !ok {
-		return consts.ImageFalse, nil, nil
-	}
-	if _, err := dataFile.Seek(0, io.SeekStart); err != nil {
-		return consts.IOOsError, &user.UserInfo{}, errors.Wrap(err, "->userInfo dataFile error")
-	}
-	filename := utils.IDGenerate()
-	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.AvatarPath, filename+filepath.Ext(data.Filename))
-	if err != nil {
-		return code, &user.UserInfo{}, errors.Wrap(err, "->userAvatar")
-	}
-	err = s.userDb.UpdateUserAvatar(config.Cfg.Path.AvatarPath+filename, userId)
+func (s *UserRepo) UserAvatar(url string, userID string) (int32, *user.UserInfo, error) {
+	err := s.userDb.UpdateUserAvatar(url, userID)
 	if err != nil {
 		return consts.UserDBUpdateError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 更新头像错误")
 	}
-	userEntity, err := s.userDb.GetUserByUserId(userId.(string))
+	userEntity, err := s.userDb.GetUserByUserId(userID)
 	if err != nil {
 		return consts.UserDBSelectError, &user.UserInfo{}, errors.Wrap(err, "->userinfo get user by userid failed")
 	}

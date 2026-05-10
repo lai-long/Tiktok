@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"Tiktok/biz/entity"
+	entity2 "Tiktok/pkg/entity"
 	"fmt"
 	"log"
 
@@ -58,8 +58,8 @@ func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]
 	return videoId, errors.Wrap(err, "dao Like video list")
 }
 
-func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity.VideoEntity) {
-	videos := make([]entity.VideoEntity, len(videoId))
+func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity2.VideoEntity) {
+	videos := make([]entity2.VideoEntity, len(videoId))
 	var GetVideoErrors = 0
 	for i := range videos {
 		var err error
@@ -81,9 +81,9 @@ func (m *MySQLdb) CreateComment(commentId string, videoId string, userId string,
 	return err
 }
 
-func (m *MySQLdb) GetComments(targetId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
+func (m *MySQLdb) GetComments(targetId string, pageNum int64, pageSize int64) ([]entity2.CommentEntity, error) {
 	sql := `SELECT * FROM comments WHERE target_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
-	var comments []entity.CommentEntity
+	var comments []entity2.CommentEntity
 	err := m.db.Select(&comments, sql, targetId, pageSize, pageNum*pageSize)
 	return comments, err
 }
@@ -94,9 +94,9 @@ func (m *MySQLdb) CommentDelete(commentId string) error {
 	return err
 }
 
-func (m *MySQLdb) GetCommentById(commentId string) (entity.CommentEntity, error) {
+func (m *MySQLdb) GetCommentById(commentId string) (entity2.CommentEntity, error) {
 	sql := `SELECT * FROM comments WHERE comment_id = ? AND deleted_at IS NULL`
-	var comment entity.CommentEntity
+	var comment entity2.CommentEntity
 	err := m.db.Get(&comment, sql, commentId)
 	return comment, err
 }

@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"Tiktok/biz/entity"
+	"Tiktok/pkg/entity"
 )
 
 func (m *MySQLdb) CreatVideo(entity entity.VideoEntity) error {

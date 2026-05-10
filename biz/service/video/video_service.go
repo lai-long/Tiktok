@@ -1,10 +1,10 @@
 package video
 
 import (
-	"Tiktok/biz/entity"
 	"Tiktok/biz/model/video"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/entity"
 	"Tiktok/pkg/utils"
 	"context"
 	"log"

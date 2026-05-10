@@ -1,10 +1,11 @@
 package social
 
 import (
-	"Tiktok/biz/entity"
 	userModel "Tiktok/biz/model/user"
-	"Tiktok/biz/service/user"
+
+	user "Tiktok/internal/user/service"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/entity"
 
 	"github.com/pkg/errors"
 )
@@ -52,7 +53,15 @@ func (s *SocialRepo) FollowingList(userId string, pageNum int64, pageSize int64)
 	}
 	userInfos := []*userModel.UserInfo{}
 	for i := 0; i < len(followings); i++ {
-		userInfos = append(userInfos, followings[i].ToUserInfo())
+		user2 := &userModel.UserInfo{
+			ID:        followings[i].ToUserInfo().ID,
+			Username:  followings[i].ToUserInfo().Username,
+			AvatarURL: followings[i].ToUserInfo().AvatarURL,
+			CreatedAt: followings[i].ToUserInfo().CreatedAt,
+			UpdatedAt: followings[i].ToUserInfo().UpdatedAt,
+			DeletedAt: followings[i].ToUserInfo().DeletedAt,
+		}
+		userInfos = append(userInfos, user2)
 	}
 	return consts.Success, userInfos, nil
 }
@@ -64,7 +73,15 @@ func (s *SocialRepo) FollowerList(userId string, pageNum int64, pageSize int64) 
 	}
 	userInfos := []*userModel.UserInfo{}
 	for i := 0; i < len(followers); i++ {
-		userInfos = append(userInfos, followers[i].ToUserInfo())
+		user2 := &userModel.UserInfo{
+			ID:        followers[i].ToUserInfo().ID,
+			Username:  followers[i].ToUserInfo().Username,
+			AvatarURL: followers[i].ToUserInfo().AvatarURL,
+			CreatedAt: followers[i].ToUserInfo().CreatedAt,
+			UpdatedAt: followers[i].ToUserInfo().UpdatedAt,
+			DeletedAt: followers[i].ToUserInfo().DeletedAt,
+		}
+		userInfos = append(userInfos, user2)
 	}
 	return consts.Success, userInfos, nil
 }
@@ -76,7 +93,15 @@ func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (i
 	}
 	userInfos := []*userModel.UserInfo{}
 	for i := range entityFriend {
-		userInfos = append(userInfos, entityFriend[i].ToUserInfo())
+		user2 := &userModel.UserInfo{
+			ID:        entityFriend[i].ToUserInfo().ID,
+			Username:  entityFriend[i].ToUserInfo().Username,
+			AvatarURL: entityFriend[i].ToUserInfo().AvatarURL,
+			CreatedAt: entityFriend[i].ToUserInfo().CreatedAt,
+			UpdatedAt: entityFriend[i].ToUserInfo().UpdatedAt,
+			DeletedAt: entityFriend[i].ToUserInfo().DeletedAt,
+		}
+		userInfos = append(userInfos, user2)
 	}
 	return consts.Success, userInfos, nil
 }

@@ -1,8 +1,8 @@
 package react
 
 import (
-	"Tiktok/biz/entity"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/entity"
 	"errors"
 	"testing"
 

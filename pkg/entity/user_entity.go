@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"Tiktok/biz/model/user"
+	"Tiktok/kitex_gen/user"
 	"database/sql"
 	"time"
 )

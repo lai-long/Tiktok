@@ -5,54 +5,23 @@ package user
 import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
-	userService "Tiktok/biz/service/user"
+	"Tiktok/pkg/config"
+	"Tiktok/pkg/utils"
 	"context"
 	"log"
-	"mime/multipart"
+	"path/filepath"
 
-	user "Tiktok/biz/model/user"
-
+	"Tiktok/biz/model/user"
+	Rpc "Tiktok/biz/rpc"
+	user2 "Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
 
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-var (
-	UserInfo     func(ctx context.Context, c *app.RequestContext)
-	UserLogin    func(ctx context.Context, c *app.RequestContext)
-	RefreshToken func(ctx context.Context, c *app.RequestContext)
-	UserRegister func(ctx context.Context, c *app.RequestContext)
-	UserAvatar   func(ctx context.Context, c *app.RequestContext)
-)
-
-type UserSever interface {
-	Register(userName string, password string) (int32, error)
-	Login(username, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error)
-	UserInfo(ctx context.Context, userId string) (*user.UserInfo, int32, error)
-	UserAvatar(userAvatarReq *multipart.FileHeader, userId interface{}) (int32, *user.UserInfo, error)
-	RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error)
-}
-type UserHandler struct {
-	userService UserSever
-}
-
-func NewUserHandler(userService *userService.UserRepo) *UserHandler {
-	return &UserHandler{
-		userService: userService,
-	}
-}
-
 // UserRegister .
 // @router /user/register [POST]
-func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/user/register")
-	if blockErr != nil {
-		c.JSON(200, &user.RegisterResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func UserRegister(ctx context.Context, c *app.RequestContext) {
 	var req user.RegisterReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -63,7 +32,10 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, err := h.userService.Register(req.UserName, req.Password)
+	code, err := Rpc.RegisterRpc(ctx, &user2.RegisterReq{
+		UserName: req.UserName,
+		Password: req.Password,
+	})
 	if err != nil {
 		log.Println("userService.Register error:", err)
 	}
@@ -74,14 +46,7 @@ func (h *UserHandler) UserRegister(ctx context.Context, c *app.RequestContext) {
 
 // UserLogin .
 // @router /user/login [POST]
-func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/user/login")
-	if blockErr != nil {
-		c.JSON(200, &user.LoginResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func UserLogin(ctx context.Context, c *app.RequestContext) {
 	var req user.LoginReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -92,13 +57,24 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, userInfo, reToken, acToken, err := h.userService.Login(req.UserName, req.Password, req.Code, ctx)
+	code, userInfo, reToken, acToken, err := Rpc.LoginRpc(ctx, &user2.LoginReq{
+		UserName: req.UserName,
+		Password: req.Password,
+		Code:     req.Code,
+	})
 	if err != nil {
 		log.Println("userService.Login error:", err)
 	}
 	resp := &user.LoginResp{
-		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data:         userInfo,
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		Data: &user.UserInfo{
+			ID:        userInfo.ID,
+			Username:  userInfo.Username,
+			AvatarURL: userInfo.AvatarURL,
+			CreatedAt: userInfo.CreatedAt,
+			UpdatedAt: userInfo.UpdatedAt,
+			DeletedAt: userInfo.DeletedAt,
+		},
 		RefreshToken: reToken,
 		AccessToken:  acToken,
 	}
@@ -107,14 +83,7 @@ func (h *UserHandler) UserLogin(ctx context.Context, c *app.RequestContext) {
 
 // UserInfo .
 // @router /user/info [GET]
-func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/user/info")
-	if blockErr != nil {
-		c.JSON(200, &user.UserInfoResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func UserInfo(ctx context.Context, c *app.RequestContext) {
 	var req user.UserInfoReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -125,7 +94,7 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userInfo, code, err := h.userService.UserInfo(ctx, req.UserId)
+	code, userInfo, err := Rpc.UserInfoRpc(ctx, &user2.UserInfoReq{UserId: req.UserId})
 	if err != nil {
 		log.Println("userService.UserInfo error:", err)
 	}
@@ -134,21 +103,21 @@ func (h *UserHandler) UserInfo(ctx context.Context, c *app.RequestContext) {
 			Code: code,
 			Msg:  consts.GetErrorCodeMsg(code),
 		},
-		Data: userInfo,
+		Data: &user.UserInfo{
+			ID:        userInfo.ID,
+			Username:  userInfo.Username,
+			AvatarURL: userInfo.AvatarURL,
+			CreatedAt: userInfo.CreatedAt,
+			UpdatedAt: userInfo.UpdatedAt,
+			DeletedAt: userInfo.DeletedAt,
+		},
 	}
 	c.JSON(200, resp)
 }
 
 // UserAvatar .
 // @router /user/avatar/upload [PUT]
-func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/user/avatar/upload")
-	if blockErr != nil {
-		c.JSON(200, &user.UserAvatarResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func UserAvatar(ctx context.Context, c *app.RequestContext) {
 	var req user.UserAvatarReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -159,7 +128,8 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userAvatarReq, err := c.FormFile("data")
+
+	data, err := c.FormFile("data")
 	if err != nil {
 		log.Println("userService.UserAvatar FormFile error:", err)
 		resp := &user.UserAvatarResp{
@@ -168,28 +138,73 @@ func (h *UserHandler) UserAvatar(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
+	file, err := data.Open()
+	if err != nil {
+		log.Println("userService.UserAvatar data.Open error:", err)
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Data: nil,
+		}
+		c.JSON(200, resp)
+	}
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Println("file err", err)
+		}
+	}()
+	ok, err := utils.IsImage(file)
+	if err != nil {
+		log.Println("userService.UserAvatar IsImage error:", err)
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Data: nil,
+		}
+		c.JSON(200, resp)
+	}
+	if !ok {
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.ImageFalse, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Data: nil,
+		}
+		c.JSON(200, resp)
+	}
+	filename := utils.IDGenerate()
+	code, err := utils.SaveUploadFile(file, config.Cfg.Path.AvatarPath, filename+filepath.Ext(data.Filename))
+	if err != nil {
+		log.Println(err)
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Data: nil,
+		}
+		c.JSON(200, resp)
+	}
+
 	userId := ctx.Value(middleware.UserIDKey).(string)
-	code, userInfo, err := h.userService.UserAvatar(userAvatarReq, userId)
+	code, userInfo, err := Rpc.UserAvatarRpc(ctx, &user2.UserAvatarReq{
+		AvatarURL: "",
+		UserID:    userId,
+	})
 	if err != nil {
 		log.Println("userService.UserAvatar error:", err)
 	}
 	resp := &user.UserAvatarResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: userInfo,
+		Data: &user.UserInfo{
+			ID:        userInfo.ID,
+			Username:  userInfo.Username,
+			AvatarURL: userInfo.AvatarURL,
+			CreatedAt: userInfo.CreatedAt,
+			UpdatedAt: userInfo.UpdatedAt,
+			DeletedAt: userInfo.DeletedAt,
+		},
 	}
 	c.JSON(200, resp)
 }
 
 // RefreshToken .
 // @router /user/refresh [POST]
-func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/user/refresh")
-	if blockErr != nil {
-		c.JSON(200, &user.RefreshTokenResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func RefreshToken(ctx context.Context, c *app.RequestContext) {
 	var req user.RefreshTokenReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -200,7 +215,7 @@ func (h *UserHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	code, reToken, acToken, err := h.userService.RefreshToken(ctx, req.RefreshToken)
+	code, reToken, acToken, err := Rpc.RefreshTokenRpc(ctx, &user2.RefreshTokenReq{RefreshToken: req.RefreshToken})
 	if err != nil {
 		log.Println("userService.RefreshToken error:", err)
 	}

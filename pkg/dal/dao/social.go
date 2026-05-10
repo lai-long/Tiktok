@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"Tiktok/biz/entity"
+	"Tiktok/pkg/entity"
 	"log"
 )
 

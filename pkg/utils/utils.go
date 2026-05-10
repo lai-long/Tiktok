@@ -2,7 +2,7 @@
 package utils
 
 import (
-	"Tiktok/biz/model/user"
+	user "Tiktok/kitex_gen/user"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"io"

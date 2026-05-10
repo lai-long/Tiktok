@@ -3,25 +3,23 @@
 package main
 
 import (
-	"Tiktok/biz/dal/cache"
-	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/handler/chat"
 	"Tiktok/biz/handler/mfa"
 	"Tiktok/biz/handler/react"
 	socialHandler "Tiktok/biz/handler/social"
-	"Tiktok/biz/handler/user"
 	"Tiktok/biz/handler/video"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
-	likeService "Tiktok/biz/service/react"
-	"os"
-
+	Rpc "Tiktok/biz/rpc"
 	ws "Tiktok/biz/service/chat"
 	mfaService "Tiktok/biz/service/mfa"
+	likeService "Tiktok/biz/service/react"
 	socialService "Tiktok/biz/service/social"
-	userService "Tiktok/biz/service/user"
 	videoService "Tiktok/biz/service/video"
 	"Tiktok/pkg/config"
+	"Tiktok/pkg/dal/cache"
+	"Tiktok/pkg/dal/dao"
+	"os"
 
 	"log"
 
@@ -47,6 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal("加载sentinel rules错误", err)
 	}
+
 	rdb := cache.InitRedis()
 	re := cache.NewRedis(rdb)
 	defer func() {
@@ -64,14 +63,7 @@ func main() {
 		}
 	}()
 	mysqlDb := dao.NewMySQLdb(ddb)
-
-	userSrv := userService.NewUserRepo(mysqlDb, mysqlDb, re)
-	userHandler := user.NewUserHandler(userSrv)
-	user.UserInfo = userHandler.UserInfo
-	user.UserRegister = userHandler.UserRegister
-	user.UserLogin = userHandler.UserLogin
-	user.RefreshToken = userHandler.RefreshToken
-	user.UserAvatar = userHandler.UserAvatar
+	Rpc.Init()
 	mfaSrv := mfaService.NewMfaRepo(mysqlDb)
 	mfaHandler := mfa.NewMfaHandler(mfaSrv)
 	mfa.MfaBind = mfaHandler.MfaBind

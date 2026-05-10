@@ -1,0 +1,70 @@
+syntax="proto3";
+package user;
+option go_package="user";
+message UserInfo{
+    string ID = 1;
+    string Username=2;
+    string AvatarURL=3;
+    string CreatedAt=4;
+    string UpdatedAt=5;
+    string DeletedAt=6;
+}
+
+message RegisterReq{
+    string UserName=1;
+    string Password=2;
+}
+message RegisterResp{
+    int32 Code =1;
+}
+
+message LoginReq{
+    string UserName=1;
+    string Password=2;
+    string Code=3;
+}
+message LoginResp{
+    int32 Code =1;
+    UserInfo data=2;
+    string RefreshToken=3;
+    string AccessToken=4;
+}
+
+message UserInfoReq{
+    string UserId=1;
+}
+message UserInfoResp{
+    int32 Code =1;
+    UserInfo Data=2;
+}
+
+message UserAvatarReq{
+    string AvatarURL = 1;
+    string UserID = 2;
+}
+message UserAvatarResp{
+    int32 Code =1;
+    UserInfo data=2;
+}
+
+message RefreshTokenReq{
+    string RefreshToken=1;
+}
+message RefreshTokenResp{
+    int32 Code =1;
+    string RefreshToken=2;
+    string AccessToken=3;
+}
+message AuthReq{
+    string AccessToken=1;
+}
+message AuthResp{
+    int32 Code =1;
+}
+service UserService{
+    rpc UserRegister(RegisterReq) returns(RegisterResp){}
+    rpc UserLogin(LoginReq) returns(LoginResp){}
+    rpc UserInfo(UserInfoReq)returns(UserInfoResp){}
+    rpc UserAvatar(UserAvatarReq)returns(UserAvatarResp){}
+    rpc RefreshToken(RefreshTokenReq)returns(RefreshTokenResp){}
+}
