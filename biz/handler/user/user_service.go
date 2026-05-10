@@ -174,7 +174,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		log.Println(err)
 		resp := &user.UserAvatarResp{
-			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 			Data: nil,
 		}
 		c.JSON(200, resp)

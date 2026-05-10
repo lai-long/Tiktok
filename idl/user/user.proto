@@ -61,6 +61,7 @@ message AuthReq{
 message AuthResp{
     int32 Code =1;
 }
+
 service UserService{
     rpc UserRegister(RegisterReq) returns(RegisterResp){}
     rpc UserLogin(LoginReq) returns(LoginResp){}
