@@ -3,6 +3,7 @@ package user;
 option go_package="user";
 import "api.proto";
 import "common.proto";
+import "user.proto";
 message UserInfo{
    string ID = 1[(api.go_tag)="json:\"id\""];
    string Username=2[(api.go_tag)="json:\"username\""];
@@ -11,8 +12,6 @@ message UserInfo{
    string UpdatedAt=5[(api.go_tag)="json:\"updated_at\""];
    string DeletedAt=6[(api.go_tag)="json:\"deleted_at\""];
 }
-
-
 
 message RegisterReq{
    string UserName=1[(api.body)="username",(api.vd)="required,min=1,max=20"];

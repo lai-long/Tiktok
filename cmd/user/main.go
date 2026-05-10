@@ -41,18 +41,10 @@ func main() {
 	}
 	db := dao.InitDb()
 	mysqlDb := dao.NewMySQLdb(db)
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Println("db close err", err)
-		}
-	}()
+
 	rdb := cache.InitRedis()
 	redis := cache.NewRedis(rdb)
-	defer func() {
-		if err := rdb.Close(); err != nil {
-			log.Println("redis close err", err)
-		}
-	}()
+
 	userRepo := service.NewUserRepo(mysqlDb, mysqlDb, redis)
 	userService := handler.NewUserService(userRepo)
 
@@ -66,7 +58,12 @@ func main() {
 	)
 
 	log.Printf("User Kitex server started at %s", addr.String())
-
+	if err := db.Close(); err != nil {
+		log.Println("db close err", err)
+	}
+	if err := rdb.Close(); err != nil {
+		log.Println("redis close err", err)
+	}
 	if err := svr.Run(); err != nil {
 		log.Fatal("Kitex server error:", err)
 	}
