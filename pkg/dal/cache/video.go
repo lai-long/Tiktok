@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"Tiktok/biz/entity"
+	"Tiktok/pkg/entity"
 	"context"
 	"encoding/json"
 	"math/rand"

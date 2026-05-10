@@ -1,9 +1,9 @@
-package user
+package service
 
 import (
-	"Tiktok/biz/entity"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/entity"
 	"Tiktok/pkg/utils"
 	"context"
 	"database/sql"

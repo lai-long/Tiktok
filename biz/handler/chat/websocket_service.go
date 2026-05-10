@@ -3,11 +3,11 @@
 package chat
 
 import (
-	"Tiktok/biz/dal/cache"
-	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	ws "Tiktok/biz/service/chat"
+	"Tiktok/pkg/dal/cache"
+	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/utils"
 	"context"
 	"log"

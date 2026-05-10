@@ -1,10 +1,10 @@
 package chat
 
 import (
-	"Tiktok/biz/dal/cache"
-	"Tiktok/biz/dal/dao"
 	"Tiktok/biz/model/chat"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/dal/cache"
+	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/utils"
 	"context"
 	"fmt"
