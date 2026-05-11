@@ -59,11 +59,12 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 	}
 	userID := ctx.Value(middleware.UserIDKey).(string)
 	var ty string
-	if req.Secret != "" {
+	switch {
+	case req.Secret != "":
 		ty = "secret"
-	} else if req.Code != "" {
+	case req.Code != "":
 		ty = "qrcode"
-	} else {
+	default:
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}

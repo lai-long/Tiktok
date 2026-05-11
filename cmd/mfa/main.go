@@ -38,7 +38,9 @@ func main() {
 	db := dao.InitDb()
 	mysqlDb := dao.NewMySQLdb(db)
 	defer func() {
-		db.Close()
+		if err := db.Close(); err != nil {
+			log.Println("db close err", err)
+		}
 	}()
 
 	mfaRepo := service.NewMfaRepo(mysqlDb)
@@ -46,7 +48,7 @@ func main() {
 
 	r, err := etcd.NewEtcdRegistry([]string{"127.0.0.1:2379"})
 	if err != nil {
-		log.Fatalln(err)
+		log.Println("registry error:", err)
 	}
 	addr := &net.TCPAddr{
 		IP:   net.ParseIP("0.0.0.0"),

@@ -52,11 +52,12 @@ func (s *MfaServiceImpl) MfaBind(ctx context.Context, req *mfa.MfaBindReq) (resp
 	}
 	defer entry.Exit()
 	var code int32
-	if req.Type == "secret" {
+	switch req.Type {
+	case "secret":
 		code, err = s.mfaRepo.MfaBindBySecret(req.Secret, req.UserID)
-	} else if req.Type == "qrcode" {
+	case "qrcode":
 		code, err = s.mfaRepo.MfaBindByCode(req.MfaCode, req.UserID)
-	} else {
+	default:
 		code = consts.MfaCodeFalse
 		err = nil
 	}

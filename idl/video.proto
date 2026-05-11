@@ -1,0 +1,73 @@
+syntax="proto3";
+package video;
+option go_package="video";
+message VideoInfo{
+    string ID=1;
+    string UserID=2;
+    string Title=3;
+    string Description=4;
+    int64 CommentCount=5;
+    string CoverURL=6;
+    string CreatedAt=7;
+    int64 LikeCount=8;
+    string UpdatedAt=9;
+    string VideoURL=10;
+    int64 VisitCount=11;
+}
+message VideoData{
+    repeated VideoInfo items=1;
+    int64 Total=2;
+}
+
+message VideoPublishReq{
+    string Title=1;
+    string Description=2;
+}
+message VideoPublishResp{
+    int32 Code=1;
+}
+
+message VideoListReq{
+    string UserId=1;
+    int64 PageNum=2;
+    int64 PageSize=3;
+}
+
+message VideoListResp{
+    int32 Code=1;
+    VideoData Data=2;
+}
+
+message VideoHotReq{
+    int64 PageNum=1;
+    int64 PageSize=2;
+}
+message VideoHotResp{
+    int32 Code=1;
+    VideoData Data=2;
+}
+
+message VideoSearchReq{
+    string KeyWord=1;
+    int64 PageNum=2;
+    int64 PageSize=3;
+}
+message VideoSearchResp{
+    int32 Code=1;
+    VideoData Data=2;
+}
+
+message VideoStreamReq{
+}
+message VideoStreamResp{
+    int32 Code=1;
+    VideoData Data=2;
+}
+
+service VideoService {
+    rpc VideoPublish(VideoPublishReq) returns (VideoPublishResp);
+    rpc VideoList(VideoListReq) returns (VideoListResp);
+    rpc VideoSearch(VideoSearchReq) returns (VideoSearchResp);
+    rpc VideoPopular(VideoHotReq) returns (VideoHotResp);
+    rpc VideoStream(VideoStreamReq) returns (VideoStreamResp);
+}

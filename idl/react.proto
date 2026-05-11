@@ -1,0 +1,82 @@
+syntax="proto3";
+package react;
+option go_package="react";
+import "video.proto";
+message CommentInfo{
+    string UserId=1;
+    string TargetId=2;
+    string CommentId=3;
+    string Content=4;
+    int64 LikeCount=5;
+    string CreatedAt=6;
+    string UpdatedAt=7;
+    string DeletedAt=8;
+    string TargetType=9;
+    int64 CommentCount=10;
+}
+
+message CommentPublishReq{
+    string TargetAt=1;
+    string TargetType=2;
+    string Content=3;
+}
+message CommentPublishResp{
+     int32 Code=1;
+}
+
+message CommentListReq{
+    string TargetAt=1;
+    int64 PageSize=2;
+    int64 PageNum=3;
+}
+message CommentData{
+    repeated CommentInfo items=1;
+    int64 Total=2;
+}
+message CommentListResp{
+    int32 code=1;
+    CommentData Data=2;
+}
+
+message CommentDeleteReq{
+    string CommentId=1;
+    string TargetAt=2;
+    string TargetType=3;
+}
+message CommentDeleteResp{
+   int32 code=1;
+}
+
+message LikeActionReq{
+    string TargetAt=1;
+    string TargetType=2;
+    string ActionType=3;
+}
+message LikeActionResp{
+    int32 Code=1;
+}
+
+message LikeListReq{
+    string UserId=1;
+    int64 PageNum=2;
+    int64 PageSize=3;
+}
+message LikeVideoData{
+    repeated video.VideoInfo items=1;
+    int64 Total=2;
+}
+message LikeListResp{
+    int32 code=1;
+    LikeVideoData Data=2;
+}
+
+service CommentService {
+    rpc CommentPublish(CommentPublishReq) returns (CommentPublishResp);
+    rpc CommentList(CommentListReq) returns (CommentListResp);
+    rpc CommentDelete(CommentDeleteReq) returns (CommentDeleteResp);
+}
+
+service LikeService {
+    rpc LikeAction(LikeActionReq) returns (LikeActionResp);
+    rpc LikeList(LikeListReq) returns (LikeListResp);
+}
