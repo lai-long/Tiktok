@@ -66,15 +66,8 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		log.Println("userService.Login error:", err)
 	}
 	resp := &user.LoginResp{
-		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &user.UserInfo{
-			ID:        userInfo.ID,
-			Username:  userInfo.Username,
-			AvatarURL: userInfo.AvatarURL,
-			CreatedAt: userInfo.CreatedAt,
-			UpdatedAt: userInfo.UpdatedAt,
-			DeletedAt: userInfo.DeletedAt,
-		},
+		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		Data:         userInfo,
 		RefreshToken: reToken,
 		AccessToken:  acToken,
 	}
@@ -103,14 +96,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 			Code: code,
 			Msg:  consts.GetErrorCodeMsg(code),
 		},
-		Data: &user.UserInfo{
-			ID:        userInfo.ID,
-			Username:  userInfo.Username,
-			AvatarURL: userInfo.AvatarURL,
-			CreatedAt: userInfo.CreatedAt,
-			UpdatedAt: userInfo.UpdatedAt,
-			DeletedAt: userInfo.DeletedAt,
-		},
+		Data: userInfo,
 	}
 	c.JSON(200, resp)
 }
@@ -190,14 +176,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 	}
 	resp := &user.UserAvatarResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &user.UserInfo{
-			ID:        userInfo.ID,
-			Username:  userInfo.Username,
-			AvatarURL: userInfo.AvatarURL,
-			CreatedAt: userInfo.CreatedAt,
-			UpdatedAt: userInfo.UpdatedAt,
-			DeletedAt: userInfo.DeletedAt,
-		},
+		Data: userInfo,
 	}
 	c.JSON(200, resp)
 }

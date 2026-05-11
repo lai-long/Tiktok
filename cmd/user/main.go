@@ -66,12 +66,6 @@ func main() {
 	}()
 	log.Printf("User Kitex server started at %s", addr.String())
 	if err := svr.Run(); err != nil {
-		if err := db.Close(); err != nil {
-			log.Println("db close err", err)
-		}
-		if err := rdb.Close(); err != nil {
-			log.Println("redis close err", err)
-		}
-		log.Fatal("Kitex server error:", err)
+		log.Println("Kitex server error:", err)
 	}
 }

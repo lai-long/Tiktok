@@ -5,47 +5,21 @@ package mfa
 import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
+	Rpc "Tiktok/biz/rpc"
+	mfa2 "Tiktok/kitex_gen/mfa"
 	"context"
 	"log"
 
-	mfa "Tiktok/biz/model/mfa"
+	"Tiktok/biz/model/mfa"
 
 	"Tiktok/pkg/consts"
 
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
-var (
-	MfaQrcode func(ctx context.Context, c *app.RequestContext)
-	MfaBind   func(ctx context.Context, c *app.RequestContext)
-)
-
-type MfaServer interface {
-	GenerateMfa(username string, userId string) (string, string, int32, error)
-	MfaBindByCode(code string, userId string) (int32, error)
-	MfaBindBySecret(secret string, userId string) (int32, error)
-}
-type MfaHandler struct {
-	MfaService MfaServer
-}
-
-func NewMfaHandler(mfaService MfaServer) *MfaHandler {
-	return &MfaHandler{
-		MfaService: mfaService,
-	}
-}
-
 // MfaQrcode .
 // @router /auth/mfa/qrcode [GET]
-func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/auth/mfa/qrcode")
-	if blockErr != nil {
-		c.JSON(200, &mfa.MfaQrcodeResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	var req mfa.MfaQrcodeReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -57,7 +31,10 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 	}
 	userId := ctx.Value(middleware.UserIDKey).(string)
 	userName := ctx.Value(middleware.UsernameKey).(string)
-	key, secret, code, err := h.MfaService.GenerateMfa(userName, userId)
+	code, secret, key, err := Rpc.MfaQrCodeRpc(ctx, &mfa2.MfaQrcodeReq{
+		UserName: userName,
+		UserID:   userId,
+	})
 	if err != nil {
 		log.Println("MfaQrcode err: ", err)
 	}
@@ -70,34 +47,40 @@ func (h *MfaHandler) MfaQrcode(ctx context.Context, c *app.RequestContext) {
 
 // MfaBind .
 // @router /auth/mfa/bind [POST]
-func (h *MfaHandler) MfaBind(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/auth/mfa/bind")
-	if blockErr != nil {
-		c.JSON(200, &mfa.MfaBindResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func MfaBind(ctx context.Context, c *app.RequestContext) {
 	var req mfa.MfaBindReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
 		resp := &mfa.MfaQrcodeResp{
-			Base: &common.Base{Code: consts.UserReqValidError},
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	resp := new(mfa.MfaBindResp)
-	var code int32
-	userId := ctx.Value(middleware.UserIDKey).(string)
+	userID := ctx.Value(middleware.UserIDKey).(string)
+	var ty string
 	if req.Secret != "" {
-		code, err = h.MfaService.MfaBindBySecret(req.Secret, userId)
+		ty = "secret"
+	} else if req.Code != "" {
+		ty = "qrcode"
 	} else {
-		code, err = h.MfaService.MfaBindByCode(req.Code, userId)
+		resp := &mfa.MfaQrcodeResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
+		return
 	}
+	code, err := Rpc.MfaBindRpc(ctx, &mfa2.MfaBindReq{
+		MfaCode: req.Code,
+		Secret:  req.Secret,
+		UserID:  userID,
+		Type:    ty,
+	})
 	if err != nil {
 		log.Println("MfaBind err: ", err)
 	}
-	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
+	resp := &mfa.MfaQrcodeResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+	}
 	c.JSON(200, resp)
 }
