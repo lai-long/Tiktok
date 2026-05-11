@@ -4,7 +4,6 @@ package main
 
 import (
 	"Tiktok/biz/handler/chat"
-	"Tiktok/biz/handler/mfa"
 	"Tiktok/biz/handler/react"
 	socialHandler "Tiktok/biz/handler/social"
 	"Tiktok/biz/handler/video"
@@ -12,7 +11,6 @@ import (
 	"Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
 	ws "Tiktok/biz/service/chat"
-	mfaService "Tiktok/biz/service/mfa"
 	likeService "Tiktok/biz/service/react"
 	socialService "Tiktok/biz/service/social"
 	videoService "Tiktok/biz/service/video"
@@ -64,10 +62,6 @@ func main() {
 	}()
 	mysqlDb := dao.NewMySQLdb(ddb)
 	Rpc.Init()
-	mfaSrv := mfaService.NewMfaRepo(mysqlDb)
-	mfaHandler := mfa.NewMfaHandler(mfaSrv)
-	mfa.MfaBind = mfaHandler.MfaBind
-	mfa.MfaQrcode = mfaHandler.MfaQrcode
 
 	videoSrv := videoService.NewVideoRepo(mysqlDb, re)
 	videoHandler := video.NewVideoHandler(videoSrv)

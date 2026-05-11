@@ -1,4 +1,4 @@
-package mfa
+package service
 
 import (
 	"Tiktok/pkg/consts"

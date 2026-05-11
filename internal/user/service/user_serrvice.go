@@ -1,7 +1,7 @@
 package service
 
 import (
-	"Tiktok/biz/service/mfa"
+	mfa "Tiktok/internal/mfa/service"
 	"Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
