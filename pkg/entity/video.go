@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"Tiktok/biz/model/video"
+	"Tiktok/kitex_gen/video"
 	"database/sql"
 )
 

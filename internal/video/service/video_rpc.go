@@ -1,16 +1,12 @@
-package video
+package service
 
 import (
-	"Tiktok/biz/model/video"
-	"Tiktok/pkg/config"
+	"Tiktok/kitex_gen/video"
+
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
-	"Tiktok/pkg/utils"
 	"context"
-	"log"
 	"math/rand"
-	"mime/multipart"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
@@ -38,30 +34,14 @@ func NewVideoRepo(videoDb VideoDatabase, videoRedis VideoRedis) *VideoRepo {
 	return &VideoRepo{videoDb: videoDb, VideoRedis: videoRedis}
 }
 
-func (s *VideoRepo) VideoPublish(videoInfo *video.VideoInfo, data *multipart.FileHeader, ctx context.Context) (int32, error) {
-	dataFile, err := data.Open()
-	if err != nil {
-		return consts.IOOsError, errors.Wrap(err, "->VideoPublish data.Open err")
-	}
-	defer func() {
-		err := dataFile.Close()
-		if err != nil {
-			log.Println(errors.Wrap(err, "VideoPublish data close"))
-		}
-	}()
-	filename := utils.IDGenerate()
-	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
-	if err != nil {
-		return code, errors.Wrap(err, " VideoPublish ")
-	}
+func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description string, url string, userID string) (int32, error) {
 	var videoEntity entity.VideoEntity
-	videoEntity.Title = videoInfo.Title
-	videoEntity.Description = videoInfo.Description
-	videoEntity.VideoURL = config.Cfg.Path.VideoPath + filename
-	videoEntity.UserID = videoInfo.UserID
-	videoEntity.ID = filename
+	videoEntity.Title = title
+	videoEntity.Description = description
+	videoEntity.VideoURL = url
+	videoEntity.UserID = userID
 	videoEntity.VisitCount = rand.Intn(100)
-	err = s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
+	err := s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
 	if err != nil {
 		return consts.VideoRedisSetError, errors.Wrap(err, "->VideoPublish redis hot set err")
 	}
