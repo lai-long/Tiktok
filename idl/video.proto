@@ -22,6 +22,8 @@ message VideoData{
 message VideoPublishReq{
     string Title=1;
     string Description=2;
+    string VideoURL=3;
+    string UserID=4;
 }
 message VideoPublishResp{
     int32 Code=1;

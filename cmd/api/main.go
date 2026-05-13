@@ -6,14 +6,12 @@ import (
 	"Tiktok/biz/handler/chat"
 	"Tiktok/biz/handler/react"
 	socialHandler "Tiktok/biz/handler/social"
-	"Tiktok/biz/handler/video"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
 	ws "Tiktok/biz/service/chat"
 	likeService "Tiktok/biz/service/react"
 	socialService "Tiktok/biz/service/social"
-	videoService "Tiktok/biz/service/video"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
@@ -62,14 +60,6 @@ func main() {
 	}()
 	mysqlDb := dao.NewMySQLdb(ddb)
 	Rpc.Init()
-
-	videoSrv := videoService.NewVideoRepo(mysqlDb, re)
-	videoHandler := video.NewVideoHandler(videoSrv)
-	video.VideoPublish = videoHandler.VideoPublish
-	video.VideoStream = videoHandler.VideoStream
-	video.VideoSearch = videoHandler.VideoSearch
-	video.VideoPopular = videoHandler.VideoPopular
-	video.VideoList = videoHandler.VideoList
 
 	socialSrv := socialService.NewSocialRepo(mysqlDb, mysqlDb)
 	socialHdlr := socialHandler.NewSocialHandler(socialSrv)

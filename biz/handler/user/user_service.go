@@ -80,7 +80,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	var req user.UserInfoReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("userService.Login bind error:", err)
+		log.Println("userService.userinfo bind error:", err)
 		resp := &user.UserInfoResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -168,7 +168,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 
 	userId := ctx.Value(middleware.UserIDKey).(string)
 	code, userInfo, err := Rpc.UserAvatarRpc(ctx, &user2.UserAvatarReq{
-		AvatarURL: "",
+		AvatarURL: config.Cfg.Path.AvatarPath + filename + filepath.Ext(data.Filename),
 		UserID:    userId,
 	})
 	if err != nil {
