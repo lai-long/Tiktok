@@ -4,12 +4,10 @@ package main
 
 import (
 	"Tiktok/biz/handler/chat"
-	socialHandler "Tiktok/biz/handler/social"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
 	ws "Tiktok/biz/service/chat"
-	socialService "Tiktok/biz/service/social"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
@@ -58,13 +56,6 @@ func main() {
 	}()
 	mysqlDb := dao.NewMySQLdb(ddb)
 	Rpc.Init()
-
-	socialSrv := socialService.NewSocialRepo(mysqlDb, mysqlDb)
-	socialHdlr := socialHandler.NewSocialHandler(socialSrv)
-	socialHandler.FollowingList = socialHdlr.FollowingList
-	socialHandler.FollowerList = socialHdlr.FollowerList
-	socialHandler.FriendList = socialHdlr.FriendList
-	socialHandler.RelationAction = socialHdlr.RelationAction
 
 	wsService := ws.NewWebsocketService(mysqlDb, re)
 	websocketService := chat.NewWebsocketSever(mysqlDb, re, wsService)
