@@ -37,22 +37,7 @@ func FollowingListRpc(ctx context.Context, req *social.FollowingListReq) (int32,
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
 	}
-	items := make([]*user.UserInfo, len(resp.Data.Items))
-	for i, item := range resp.Data.Items {
-		items[i] = &user.UserInfo{
-			ID:        item.ID,
-			Username:  item.Username,
-			AvatarURL: item.AvatarURL,
-			CreatedAt: item.CreatedAt,
-			UpdatedAt: item.UpdatedAt,
-			DeletedAt: item.DeletedAt,
-		}
-	}
-	data := &SocialData{
-		Items: items,
-		Total: resp.Data.Total,
-	}
-	return resp.Code, data, nil
+	return resp.Code, convertSocialItemsToUserInfos(resp.Data), nil
 }
 
 func FollowerListRpc(ctx context.Context, req *social.FollowerListReq) (int32, *SocialData, error) {
@@ -60,22 +45,7 @@ func FollowerListRpc(ctx context.Context, req *social.FollowerListReq) (int32, *
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
 	}
-	items := make([]*user.UserInfo, len(resp.Data.Items))
-	for i, item := range resp.Data.Items {
-		items[i] = &user.UserInfo{
-			ID:        item.ID,
-			Username:  item.Username,
-			AvatarURL: item.AvatarURL,
-			CreatedAt: item.CreatedAt,
-			UpdatedAt: item.UpdatedAt,
-			DeletedAt: item.DeletedAt,
-		}
-	}
-	data := &SocialData{
-		Items: items,
-		Total: resp.Data.Total,
-	}
-	return resp.Code, data, nil
+	return resp.Code, convertSocialItemsToUserInfos(resp.Data), nil
 }
 
 func FriendListRpc(ctx context.Context, req *social.FriendListReq) (int32, *SocialData, error) {
@@ -83,8 +53,12 @@ func FriendListRpc(ctx context.Context, req *social.FriendListReq) (int32, *Soci
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
 	}
-	items := make([]*user.UserInfo, len(resp.Data.Items))
-	for i, item := range resp.Data.Items {
+	return resp.Code, convertSocialItemsToUserInfos(resp.Data), nil
+}
+
+func convertSocialItemsToUserInfos(data *social.SocialData) *SocialData {
+	items := make([]*user.UserInfo, len(data.Items))
+	for i, item := range data.Items {
 		items[i] = &user.UserInfo{
 			ID:        item.ID,
 			Username:  item.Username,
@@ -94,11 +68,7 @@ func FriendListRpc(ctx context.Context, req *social.FriendListReq) (int32, *Soci
 			DeletedAt: item.DeletedAt,
 		}
 	}
-	data := &SocialData{
-		Items: items,
-		Total: resp.Data.Total,
-	}
-	return resp.Code, data, nil
+	return &SocialData{Items: items, Total: data.Total}
 }
 
 type SocialData struct {
