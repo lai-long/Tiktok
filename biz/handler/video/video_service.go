@@ -62,7 +62,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	}
 	filename := utils.IDGenerate()
 	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
-	dataFile.Close()
+	_ = dataFile.Close()
 	if err != nil {
 		log.Println("save upload file err:", err)
 		c.JSON(200, &video.VideoPublishResp{

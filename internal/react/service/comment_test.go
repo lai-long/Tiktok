@@ -1,7 +1,6 @@
 package service
 
 import (
-	"Tiktok/biz/service/react"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
 	"errors"
@@ -88,7 +87,7 @@ func TestCommentList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
-			svc := react.NewCommentService(mockComment)
+			svc := NewCommentService(mockComment)
 			code, comments, err := svc.CommentList(tt.targetId, tt.pageSize, tt.pageNum)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantLen, len(comments))
@@ -178,7 +177,7 @@ func TestCommentPublish(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
-			svc := react.NewCommentService(mockComment)
+			svc := NewCommentService(mockComment)
 			code, err := svc.CommentPublish(tt.targetId, tt.userId, tt.content, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -244,7 +243,7 @@ func TestCommentDelete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
-			svc := react.NewCommentService(mockComment)
+			svc := NewCommentService(mockComment)
 			code, err := svc.CommentDelete(tt.commentId, tt.targetId, tt.userId, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)

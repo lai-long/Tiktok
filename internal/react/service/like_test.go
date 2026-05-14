@@ -1,11 +1,9 @@
 package service
 
 import (
-	"Tiktok/biz/service/react"
+	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
 	"context"
-
-	"Tiktok/pkg/consts"
 	"errors"
 	"testing"
 
@@ -164,7 +162,7 @@ func TestLikeAction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
-			like := react.NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
+			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
 			code, err := like.LikeAction(context.Background(), tt.userId, tt.targetId, tt.action, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -226,7 +224,7 @@ func TestLikeList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
-			like := react.NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
+			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
 			code, _, err := like.LikeList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
