@@ -13,11 +13,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type ContextKey string
-
 const (
-	UserIDKey   ContextKey = "user_id"
-	UsernameKey ContextKey = "username"
+	UserIDKey   = "userid"
+	UsernameKey = "username"
 )
 
 func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
@@ -78,7 +76,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	}
 	userid, _ := (*claims)["userid"].(string)
 	username, _ := (*claims)["username"].(string)
-	newCtx := context.WithValue(ctx, UserIDKey, userid)
-	newCtx = context.WithValue(newCtx, UsernameKey, username)
-	c.Next(newCtx)
+	c.Set(UserIDKey, userid)
+	c.Set(UsernameKey, username)
+	c.Next(ctx)
 }

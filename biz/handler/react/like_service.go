@@ -5,7 +5,7 @@ package react
 import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/model/video"
+	"Tiktok/kitex_gen/video"
 	"context"
 	"log"
 
@@ -98,7 +98,7 @@ func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
 	}
 	resp := &react.LikeListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &react.LikeVideoData{Items: videoInfos, Total: int64(len(videoInfos))},
+		Data: &react.LikeVideoData{Items: nil, Total: int64(len(videoInfos))},
 	}
 	c.JSON(200, resp)
 }

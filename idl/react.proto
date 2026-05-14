@@ -1,7 +1,6 @@
 syntax="proto3";
 package react;
 option go_package="react";
-import "video.proto";
 message CommentInfo{
     string UserId=1;
     string TargetId=2;

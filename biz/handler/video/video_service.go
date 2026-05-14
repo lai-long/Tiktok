@@ -3,6 +3,7 @@
 package video
 
 import (
+	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	video "Tiktok/biz/model/video"
 	Rpc "Tiktok/biz/rpc"
@@ -33,15 +34,18 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	data, err := c.FormFile("data")
+	log.Printf("VideoPublish: FormFile data, filename=%s, err=%v", data.Filename, err)
 	if err != nil {
+		log.Println("video publish postform err:", err)
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId, ok := c.Value("user_id").(string)
+	userId, ok := c.Value(middleware.UserIDKey).(string)
 	if !ok || userId == "" {
+		log.Println("video publish user id not found")
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -51,7 +55,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	dataFile, err := data.Open()
 	if err != nil {
 		resp := &video.VideoPublishResp{
-			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
+			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 		}
 		c.JSON(200, resp)
 		return
