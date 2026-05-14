@@ -156,7 +156,7 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 		if !ok {
 			return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
 		}
-		return consts.Success, convertVideoEntitiesToInfos(videos), nil
+		return consts.Success, buildVideoInfos(videos), nil
 	}
 	videoId, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
@@ -176,10 +176,10 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 			}
 		}
 	}()
-	return consts.Success, convertVideoEntitiesToInfos(videos), nil
+	return consts.Success, buildVideoInfos(videos), nil
 }
 
-func convertVideoEntitiesToInfos(videos []entity.VideoEntity) []*video.VideoInfo {
+func buildVideoInfos(videos []entity.VideoEntity) []*video.VideoInfo {
 	result := make([]*video.VideoInfo, 0, len(videos))
 	for _, v := range videos {
 		result = append(result, v.ToVideoInfo())

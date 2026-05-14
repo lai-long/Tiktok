@@ -42,15 +42,19 @@ func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, action
 }
 
 func (s *SocialRepo) FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	return s.buildUserList(func() ([]entity.UserEntity, error) {
-		return s.socialDb.FollowingList(userId, pageNum, pageSize)
-	}, "->FollowingList Get Following List err")
+	entities, err := s.socialDb.FollowingList(userId, pageNum, pageSize)
+	if err != nil {
+		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowingList Get Following List err")
+	}
+	return consts.Success, toUserInfoList(entities), nil
 }
 
 func (s *SocialRepo) FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	return s.buildUserList(func() ([]entity.UserEntity, error) {
-		return s.socialDb.FollowerList(userId, pageNum, pageSize)
-	}, "->FollowerList Get List err")
+	entities, err := s.socialDb.FollowerList(userId, pageNum, pageSize)
+	if err != nil {
+		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowerList Get List err")
+	}
+	return consts.Success, toUserInfoList(entities), nil
 }
 
 func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
@@ -58,23 +62,15 @@ func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (i
 	if !ok {
 		return consts.SocialDBSelectError, nil, errors.New("->FriendList Get List err")
 	}
-	userInfos := make([]*social.UserInfo, 0, len(entityFriend))
-	for _, e := range entityFriend {
-		userInfos = append(userInfos, toSocialUserInfo(e))
-	}
-	return consts.Success, userInfos, nil
+	return consts.Success, toUserInfoList(entityFriend), nil
 }
 
-func (s *SocialRepo) buildUserList(fetchFunc func() ([]entity.UserEntity, error), errorMsg string) (int32, []*social.UserInfo, error) {
-	entities, err := fetchFunc()
-	if err != nil {
-		return consts.SocialDBSelectError, nil, errors.Wrap(err, errorMsg)
-	}
+func toUserInfoList(entities []entity.UserEntity) []*social.UserInfo {
 	userInfos := make([]*social.UserInfo, 0, len(entities))
 	for _, e := range entities {
 		userInfos = append(userInfos, toSocialUserInfo(e))
 	}
-	return consts.Success, userInfos, nil
+	return userInfos
 }
 
 func toSocialUserInfo(e entity.UserEntity) *social.UserInfo {
