@@ -34,7 +34,7 @@ func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.Vide
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
 	}
-	infos := make([]*model.VideoInfo, 0, resp.Data.Total)
+	infos := make([]*model.VideoInfo, len(resp.Data.Items))
 	for i := 0; i < len(resp.Data.Items); i++ {
 		infos = append(infos, &model.VideoInfo{
 			ID:           resp.Data.Items[i].ID,

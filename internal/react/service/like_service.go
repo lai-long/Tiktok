@@ -1,8 +1,7 @@
-package react
+package service
 
 import (
 	"Tiktok/kitex_gen/video"
-
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
 	"context"

@@ -46,6 +46,7 @@ const (
 const (
 	ReactReqValidError int32 = 103001 // 互动模块视频绑定错误
 	ReactReqValueError int32 = 103002 // 互动模块传入参数错误
+	ReactError         int32 = 103003 // nil case error
 	ReactDBInsertError int32 = 203002 // 互动模块模块数据库insert错误
 	ReactDBUpdateError int32 = 203003 // 互动模块模块数据库update错误
 	ReactDBDeleteError int32 = 203004 // 互动模块模块数据库delete错误

@@ -4,13 +4,11 @@ package main
 
 import (
 	"Tiktok/biz/handler/chat"
-	"Tiktok/biz/handler/react"
 	socialHandler "Tiktok/biz/handler/social"
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
 	ws "Tiktok/biz/service/chat"
-	likeService "Tiktok/biz/service/react"
 	socialService "Tiktok/biz/service/social"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
@@ -67,17 +65,6 @@ func main() {
 	socialHandler.FollowerList = socialHdlr.FollowerList
 	socialHandler.FriendList = socialHdlr.FriendList
 	socialHandler.RelationAction = socialHdlr.RelationAction
-
-	commentSrv := likeService.NewCommentService(mysqlDb)
-	commentHandler := react.NewCommentHandler(commentSrv)
-	react.CommentDelete = commentHandler.CommentDelete
-	react.CommentPublish = commentHandler.CommentPublish
-	react.CommentList = commentHandler.CommentList
-
-	likeSrv := likeService.NewLikeRepo(mysqlDb, mysqlDb, mysqlDb, re)
-	likeHandler := react.NewLikesHandler(likeSrv)
-	react.LikeList = likeHandler.LikeList
-	react.LikeAction = likeHandler.LikeAction
 
 	wsService := ws.NewWebsocketService(mysqlDb, re)
 	websocketService := chat.NewWebsocketSever(mysqlDb, re, wsService)

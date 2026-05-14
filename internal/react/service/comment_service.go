@@ -1,7 +1,7 @@
-package react
+package service
 
 import (
-	"Tiktok/biz/model/react"
+	"Tiktok/kitex_gen/react"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
 	"Tiktok/pkg/utils"

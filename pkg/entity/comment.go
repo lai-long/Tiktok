@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"Tiktok/biz/model/react"
+	"Tiktok/kitex_gen/react"
 	"database/sql"
 )
 

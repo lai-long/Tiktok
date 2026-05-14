@@ -5,58 +5,30 @@ package react
 import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
-	"Tiktok/kitex_gen/video"
+	"Tiktok/biz/model/react"
+	react2 "Tiktok/kitex_gen/react"
 	"context"
 	"log"
 
-	react "Tiktok/biz/model/react"
-
+	Rpc "Tiktok/biz/rpc"
 	"Tiktok/pkg/consts"
 
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
-)
-
-type LikeSever interface {
-	LikeAction(ctx context.Context, userId string, videoId string, action string, targetType string) (int32, error)
-	LikeList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error)
-}
-
-type LikesHandler struct {
-	likeService LikeSever
-}
-
-func NewLikesHandler(like LikeSever) *LikesHandler {
-	return &LikesHandler{
-		likeService: like,
-	}
-}
-
-var (
-	LikeAction func(ctx context.Context, c *app.RequestContext)
-	LikeList   func(ctx context.Context, c *app.RequestContext)
 )
 
 // LikeAction .
 // @router /like/action [POST]
-func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/like/action")
-	if blockErr != nil {
-		c.JSON(200, &react.LikeActionResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func LikeAction(ctx context.Context, c *app.RequestContext) {
 	var req react.LikeActionReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &react.CommentPublishResp{
+		resp := &react.LikeActionResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value(middleware.UserIDKey).(string)
+	userId := c.Value(middleware.UserIDKey).(string)
 	if req.TargetType == "" {
 		c.JSON(200, react.LikeActionResp{Base: &common.Base{
 			Code: 0,
@@ -64,41 +36,44 @@ func (h *LikesHandler) LikeAction(ctx context.Context, c *app.RequestContext) {
 		}})
 		return
 	}
-	code, err := h.likeService.LikeAction(ctx, userId, req.TargetAt, req.ActionType, req.TargetType)
+	code, err := Rpc.LikeAction(ctx, &react2.LikeActionReq{
+		TargetAt:   req.TargetAt,
+		TargetType: req.TargetType,
+		ActionType: req.ActionType,
+		UserID:     userId,
+	})
 	if err != nil {
 		log.Println("likeService.LikeAction:", err)
 	}
-	resp := new(react.LikeActionResp)
-	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
+	resp := &react.LikeActionResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+	}
 	c.JSON(200, resp)
 }
 
 // LikeList .
 // @router /like/list [GET]
-func (h *LikesHandler) LikeList(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/like/list")
-	if blockErr != nil {
-		c.JSON(200, &react.LikeListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func LikeList(ctx context.Context, c *app.RequestContext) {
 	var req react.LikeListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &react.CommentPublishResp{
+		resp := &react.LikeListResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	code, videoInfos, err := h.likeService.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
+	code, data, err := Rpc.LikeList(ctx, &react2.LikeListReq{
+		UserId:   req.UserId,
+		PageNum:  req.PageNum,
+		PageSize: req.PageSize,
+	})
 	if err != nil {
 		log.Println("likeService.LikeList:", err)
 	}
 	resp := &react.LikeListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &react.LikeVideoData{Items: nil, Total: int64(len(videoInfos))},
+		Data: data,
 	}
 	c.JSON(200, resp)
 }
