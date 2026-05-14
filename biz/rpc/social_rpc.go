@@ -37,7 +37,7 @@ func FollowingListRpc(ctx context.Context, req *social.FollowingListReq) (int32,
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
 	}
-	return resp.Code, convertSocialItemsToUserInfos(resp.Data), nil
+	return resp.Code, buildSocialData(resp.Data), nil
 }
 
 func FollowerListRpc(ctx context.Context, req *social.FollowerListReq) (int32, *SocialData, error) {
@@ -45,7 +45,7 @@ func FollowerListRpc(ctx context.Context, req *social.FollowerListReq) (int32, *
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
 	}
-	return resp.Code, convertSocialItemsToUserInfos(resp.Data), nil
+	return resp.Code, buildSocialData(resp.Data), nil
 }
 
 func FriendListRpc(ctx context.Context, req *social.FriendListReq) (int32, *SocialData, error) {
@@ -53,10 +53,10 @@ func FriendListRpc(ctx context.Context, req *social.FriendListReq) (int32, *Soci
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
 	}
-	return resp.Code, convertSocialItemsToUserInfos(resp.Data), nil
+	return resp.Code, buildSocialData(resp.Data), nil
 }
 
-func convertSocialItemsToUserInfos(data *social.SocialData) *SocialData {
+func buildSocialData(data *social.SocialData) *SocialData {
 	items := make([]*user.UserInfo, len(data.Items))
 	for i, item := range data.Items {
 		items[i] = &user.UserInfo{
