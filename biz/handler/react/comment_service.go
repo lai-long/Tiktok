@@ -5,47 +5,20 @@ package react
 import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
-	react "Tiktok/biz/model/react"
+	"Tiktok/biz/model/react"
+	react2 "Tiktok/kitex_gen/react"
 	"context"
 	"log"
 
+	Rpc "Tiktok/biz/rpc"
 	"Tiktok/pkg/consts"
 
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
-)
-
-type CommentSever interface {
-	CommentPublish(targetId, userId, content, targetType string) (int32, error)
-	CommentList(targetId string, pageSize int64, pageNum int64) (int32, []*react.CommentInfo, error)
-	CommentDelete(commentId string, target string, userId string, targetType string) (int32, error)
-}
-type CommentHandler struct {
-	service CommentSever
-}
-
-func NewCommentHandler(service CommentSever) *CommentHandler {
-	return &CommentHandler{
-		service: service,
-	}
-}
-
-var (
-	CommentPublish func(ctx context.Context, c *app.RequestContext)
-	CommentList    func(ctx context.Context, c *app.RequestContext)
-	CommentDelete  func(ctx context.Context, c *app.RequestContext)
 )
 
 // CommentPublish .
 // @router /comment/publish [POST]
-func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/comment/publish")
-	if blockErr != nil {
-		c.JSON(200, &react.CommentPublishResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func CommentPublish(ctx context.Context, c *app.RequestContext) {
 	var req react.CommentPublishReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -55,8 +28,13 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value(middleware.UserIDKey).(string)
-	code, err := h.service.CommentPublish(req.TargetAt, userId, req.Content, req.TargetType)
+	userId := c.Value(middleware.UserIDKey).(string)
+	code, err := Rpc.CommentPublish(ctx, &react2.CommentPublishReq{
+		TargetAt:   req.TargetAt,
+		TargetType: req.TargetType,
+		Content:    req.Content,
+		UserID:     userId,
+	})
 	if err != nil {
 		log.Println("CommentPublish err:", err)
 	}
@@ -68,59 +46,55 @@ func (h *CommentHandler) CommentPublish(ctx context.Context, c *app.RequestConte
 
 // CommentList .
 // @router /comment/list [GET]
-func (h *CommentHandler) CommentList(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/comment/list")
-	if blockErr != nil {
-		c.JSON(200, &react.CommentListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func CommentList(ctx context.Context, c *app.RequestContext) {
 	var req react.CommentListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &react.CommentPublishResp{
+		resp := &react.CommentListResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	code, commentInfos, err := h.service.CommentList(req.TargetAt, req.PageSize, req.PageNum)
+	code, data, err := Rpc.CommentList(ctx, &react2.CommentListReq{
+		TargetAt: req.TargetAt,
+		PageSize: req.PageSize,
+		PageNum:  req.PageNum,
+	})
 	if err != nil {
 		log.Println("CommentList err:", err)
 	}
 	resp := &react.CommentListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &react.CommentData{Items: commentInfos},
+		Data: data,
 	}
 	c.JSON(200, resp)
 }
 
 // CommentDelete .
 // @router /comment/delete [DELETE]
-func (h *CommentHandler) CommentDelete(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/comment/delete")
-	if blockErr != nil {
-		c.JSON(200, &react.CommentDeleteResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func CommentDelete(ctx context.Context, c *app.RequestContext) {
 	var req react.CommentDeleteReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &react.CommentPublishResp{
+		resp := &react.CommentDeleteResp{
 			Base: &common.Base{Code: consts.ReactReqValidError, Msg: consts.GetErrorCodeMsg(consts.ReactReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value(middleware.UserIDKey).(string)
-	code, err := h.service.CommentDelete(req.CommentId, req.TargetAt, userId, req.TargetType)
+	userId := c.Value(middleware.UserIDKey).(string)
+	code, err := Rpc.CommentDelete(ctx, &react2.CommentDeleteReq{
+		CommentId:  req.CommentId,
+		TargetAt:   req.TargetAt,
+		TargetType: req.TargetType,
+		UserID:     userId,
+	})
 	if err != nil {
 		log.Println("CommentDelete err:", err)
 	}
-	resp := new(react.CommentDeleteResp)
-	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
+	resp := &react.CommentDeleteResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+	}
 	c.JSON(200, resp)
 }

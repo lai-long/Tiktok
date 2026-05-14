@@ -1,83 +1,71 @@
 syntax="proto3";
 package user;
 option go_package="user";
-import "api.proto";
-import "common.proto";
 message UserInfo{
-   string ID = 1[(api.go_tag)="json:\"id\""];
-   string Username=2[(api.go_tag)="json:\"username\""];
-   string AvatarURL=3[(api.go_tag)="json:\"avatar_url\""];
-   string CreatedAt=4[(api.go_tag)="json:\"created_at\""];
-   string UpdatedAt=5[(api.go_tag)="json:\"updated_at\""];
-   string DeletedAt=6[(api.go_tag)="json:\"deleted_at\""];
+    string ID = 1;
+    string Username=2;
+    string AvatarURL=3;
+    string CreatedAt=4;
+    string UpdatedAt=5;
+    string DeletedAt=6;
 }
-
-
 
 message RegisterReq{
-   string UserName=1[(api.body)="username",(api.vd)="required,min=1,max=20"];
-   string Password=2[(api.body)="password",(api.vd)="required,min=5,max=20"];
+    string UserName=1;
+    string Password=2;
 }
 message RegisterResp{
-   common.Base Base=1[(api.go_tag)="json:\"base\""];
+    int32 Code =1;
 }
 
 message LoginReq{
-   string UserName=1[(api.body)="username",(api.vd)="required,min=1,max=20"];
-   string Password=2[(api.body)="password",(api.vd)="required,min=5,max=20"];
-   string Code=3[(api.body)="code"];
+    string UserName=1;
+    string Password=2;
+    string Code=3;
 }
 message LoginResp{
-   common.Base Base=1[(api.go_tag)="json:\"base\""];
-   UserInfo data=2[(api.go_tag)="json:\"data\""];
-   string RefreshToken=3[(api.go_tag)="json:\"refresh_token\""];
-   string AccessToken=4[(api.go_tag)="json:\"access_token\""];
+    int32 Code =1;
+    UserInfo data=2;
+    string RefreshToken=3;
+    string AccessToken=4;
 }
 
 message UserInfoReq{
-   string UserId=1[(api.body)="user_id",(api.vd)="required"];
+    string UserId=1;
 }
 message UserInfoResp{
-   common.Base Base=1[(api.go_tag)="json:\"base\""];
-   UserInfo Data=2[(api.go_tag)="json:\"data\""];
+    int32 Code =1;
+    UserInfo Data=2;
 }
 
 message UserAvatarReq{
+    string AvatarURL = 1;
+    string UserID = 2;
 }
 message UserAvatarResp{
-   common.Base Base=1[(api.go_tag)="json:\"base\""];
-   UserInfo data=2[(api.go_tag)="json:\"data\""];
+    int32 Code =1;
+    UserInfo data=2;
 }
 
 message RefreshTokenReq{
-   string RefreshToken=1[(api.body)="refresh_token"];
+    string RefreshToken=1;
 }
 message RefreshTokenResp{
-   common.Base Base=1[(api.go_tag)="json:\"base\""];
-   string RefreshToken=2[(api.go_tag)="json:\"refresh_token\""];
-   string AccessToken=3[(api.go_tag)="json:\"access_token\""];
+    int32 Code =1;
+    string RefreshToken=2;
+    string AccessToken=3;
 }
-
 message AuthReq{
-   string AccessToken=1[(api.header)="Access-Token"];
+    string AccessToken=1;
 }
 message AuthResp{
-   common.Base Base=1[(api.body)="base"];
+    int32 Code =1;
 }
+
 service UserService{
-   rpc UserRegister(RegisterReq) returns(RegisterResp){
-      option(api.post) = "/user/register";
-   }
-   rpc UserLogin(LoginReq) returns(LoginResp){
-      option(api.post) = "/user/login";
-   }
-   rpc UserInfo(UserInfoReq)returns(UserInfoResp){
-      option(api.get) = "/user/info";
-   }
-   rpc UserAvatar(UserAvatarReq)returns(UserAvatarResp){
-      option(api.put) = "/user/avatar/upload";
-   }
-   rpc RefreshToken(RefreshTokenReq)returns(RefreshTokenResp){
-      option(api.post)="/user/refresh";
-   }
+    rpc UserRegister(RegisterReq) returns(RegisterResp){}
+    rpc UserLogin(LoginReq) returns(LoginResp){}
+    rpc UserInfo(UserInfoReq)returns(UserInfoResp){}
+    rpc UserAvatar(UserAvatarReq)returns(UserAvatarResp){}
+    rpc RefreshToken(RefreshTokenReq)returns(RefreshTokenResp){}
 }

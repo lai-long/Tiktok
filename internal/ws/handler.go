@@ -1,0 +1,80 @@
+package ws
+
+import (
+	"Tiktok/biz/middleware"
+	"Tiktok/biz/model/chat"
+	"Tiktok/biz/model/common"
+	"Tiktok/internal/ws/service"
+	"Tiktok/pkg/dal/cache"
+	"Tiktok/pkg/dal/dao"
+	"Tiktok/pkg/utils"
+	"context"
+	"log"
+	"net/http"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/adaptor"
+	"github.com/gorilla/websocket"
+)
+
+type WebsocketSever struct {
+	db        *dao.MySQLdb
+	re        *cache.Redis
+	websocket *service.WebsocketService
+}
+
+func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis, ws *service.WebsocketService) *WebsocketSever {
+	return &WebsocketSever{
+		db:        db,
+		re:        re,
+		websocket: ws,
+	}
+}
+
+func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
+	userid, ok := c.Value(middleware.UserIDKey).(string)
+	if !ok || userid == "" {
+		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
+			Code: 200,
+			Msg:  "Unauthorized: user_id not found",
+		}})
+		return
+	}
+	log.Println("User connected:", userid)
+	uid := userid
+	req := new(chat.WebsocketReq)
+	err := c.BindAndValidate(req)
+	if err != nil {
+		log.Println("BindAndValidate error:", err)
+		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
+			Code: 0,
+			Msg:  "Invalid request parameters",
+		}})
+		return
+	}
+	stdHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := (&websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		}).Upgrade(w, r, nil)
+		if err != nil {
+			log.Println("WebSocket upgrade error:", err)
+			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
+			return
+		}
+		client := &service.Client{
+			ID:      utils.CreateID(uid, req.ToUserId),
+			SendID:  utils.CreateID(req.ToUserId, uid),
+			GroupId: req.GroupId,
+			Socket:  conn,
+			Send:    make(chan []byte, 128),
+		}
+		log.Println("WebSocket client:", client)
+		m.websocket.Manager.Register <- client
+		go m.websocket.Read(client)
+		go m.websocket.Write(client)
+	})
+	wsAdaptor := adaptor.HertzHandler(stdHandler)
+	wsAdaptor(ctx, c)
+}

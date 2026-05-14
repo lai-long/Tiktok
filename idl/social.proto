@@ -1,64 +1,67 @@
 syntax="proto3";
 package social;
 option go_package="social";
-import "api.proto";
-import "common.proto";
-import "user.proto";
+
+message UserInfo{
+   string ID = 1;
+   string Username = 2;
+   string AvatarURL = 3;
+   string CreatedAt = 4;
+   string UpdatedAt = 5;
+   string DeletedAt = 6;
+}
 
 message SocialData{
-  repeated user.UserInfo items =1[(api.go_tag)="json:\"items\""];
-  int64 Total=2[(api.go_tag)="json:\"total\""];
+  repeated UserInfo items = 1;
+  int64 Total = 2;
 }
 message RelationActionReq{
-  string ToUserId=1[(api.body)="to_user_id"];
-  string ActionType=2[(api.body)="action_type"];
+  string ToUserId = 1;
+  string ActionType = 2;
+  string UserId = 3;
 }
 message RelationActionResp{
-  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  int32 Code = 1;
+  string Msg = 2;
 }
 
 message FollowingListReq{
-  string UserId=1[(api.body)="user_id"];
-  int64 PageNum=2[(api.body)="page_num"];
-  int64 PageSize=3[(api.body)="page_size"];
+  string UserId = 1;
+  int64 PageNum = 2;
+  int64 PageSize = 3;
 }
 message FollowingListResp{
-  common.Base Base=1[(api.go_tag)="json:\"base\""];
-  SocialData data=2[(api.go_tag)="json:\"data\""];
+  int32 Code = 1;
+  string Msg = 2;
+  SocialData data = 3;
 }
 
 message FollowerListReq{
-  string UserId=1[(api.body)="user_id"];
-  int64 PageNum=2[(api.body)="page_num"];
-  int64 PageSize=3[(api.body)="page_size"];
+  string UserId = 1;
+  int64 PageNum = 2;
+  int64 PageSize = 3;
 }
 message FollowerListResp{
-  common.Base Base=1[(api.go_tag)="json:\"base\""];
-  SocialData data=2[(api.go_tag)="json:\"data\""];
+  int32 Code = 1;
+  string Msg = 2;
+  SocialData data = 3;
 }
 
 message FriendListReq{
-  string UserId=1[(api.body)="user_id"];
-  int64 PageNum=2[(api.body)="page_num"];
-  int64 PageSize=3[(api.body)="page_size"];
+  string UserId = 1;
+  int64 PageNum = 2;
+  int64 PageSize = 3;
 }
 message FriendListResp{
-  common.Base Base=1[(api.go_tag)="json:\"base\""];
-  SocialData data=2[(api.go_tag)="json:\"data\""];
+  int32 Code = 1;
+  string Msg = 2;
+  SocialData data = 3;
 }
 
 
 service SocialService {
-  rpc RelationAction(RelationActionReq) returns (RelationActionResp) {
-    option (api.post) = "/relation/action";
-  }
-  rpc FollowingList(FollowingListReq) returns (FollowingListResp) {
-    option (api.get) = "/following/list";
-  }
-  rpc FollowerList(FollowerListReq) returns (FollowerListResp) {
-    option (api.get) = "/follower/list";
-  }
-  rpc FriendList(FriendListReq) returns (FriendListResp) {
-    option (api.get) = "/friend/list";
-  }
+  rpc RelationAction(RelationActionReq) returns (RelationActionResp);
+  rpc FollowingList(FollowingListReq) returns (FollowingListResp);
+  rpc FollowerList(FollowerListReq) returns (FollowerListResp);
+  rpc FriendList(FriendListReq) returns (FriendListResp);
 }

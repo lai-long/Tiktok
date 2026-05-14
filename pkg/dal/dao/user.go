@@ -1,0 +1,35 @@
+package dao
+
+import (
+	"Tiktok/pkg/entity"
+	"log"
+)
+
+func (m *MySQLdb) CreateUser(user entity.UserEntity) error {
+	sql := `INSERT INTO users (username,  password, id) VALUES (?, ? ,?)`
+	_, err := m.db.Exec(sql, user.Username, user.Password, user.ID)
+	return err
+}
+
+func (m *MySQLdb) GetUserByUsername(username string) (entity.UserEntity, error) {
+	var user entity.UserEntity
+	sql := `SELECT * FROM users WHERE username = ?`
+	err := m.db.Get(&user, sql, username)
+	return user, err
+}
+
+func (m *MySQLdb) GetUserByUserId(userID string) (entity.UserEntity, error) {
+	var user entity.UserEntity
+	sql := `SELECT * FROM users WHERE id = ?`
+	err := m.db.Get(&user, sql, userID)
+	if err != nil {
+		log.Println(err)
+	}
+	return user, err
+}
+
+func (m *MySQLdb) UpdateUserAvatar(url string, userID interface{}) error {
+	sql := `UPDATE users SET avatar_url=? WHERE id=?`
+	_, err := m.db.Exec(sql, url, userID)
+	return err
+}

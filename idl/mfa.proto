@@ -1,32 +1,31 @@
 syntax="proto3";
 package mfa;
 option go_package="mfa";
-import "api.proto";
-import "common.proto";
 
 message MfaData{
-  string Secret=1[(api.go_tag)="json:\"secret\""];
-  string Qrcode=2[(api.go_tag)="json:\"qrcode\""];
+    string Secret=1;
+    string Qrcode=2;
 }
 
-message MfaQrcodeReq{}
+message MfaQrcodeReq{
+    string UserName=1;
+    string UserID=2;
+}
 message MfaQrcodeResp{
-  common.Base Base=1[(api.go_tag)="json:\"base\""];
-  MfaData Data=2[(api.go_tag)="json:\"data\""];
+    int32 Code=1;
+    MfaData Data=2;
 }
 
 message MfaBindReq{
-  string Code=1[(api.body)="code"];
-  string Secret=2[(api.body)="secret"];
+    string mfaCode=1;
+    string Secret=2;
+    string UserID=3;
+    string Type=4;
 }
 message MfaBindResp{
-  common.Base Base=1[(api.go_tag)="json:\"base\""];
+    int32 Code=1;
 }
 service MfaService{
-  rpc MfaQrcode(MfaQrcodeReq) returns(MfaQrcodeResp){
-    option(api.get) = "/auth/mfa/qrcode";
-  }
-  rpc MfaBind(MfaBindReq)returns(MfaBindResp){
-    option(api.post) = "/auth/mfa/bind";
-  }
+    rpc MfaQrcode(MfaQrcodeReq) returns(MfaQrcodeResp){}
+    rpc MfaBind(MfaBindReq)returns(MfaBindResp){}
 }
