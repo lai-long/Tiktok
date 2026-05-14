@@ -102,6 +102,7 @@ type CommentPublishReq struct {
 	TargetAt   string `protobuf:"bytes,1,opt,name=TargetAt" json:"TargetAt,omitempty"`
 	TargetType string `protobuf:"bytes,2,opt,name=TargetType" json:"TargetType,omitempty"`
 	Content    string `protobuf:"bytes,3,opt,name=Content" json:"Content,omitempty"`
+	UserID     string `protobuf:"bytes,4,opt,name=UserID" json:"UserID,omitempty"`
 }
 
 func (x *CommentPublishReq) Reset() { *x = CommentPublishReq{} }
@@ -127,6 +128,13 @@ func (x *CommentPublishReq) GetTargetType() string {
 func (x *CommentPublishReq) GetContent() string {
 	if x != nil {
 		return x.Content
+	}
+	return ""
+}
+
+func (x *CommentPublishReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
 	}
 	return ""
 }
@@ -235,6 +243,7 @@ type CommentDeleteReq struct {
 	CommentId  string `protobuf:"bytes,1,opt,name=CommentId" json:"CommentId,omitempty"`
 	TargetAt   string `protobuf:"bytes,2,opt,name=TargetAt" json:"TargetAt,omitempty"`
 	TargetType string `protobuf:"bytes,3,opt,name=TargetType" json:"TargetType,omitempty"`
+	UserID     string `protobuf:"bytes,4,opt,name=UserID" json:"UserID,omitempty"`
 }
 
 func (x *CommentDeleteReq) Reset() { *x = CommentDeleteReq{} }
@@ -264,6 +273,13 @@ func (x *CommentDeleteReq) GetTargetType() string {
 	return ""
 }
 
+func (x *CommentDeleteReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
 type CommentDeleteResp struct {
 	Code int32 `protobuf:"varint,1,opt,name=code" json:"code,omitempty"`
 }
@@ -285,6 +301,7 @@ type LikeActionReq struct {
 	TargetAt   string `protobuf:"bytes,1,opt,name=TargetAt" json:"TargetAt,omitempty"`
 	TargetType string `protobuf:"bytes,2,opt,name=TargetType" json:"TargetType,omitempty"`
 	ActionType string `protobuf:"bytes,3,opt,name=ActionType" json:"ActionType,omitempty"`
+	UserID     string `protobuf:"bytes,4,opt,name=UserID" json:"UserID,omitempty"`
 }
 
 func (x *LikeActionReq) Reset() { *x = LikeActionReq{} }
@@ -310,6 +327,13 @@ func (x *LikeActionReq) GetTargetType() string {
 func (x *LikeActionReq) GetActionType() string {
 	if x != nil {
 		return x.ActionType
+	}
+	return ""
+}
+
+func (x *LikeActionReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
 	}
 	return ""
 }
