@@ -101,14 +101,3 @@
 ## 接口文档
 k7wl3pn34m.apifox.cn
 
-## 快速开始
-一、使用docker快速部署(.env与config.yaml可以自己修改)
-1. 创建环境变量文件
-`    cp .env.example .env `
-
-2. 创建与编辑config.yaml
-`   cp pkg/config/config-docker.example.yaml pkg/config/config.yaml`
-
-3. 启动服务
-`   docker-compose up -d
-`

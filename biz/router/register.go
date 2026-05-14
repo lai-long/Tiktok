@@ -3,7 +3,6 @@
 package router
 
 import (
-	chat "Tiktok/biz/router/chat"
 	mfa "Tiktok/biz/router/mfa"
 	react "Tiktok/biz/router/react"
 	social "Tiktok/biz/router/social"
@@ -17,7 +16,6 @@ import (
 func GeneratedRegister(r *server.Hertz) {
 	//INSERT_POINT: DO NOT DELETE THIS LINE!
 
-	chat.Register(r)
 	video.Register(r)
 	social.Register(r)
 	react.Register(r)
