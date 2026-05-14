@@ -17,7 +17,7 @@ const (
 
 	// Message types (WebSocket)
 	MsgTypePrivate  = "1" // 私信
-	MsgTypeGroup    = "2" // 群聊
+	MsgTypeOffline  = "2" // 未在线时搜到的消息
 	MsgTypeHistory  = "3" // 历史消息请求
 	MsgTypeGroupMsg = "4" // 群组消息
 )

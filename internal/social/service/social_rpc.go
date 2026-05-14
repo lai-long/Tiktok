@@ -42,27 +42,15 @@ func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, action
 }
 
 func (s *SocialRepo) FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	followings, err := s.socialDb.FollowingList(userId, pageNum, pageSize)
-	if err != nil {
-		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->Following List Get Following List err")
-	}
-	userInfos := []*social.UserInfo{}
-	for i := 0; i < len(followings); i++ {
-		userInfos = append(userInfos, toSocialUserInfo(followings[i]))
-	}
-	return consts.Success, userInfos, nil
+	return s.buildUserList(func() ([]entity.UserEntity, error) {
+		return s.socialDb.FollowingList(userId, pageNum, pageSize)
+	}, "->FollowingList Get Following List err")
 }
 
 func (s *SocialRepo) FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	followers, err := s.socialDb.FollowerList(userId, pageNum, pageSize)
-	if err != nil {
-		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowerList Get List err")
-	}
-	userInfos := []*social.UserInfo{}
-	for i := 0; i < len(followers); i++ {
-		userInfos = append(userInfos, toSocialUserInfo(followers[i]))
-	}
-	return consts.Success, userInfos, nil
+	return s.buildUserList(func() ([]entity.UserEntity, error) {
+		return s.socialDb.FollowerList(userId, pageNum, pageSize)
+	}, "->FollowerList Get List err")
 }
 
 func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
@@ -70,9 +58,21 @@ func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (i
 	if !ok {
 		return consts.SocialDBSelectError, nil, errors.New("->FriendList Get List err")
 	}
-	userInfos := []*social.UserInfo{}
-	for i := range entityFriend {
-		userInfos = append(userInfos, toSocialUserInfo(entityFriend[i]))
+	userInfos := make([]*social.UserInfo, 0, len(entityFriend))
+	for _, e := range entityFriend {
+		userInfos = append(userInfos, toSocialUserInfo(e))
+	}
+	return consts.Success, userInfos, nil
+}
+
+func (s *SocialRepo) buildUserList(fetchFunc func() ([]entity.UserEntity, error), errorMsg string) (int32, []*social.UserInfo, error) {
+	entities, err := fetchFunc()
+	if err != nil {
+		return consts.SocialDBSelectError, nil, errors.Wrap(err, errorMsg)
+	}
+	userInfos := make([]*social.UserInfo, 0, len(entities))
+	for _, e := range entities {
+		userInfos = append(userInfos, toSocialUserInfo(e))
 	}
 	return consts.Success, userInfos, nil
 }
