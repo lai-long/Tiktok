@@ -43,61 +43,31 @@
     [x] 删除好友
 
 ## 目录
-    ├── biz
-    │   ├── dal
-    │   │   ├── cache
-    │   │   └── dao
-    │   ├── entity
-    │   ├── handler
-    │   │   ├── chat
-    │   │   ├── mfa
-    │   │   ├── react
-    │   │   ├── social
-    │   │   ├── user
-    │   │   └── video
-    │   ├── middleware
-    │   ├── model
-    │   │   ├── ai
-    │   │   ├── api
-    │   │   ├── chat
-    │   │   ├── common
-    │   │   ├── mfa
-    │   │   ├── react
-    │   │   ├── social
-    │   │   ├── user
-    │   │   └── video
-    │   ├── router
-    │   │   ├── chat
-    │   │   ├── mfa
-    │   │   ├── react
-    │   │   ├── social
-    │   │   ├── user
-    │   │   └── video
-    │   └── service
-    │       ├── chat
-    │       ├── mfa
-    │       ├── react
-    │       ├── social
-    │       ├── user
-    │       └── video
-    ├── build.sh
-    ├── Dockerfile
-    ├── go.mod
-    ├── go.sum
-    ├── idl
-    ├── mcp_service
-    │   ├── mcp_service
-    │   └── tools
-    ├── pkg
-    │   ├── config
-    │   │   ├── config.example.yaml
-    │   │   ├── config.yaml
-    │   │   ├── init.sql
-    │   │   └── sentinel.yaml
-    │   ├── consts
-    │   └── utils
-    └── README.md
-
+    ├── biz                     # HTTP层 (Hertz handlers)
+    │   ├── handler             # HTTP请求处理
+    │   ├── middleware          # 中间件 (auth认证)
+    │   ├── model               # 请求/响应模型
+    │   ├── router              # 路由注册
+    │   └── rpc                 # RPC客户端
+    ├── cmd                     # 服务入口
+    │   ├── api                 # HTTP API服务 (:8888)
+    │   ├── mfa/react/social/user/video  # RPC服务 (Kitex)
+    │   └── ws                  # WebSocket服务 (:8881)
+    ├── idl                     # protobuf IDL定义
+    │   └── api
+    ├── internal                # RPC层 (Kitex handlers)
+    │   ├── mfa/react/social/user/video/ws
+    │   │   ├── handler.go      # Kitex服务实现
+    │   │   └── service/        # 业务逻辑
+    │   └── ws
+    ├── kitex_gen               # 生成的Kitex代码
+    │   ├── mfa/react/social/user/video
+    ├── pkg                     # 公共包
+    │   ├── config              # 配置
+    │   ├── consts             # 常量
+    │   ├── dal                # 数据访问层 (dao/cache)
+    │   ├── entity             # 实体
+    │   └── utils              # 工具函数
+    ├── Dockerfile, go.mod, go.sum, README.md
 ## 接口文档
 k7wl3pn34m.apifox.cn
-
