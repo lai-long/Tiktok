@@ -1,6 +1,7 @@
 syntax="proto3";
 package react;
 option go_package="react";
+import "video.proto";
 message CommentInfo{
     string UserId=1;
     string TargetId=2;
@@ -18,6 +19,7 @@ message CommentPublishReq{
     string TargetAt=1;
     string TargetType=2;
     string Content=3;
+    string UserID=4;
 }
 message CommentPublishResp{
      int32 Code=1;
@@ -41,6 +43,7 @@ message CommentDeleteReq{
     string CommentId=1;
     string TargetAt=2;
     string TargetType=3;
+    string UserID=4;
 }
 message CommentDeleteResp{
    int32 code=1;
@@ -50,6 +53,7 @@ message LikeActionReq{
     string TargetAt=1;
     string TargetType=2;
     string ActionType=3;
+    string UserID=4;
 }
 message LikeActionResp{
     int32 Code=1;
