@@ -1,6 +1,27 @@
 // Package consts 放置错误码以及错误信息等常量
 package consts
 
+// 通用动作/类型常量
+const (
+	// Action types (社交模块)
+	ActionFollow   = "0"
+	ActionUnfollow = "1"
+
+	// Target types (互动模块)
+	TargetVideo   = "1"
+	TargetComment = "2"
+
+	// Like/Dislike actions
+	ActionLike    = "1"
+	ActionDislike = "2"
+
+	// Message types (WebSocket)
+	MsgTypePrivate  = "1" // 私信
+	MsgTypeGroup    = "2" // 群聊
+	MsgTypeHistory  = "3" // 历史消息请求
+	MsgTypeGroupMsg = "4" // 群组消息
+)
+
 // 00通用
 const (
 	Success       int32 = 0
@@ -107,6 +128,7 @@ var mapErrorMsg = map[int32]string{
 	VideoReqValidError:  "视频模块参数绑定错误",
 	ReactReqValidError:  "互动模块视频绑定错误",
 	ReactReqValueError:  "互动模块传入参数错误",
+	ReactError:          "互动模块nil错误",
 	ReactDBInsertError:  "互动模块模块数据库insert错误",
 	ReactDBUpdateError:  "互动模块模块数据库update错误",
 	ReactDBDeleteError:  "互动模块模块数据库delete错误",
@@ -117,14 +139,14 @@ var mapErrorMsg = map[int32]string{
 	SocialDBUpdateError: "社交模块模块数据库update错误",
 	SocialDBDeleteError: "社交模块模块数据库delete错误",
 	SocialDBSelectError: "社交模块模块数据库select错误",
-	WsReqValidError:     " websocket参数错误",
-	WsClientNotOnline:   " 对方不在线",
-	WsClientOnline:      " 对方在线",
-	WsDisconnect:        " 连接中断",
-	WsConnectSuccess:    " 连接成功",
-	WsAIReplyEmpty:      " AI无响应",
-	WsGetOfflineError:   " 获取离线消息错误",
-	WsGetHistoryError:   " 获取历史消息错误",
+	WsReqValidError:     "websocket参数错误",
+	WsClientNotOnline:   "对方不在线",
+	WsClientOnline:      "对方在线",
+	WsDisconnect:        "连接中断",
+	WsConnectSuccess:    "连接成功",
+	WsAIReplyEmpty:      "AI无响应",
+	WsGetOfflineError:   "获取离线消息错误",
+	WsGetHistoryError:   "获取历史消息错误",
 }
 
 // GetErrorCodeMsg 根据code获取对应错误信息
