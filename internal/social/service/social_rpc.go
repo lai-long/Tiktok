@@ -24,14 +24,14 @@ func NewSocialRepo(socialDb SocialDatabase) *SocialRepo {
 	return &SocialRepo{socialDb: socialDb}
 }
 func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, actionType string, userId string) (int32, error) {
-	if actionType == "0" {
+	if actionType == consts.ActionFollow {
 		err := s.socialDb.CreateFollowing(userId, toUserId)
 		if err != nil {
 			return consts.SocialDBInsertError, errors.Wrap(err, "->RelationAction CreateFollowing err")
 		}
 		return consts.Success, nil
 	}
-	if actionType == "1" {
+	if actionType == consts.ActionUnfollow {
 		err := s.socialDb.DeleteFollowing(userId, toUserId)
 		if err != nil {
 			return consts.SocialDBDeleteError, errors.Wrap(err, "->RelationACtion DeleteFollowing err")

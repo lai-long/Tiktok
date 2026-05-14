@@ -113,23 +113,23 @@ func (s *LikeRepo) DislikeComment(userId string, targetId string, targetType str
 
 func (s *LikeRepo) LikeAction(ctx context.Context, userId string, targetId string, action string, targetType string) (int32, error) {
 	switch targetType {
-	case "1":
+	case consts.TargetVideo:
 		switch action {
-		case "1":
+		case consts.ActionLike:
 			code, err := s.LikeVideo(ctx, userId, targetId, targetType)
 			return code, err
-		case "2":
+		case consts.ActionDislike:
 			code, err := s.DislikeVideo(ctx, userId, targetId, targetType)
 			return code, err
 		default:
 			return consts.ReactReqValueError, errors.Errorf("invalid action type: %s", action)
 		}
-	case "2":
+	case consts.TargetComment:
 		switch action {
-		case "1":
+		case consts.ActionLike:
 			code, err := s.LikeComment(userId, targetId, targetType)
 			return code, err
-		case "2":
+		case consts.ActionDislike:
 			code, err := s.DislikeComment(userId, targetId, targetType)
 			return code, err
 		default:

@@ -81,25 +81,25 @@ func (ws *WebsocketService) Read(c *Client) {
 			}(question)
 		}
 		switch sendMsg.Type {
-		case "1":
+		case consts.MsgTypePrivate:
 			ws.Manager.Broadcast <- &Broadcast{
-				Type:    "1",
+				Type:    consts.MsgTypePrivate,
 				Clients: c,
 				Message: []byte(sendMsg.Content),
 			}
-		case "2":
+		case consts.MsgTypeGroup:
 			ws.Manager.Broadcast <- &Broadcast{
-				Type:    "2",
+				Type:    consts.MsgTypeGroup,
 				Clients: c,
 			}
-		case "3":
+		case consts.MsgTypeHistory:
 			ws.Manager.Broadcast <- &Broadcast{
-				Type:     "3",
+				Type:     consts.MsgTypeHistory,
 				Clients:  c,
 				PageNum:  sendMsg.PageNum,
 				PageSize: sendMsg.PageSize,
 			}
-		case "4":
+		case consts.MsgTypeGroupMsg:
 			ws.Manager.mu.Lock()
 			ws.Manager.GroupBroadcast <- &GroupBroadcast{
 				Clients: ws.Manager.Groups[c.GroupId],
