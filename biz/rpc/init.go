@@ -15,4 +15,5 @@ var (
 func Init() {
 	InitUserRpc()
 	InitMfaRpc()
+	InitVideoRpc()
 }

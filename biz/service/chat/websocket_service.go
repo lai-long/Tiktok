@@ -11,6 +11,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -71,8 +72,10 @@ func (ws *WebsocketService) Read(c *Client) {
 		}
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
-			agent := NewAgent(context.Background())
 			go func(q string) {
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+				agent := NewAgent(ctx)
 				resp := agent.StartAction(question)
 				ws.aiReplyToClient(resp, c)
 			}(question)

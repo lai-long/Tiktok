@@ -3,6 +3,7 @@ package rpc
 import (
 	"Tiktok/kitex_gen/video"
 	"Tiktok/kitex_gen/video/videoservice"
+	"Tiktok/pkg/consts"
 	"context"
 	"log"
 
@@ -13,15 +14,13 @@ import (
 )
 
 func InitVideoRpc() {
-	r, err := etcd.NewEtcdResolver([]string{"http://127.0.0.1:2379"})
+	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 	cli, err := videoservice.NewClient("videoService", client.WithResolver(r))
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 	videoClient = cli
 }
@@ -32,9 +31,12 @@ func VideoPublish(ctx context.Context, req *video.VideoPublishReq) (int32, error
 }
 func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoList(ctx, req)
-	infos := make([]*model.VideoInfo, resp.Data.Total)
-	for i := 0; i < len(infos); i++ {
-		infos[i] = &model.VideoInfo{
+	if err != nil || resp.Data == nil {
+		return consts.VideoDBSelectError, nil, err
+	}
+	infos := make([]*model.VideoInfo, 0, resp.Data.Total)
+	for i := 0; i < len(resp.Data.Items); i++ {
+		infos = append(infos, &model.VideoInfo{
 			ID:           resp.Data.Items[i].ID,
 			UserID:       resp.Data.Items[i].UserID,
 			Title:        resp.Data.Items[i].Title,
@@ -46,7 +48,7 @@ func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.Vide
 			UpdatedAt:    resp.Data.Items[i].UpdatedAt,
 			VideoURL:     resp.Data.Items[i].VideoURL,
 			VisitCount:   resp.Data.Items[i].VisitCount,
-		}
+		})
 	}
 	data := &model.VideoData{
 		Items: infos,
@@ -56,9 +58,12 @@ func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.Vide
 }
 func VideoSearch(ctx context.Context, req *video.VideoSearchReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoSearch(ctx, req)
-	infos := make([]*model.VideoInfo, resp.Data.Total)
-	for i := 0; i < len(infos); i++ {
-		infos[i] = &model.VideoInfo{
+	if err != nil || resp.Data == nil {
+		return consts.VideoDBSelectError, nil, err
+	}
+	infos := make([]*model.VideoInfo, 0, resp.Data.Total)
+	for i := 0; i < len(resp.Data.Items); i++ {
+		infos = append(infos, &model.VideoInfo{
 			ID:           resp.Data.Items[i].ID,
 			UserID:       resp.Data.Items[i].UserID,
 			Title:        resp.Data.Items[i].Title,
@@ -70,7 +75,7 @@ func VideoSearch(ctx context.Context, req *video.VideoSearchReq) (int32, *model.
 			UpdatedAt:    resp.Data.Items[i].UpdatedAt,
 			VideoURL:     resp.Data.Items[i].VideoURL,
 			VisitCount:   resp.Data.Items[i].VisitCount,
-		}
+		})
 	}
 	data := &model.VideoData{
 		Items: infos,
@@ -80,9 +85,12 @@ func VideoSearch(ctx context.Context, req *video.VideoSearchReq) (int32, *model.
 }
 func VideoPopular(ctx context.Context, req *video.VideoHotReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoPopular(ctx, req)
-	infos := make([]*model.VideoInfo, resp.Data.Total)
-	for i := 0; i < len(infos); i++ {
-		infos[i] = &model.VideoInfo{
+	if err != nil || resp.Data == nil {
+		return consts.VideoDBSelectError, nil, err
+	}
+	infos := make([]*model.VideoInfo, 0, resp.Data.Total)
+	for i := 0; i < len(resp.Data.Items); i++ {
+		infos = append(infos, &model.VideoInfo{
 			ID:           resp.Data.Items[i].ID,
 			UserID:       resp.Data.Items[i].UserID,
 			Title:        resp.Data.Items[i].Title,
@@ -94,7 +102,7 @@ func VideoPopular(ctx context.Context, req *video.VideoHotReq) (int32, *model.Vi
 			UpdatedAt:    resp.Data.Items[i].UpdatedAt,
 			VideoURL:     resp.Data.Items[i].VideoURL,
 			VisitCount:   resp.Data.Items[i].VisitCount,
-		}
+		})
 	}
 	data := &model.VideoData{
 		Items: infos,
@@ -104,9 +112,12 @@ func VideoPopular(ctx context.Context, req *video.VideoHotReq) (int32, *model.Vi
 }
 func VideoStream(ctx context.Context, req *video.VideoStreamReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoStream(ctx, req)
-	infos := make([]*model.VideoInfo, resp.Data.Total)
-	for i := 0; i < len(infos); i++ {
-		infos[i] = &model.VideoInfo{
+	if err != nil || resp.Data == nil {
+		return consts.VideoDBSelectError, nil, err
+	}
+	infos := make([]*model.VideoInfo, 0, resp.Data.Total)
+	for i := 0; i < len(resp.Data.Items); i++ {
+		infos = append(infos, &model.VideoInfo{
 			ID:           resp.Data.Items[i].ID,
 			UserID:       resp.Data.Items[i].UserID,
 			Title:        resp.Data.Items[i].Title,
@@ -118,7 +129,7 @@ func VideoStream(ctx context.Context, req *video.VideoStreamReq) (int32, *model.
 			UpdatedAt:    resp.Data.Items[i].UpdatedAt,
 			VideoURL:     resp.Data.Items[i].VideoURL,
 			VisitCount:   resp.Data.Items[i].VisitCount,
-		}
+		})
 	}
 	data := &model.VideoData{
 		Items: infos,
