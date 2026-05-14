@@ -5,49 +5,19 @@ package social
 import (
 	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
-	"Tiktok/biz/model/user"
+	social "Tiktok/biz/model/social"
+	Rpc "Tiktok/biz/rpc"
+	social2 "Tiktok/kitex_gen/social"
+	"Tiktok/pkg/consts"
 	"context"
 	"log"
 
-	"Tiktok/biz/model/social"
-
-	"Tiktok/pkg/consts"
-
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
-)
-
-type SocialSever interface {
-	RelationAction(toUserId string, actionType string, userId string) (int32, error)
-	FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*user.UserInfo, error)
-	FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*user.UserInfo, error)
-	FriendList(userId string, pageNum int64, pageSize int64) (int32, []*user.UserInfo, error)
-}
-type SocialHandler struct {
-	socialService SocialSever
-}
-
-func NewSocialHandler(service SocialSever) *SocialHandler {
-	return &SocialHandler{socialService: service}
-}
-
-var (
-	RelationAction func(ctx context.Context, c *app.RequestContext)
-	FollowingList  func(ctx context.Context, c *app.RequestContext)
-	FollowerList   func(ctx context.Context, c *app.RequestContext)
-	FriendList     func(ctx context.Context, c *app.RequestContext)
 )
 
 // RelationAction .
 // @router /relation/action [POST]
-func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/relation/action")
-	if blockErr != nil {
-		c.JSON(200, &social.RelationActionResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func RelationAction(ctx context.Context, c *app.RequestContext) {
 	var req social.RelationActionReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -57,103 +27,124 @@ func (h *SocialHandler) RelationAction(ctx context.Context, c *app.RequestContex
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value(middleware.UserIDKey).(string)
-	code, err := h.socialService.RelationAction(req.ToUserId, req.ActionType, userId)
+	userId := c.Value(middleware.UserIDKey).(string)
+	rpcReq := &social2.RelationActionReq{
+		ToUserId:   req.ToUserId,
+		ActionType: req.ActionType,
+		UserId:     userId,
+	}
+	code, err := Rpc.RelationActionRpc(ctx, rpcReq)
 	if err != nil {
 		log.Println("relation action err", err)
 	}
-	resp := new(social.RelationActionResp)
-	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
+	resp := &social.RelationActionResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+	}
 	c.JSON(200, resp)
 }
 
 // FollowingList .
 // @router /following/list [GET]
-func (h *SocialHandler) FollowingList(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/following/list")
-	if blockErr != nil {
-		c.JSON(200, &social.FollowingListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func FollowingList(ctx context.Context, c *app.RequestContext) {
 	var req social.FollowingListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &social.RelationActionResp{
+		resp := &social.FollowingListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	code, userInfos, err := h.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	rpcReq := &social2.FollowingListReq{
+		UserId:   req.UserId,
+		PageNum:  req.PageNum,
+		PageSize: req.PageSize,
+	}
+	code, data, err := Rpc.FollowingListRpc(ctx, rpcReq)
 	if err != nil {
 		log.Println("following list err", err)
 	}
+	if data == nil {
+		resp := &social.FollowingListResp{
+			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		}
+		c.JSON(200, resp)
+		return
+	}
 	resp := &social.FollowingListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &social.SocialData{Items: userInfos, Total: int64(len(userInfos))},
+		Data: &social.SocialData{Items: data.Items, Total: data.Total},
 	}
 	c.JSON(200, resp)
 }
 
 // FollowerList .
 // @router /follower/list [GET]
-func (h *SocialHandler) FollowerList(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/follower/list")
-	if blockErr != nil {
-		c.JSON(200, &social.FollowingListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func FollowerList(ctx context.Context, c *app.RequestContext) {
 	var req social.FollowerListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &social.RelationActionResp{
+		resp := &social.FollowerListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	code, userInfos, err := h.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
+	rpcReq := &social2.FollowerListReq{
+		UserId:   req.UserId,
+		PageNum:  req.PageNum,
+		PageSize: req.PageSize,
+	}
+	code, data, err := Rpc.FollowerListRpc(ctx, rpcReq)
 	if err != nil {
 		log.Println("follower list err", err)
 	}
-	resp := &social.FollowingListResp{
+	if data == nil {
+		resp := &social.FollowerListResp{
+			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		}
+		c.JSON(200, resp)
+		return
+	}
+	resp := &social.FollowerListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &social.SocialData{Items: userInfos, Total: int64(len(userInfos))},
+		Data: &social.SocialData{Items: data.Items, Total: data.Total},
 	}
 	c.JSON(200, resp)
 }
 
 // FriendList .
 // @router /friend/list [GET]
-func (h *SocialHandler) FriendList(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/friend/list")
-	if blockErr != nil {
-		c.JSON(200, &social.FollowingListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+func FriendList(ctx context.Context, c *app.RequestContext) {
 	var req social.FriendListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		resp := &social.RelationActionResp{
+		resp := &social.FriendListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value(middleware.UserIDKey).(string)
-	code, userInfos, err := h.socialService.FriendList(userId, req.PageNum, req.PageSize)
+	userId := c.Value(middleware.UserIDKey).(string)
+	rpcReq := &social2.FriendListReq{
+		UserId:   userId,
+		PageNum:  req.PageNum,
+		PageSize: req.PageSize,
+	}
+	code, data, err := Rpc.FriendListRpc(ctx, rpcReq)
 	if err != nil {
 		log.Println("friend list err", err)
 	}
-	resp := &social.FollowingListResp{
+	if data == nil {
+		resp := &social.FriendListResp{
+			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		}
+		c.JSON(200, resp)
+		return
+	}
+	resp := &social.FriendListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
-		Data: &social.SocialData{Items: userInfos, Total: int64(len(userInfos))},
+		Data: &social.SocialData{Items: data.Items, Total: data.Total},
 	}
 	c.JSON(200, resp)
 }

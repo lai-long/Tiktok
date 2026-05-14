@@ -1,0 +1,67 @@
+syntax="proto3";
+package social;
+option go_package="social";
+
+message UserInfo{
+   string ID = 1;
+   string Username = 2;
+   string AvatarURL = 3;
+   string CreatedAt = 4;
+   string UpdatedAt = 5;
+   string DeletedAt = 6;
+}
+
+message SocialData{
+  repeated UserInfo items = 1;
+  int64 Total = 2;
+}
+message RelationActionReq{
+  string ToUserId = 1;
+  string ActionType = 2;
+  string UserId = 3;
+}
+message RelationActionResp{
+  int32 Code = 1;
+  string Msg = 2;
+}
+
+message FollowingListReq{
+  string UserId = 1;
+  int64 PageNum = 2;
+  int64 PageSize = 3;
+}
+message FollowingListResp{
+  int32 Code = 1;
+  string Msg = 2;
+  SocialData data = 3;
+}
+
+message FollowerListReq{
+  string UserId = 1;
+  int64 PageNum = 2;
+  int64 PageSize = 3;
+}
+message FollowerListResp{
+  int32 Code = 1;
+  string Msg = 2;
+  SocialData data = 3;
+}
+
+message FriendListReq{
+  string UserId = 1;
+  int64 PageNum = 2;
+  int64 PageSize = 3;
+}
+message FriendListResp{
+  int32 Code = 1;
+  string Msg = 2;
+  SocialData data = 3;
+}
+
+
+service SocialService {
+  rpc RelationAction(RelationActionReq) returns (RelationActionResp);
+  rpc FollowingList(FollowingListReq) returns (FollowingListResp);
+  rpc FollowerList(FollowerListReq) returns (FollowerListResp);
+  rpc FriendList(FriendListReq) returns (FriendListResp);
+}
