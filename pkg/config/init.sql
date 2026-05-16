@@ -54,27 +54,6 @@ CREATE TABLE comments
 (
     comment_id VARCHAR(64) PRIMARY KEY NOT NULL,
     user_id    VARCHAR(64) NOT NULL,
-    video_id   VARCHAR(64) NOT NULL,
-    content    TEXT NOT NULL,
-    like_count INT DEFAULT 0 NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_video_id (video_id)
-);
-CREATE TABLE message
-(
-    session_id VARCHAR(128),
-    content TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL
-);
-CREATE TABLE comments
-(
-    comment_id VARCHAR(64) PRIMARY KEY NOT NULL,
-    user_id    VARCHAR(64) NOT NULL,
     target_id   VARCHAR(64) NOT NULL,
     target_type TINYINT NOT NULL ,
     content    TEXT NOT NULL,
@@ -84,5 +63,14 @@ CREATE TABLE comments
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL,
     INDEX idx_user_id (user_id),
-    INDEX idx_target_id (target_id)
+    INDEX idx_target_id (target_id),
+    INDEX idx_target_type (target_type)
+);
+CREATE TABLE message
+(
+    session_id VARCHAR(128),
+    content TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL
 );
