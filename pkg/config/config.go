@@ -29,6 +29,7 @@ type McpClientConfig struct {
 	ID                 string   `mapstructure:"id"`
 	Name               string   `mapstructure:"name"`
 	ConnectionType     string   `mapstructure:"connection_type"`
+	URL                string   `mapstructure:"url"`
 	Command            string   `mapstructure:"command"`
 	Args               []string `mapstructure:"args"`
 	ToolsToExecute     []string `mapstructure:"tools_to_execute"`
