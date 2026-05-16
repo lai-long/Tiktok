@@ -113,23 +113,23 @@ func (s *LikeRepo) DislikeComment(userId string, targetId string, targetType str
 
 func (s *LikeRepo) LikeAction(ctx context.Context, userId string, targetId string, action string, targetType string) (int32, error) {
 	switch targetType {
-	case "1":
+	case consts.TargetVideo:
 		switch action {
-		case "1":
+		case consts.ActionLike:
 			code, err := s.LikeVideo(ctx, userId, targetId, targetType)
 			return code, err
-		case "2":
+		case consts.ActionDislike:
 			code, err := s.DislikeVideo(ctx, userId, targetId, targetType)
 			return code, err
 		default:
 			return consts.ReactReqValueError, errors.Errorf("invalid action type: %s", action)
 		}
-	case "2":
+	case consts.TargetComment:
 		switch action {
-		case "1":
+		case consts.ActionLike:
 			code, err := s.LikeComment(userId, targetId, targetType)
 			return code, err
-		case "2":
+		case consts.ActionDislike:
 			code, err := s.DislikeComment(userId, targetId, targetType)
 			return code, err
 		default:
@@ -156,12 +156,7 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 		if !ok {
 			return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
 		}
-
-		var videoInfos []*video.VideoInfo
-		for _, v := range videos {
-			videoInfos = append(videoInfos, v.ToVideoInfo())
-		}
-		return consts.Success, videoInfos, nil
+		return consts.Success, buildVideoInfos(videos), nil
 	}
 	videoId, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
@@ -170,10 +165,6 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 	ok, videos := s.videoDb.LikeVideos(videoId)
 	if !ok {
 		return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
-	}
-	var videoInfos []*video.VideoInfo
-	for _, v := range videos {
-		videoInfos = append(videoInfos, v.ToVideoInfo())
 	}
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -185,5 +176,13 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 			}
 		}
 	}()
-	return consts.Success, videoInfos, nil
+	return consts.Success, buildVideoInfos(videos), nil
+}
+
+func buildVideoInfos(videos []entity.VideoEntity) []*video.VideoInfo {
+	result := make([]*video.VideoInfo, 0, len(videos))
+	for _, v := range videos {
+		result = append(result, v.ToVideoInfo())
+	}
+	return result
 }

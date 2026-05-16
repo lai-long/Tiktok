@@ -81,25 +81,25 @@ func (ws *WebsocketService) Read(c *Client) {
 			}(question)
 		}
 		switch sendMsg.Type {
-		case "1":
+		case consts.MsgTypePrivate:
 			ws.Manager.Broadcast <- &Broadcast{
-				Type:    "1",
+				Type:    consts.MsgTypePrivate,
 				Clients: c,
 				Message: []byte(sendMsg.Content),
 			}
-		case "2":
+		case consts.MsgTypeOffline:
 			ws.Manager.Broadcast <- &Broadcast{
-				Type:    "2",
+				Type:    consts.MsgTypeOffline,
 				Clients: c,
 			}
-		case "3":
+		case consts.MsgTypeHistory:
 			ws.Manager.Broadcast <- &Broadcast{
-				Type:     "3",
+				Type:     consts.MsgTypeHistory,
 				Clients:  c,
 				PageNum:  sendMsg.PageNum,
 				PageSize: sendMsg.PageSize,
 			}
-		case "4":
+		case consts.MsgTypeGroupMsg:
 			ws.Manager.mu.Lock()
 			ws.Manager.GroupBroadcast <- &GroupBroadcast{
 				Clients: ws.Manager.Groups[c.GroupId],
@@ -153,13 +153,7 @@ func (ws *WebsocketService) startRegister(client *Client) {
 		ws.Manager.mu.Unlock()
 	}
 	ws.Manager.Clients[client.ID] = client
-	replyMSg := chat.ReplyMsg{
-		From:    client.ID,
-		Code:    consts.WsConnectSuccess,
-		Content: consts.GetErrorCodeMsg(consts.WsConnectSuccess),
-	}
-	msg, _ := protojson.Marshal(&replyMSg)
-	client.Send <- msg
+	ws.sendReplyMsg(client, client.ID, consts.WsConnectSuccess, consts.GetErrorCodeMsg(consts.WsConnectSuccess))
 }
 
 func (ws *WebsocketService) startUnregister(client *Client) {
@@ -176,13 +170,7 @@ func (ws *WebsocketService) startUnregister(client *Client) {
 		ws.Manager.mu.Unlock()
 	}
 	if _, ok := ws.Manager.Clients[client.ID]; ok {
-		replyMSg := chat.ReplyMsg{
-			From:    client.ID,
-			Code:    consts.WsDisconnect,
-			Content: consts.GetErrorCodeMsg(consts.WsDisconnect),
-		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		client.Send <- msg
+		ws.sendReplyMsg(client, client.ID, consts.WsDisconnect, consts.GetErrorCodeMsg(consts.WsDisconnect))
 		close(client.Send)
 		delete(ws.Manager.Clients, client.ID)
 	}
@@ -197,11 +185,7 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 		if id != sendId {
 			continue
 		}
-		replyMSg := chat.ReplyMsg{
-			From:    client.ID,
-			Code:    consts.Success,
-			Content: string(message),
-		}
+		replyMSg := chat.ReplyMsg{From: client.ID, Code: consts.Success, Content: string(message)}
 		msg, _ := protojson.Marshal(&replyMSg)
 		select {
 		case client.Send <- msg:
@@ -214,23 +198,13 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 	ws.Manager.mu.Unlock()
 	id := broadcast.Clients.ID
 	if flag {
-		replyMSg := chat.ReplyMsg{
-			From:    broadcast.Clients.ID,
-			Code:    consts.WsClientOnline,
-			Content: consts.GetErrorCodeMsg(consts.WsClientOnline),
-		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		broadcast.Clients.Send <- msg
+		ws.sendReplyMsg(broadcast.Clients, broadcast.Clients.ID, consts.WsClientOnline, consts.GetErrorCodeMsg(consts.WsClientOnline))
 		err := ws.mysql.InsertMsg(id, string(message))
 		if err != nil {
 			log.Println("Insert message error:", err)
 		}
 	} else {
-		replyMSg := chat.ReplyMsg{
-			From:    broadcast.Clients.ID,
-			Code:    consts.WsClientNotOnline,
-			Content: consts.GetErrorCodeMsg(consts.WsClientNotOnline),
-		}
+		ws.sendReplyMsg(broadcast.Clients, broadcast.Clients.ID, consts.WsClientNotOnline, consts.GetErrorCodeMsg(consts.WsClientNotOnline))
 		err := ws.mysql.InsertMsg(id, string(message))
 		if err != nil {
 			log.Println("Insert message error:", err)
@@ -239,8 +213,6 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 		if err != nil {
 			log.Println("Save offline message error:", err)
 		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		broadcast.Clients.Send <- msg
 	}
 }
 
@@ -248,24 +220,10 @@ func (ws *WebsocketService) startBroadcastOneOffline(broadcast *Broadcast) {
 	message, err := ws.redis.FetchOfflineMsg(broadcast.Clients.SendID)
 	if err != nil {
 		log.Println("Fetch offline message error:", err)
-		replyMSg := chat.ReplyMsg{
-			From:    "系统",
-			Code:    consts.WsGetOfflineError,
-			Content: consts.GetErrorCodeMsg(consts.WsGetOfflineError),
-		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		broadcast.Clients.Send <- msg
+		ws.sendReplyMsg(broadcast.Clients, "系统", consts.WsGetOfflineError, consts.GetErrorCodeMsg(consts.WsGetOfflineError))
 		return
 	}
-	str := strings.Join(message, ",\n ")
-	finalInfo := str + fmt.Sprintf("\ntotal:%d", len(message))
-	replyMSg := chat.ReplyMsg{
-		From:    "未在线时收到消息",
-		Code:    consts.Success,
-		Content: finalInfo,
-	}
-	msg, _ := protojson.Marshal(&replyMSg)
-	broadcast.Clients.Send <- msg
+	ws.sendReplyMsg(broadcast.Clients, "未在线时收到消息", consts.Success, formatMessageList(message))
 }
 
 func (ws *WebsocketService) startBroadcastOneHistory(broadcast *Broadcast) {
@@ -279,76 +237,39 @@ func (ws *WebsocketService) startBroadcastOneHistory(broadcast *Broadcast) {
 	}
 	msgs, err := ws.mysql.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
 	if err != nil || msgs == nil {
-		replyMSg := chat.ReplyMsg{
-			From:    "系统",
-			Code:    consts.WsGetHistoryError,
-			Content: consts.GetErrorCodeMsg(consts.WsGetHistoryError),
-		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		broadcast.Clients.Send <- msg
+		ws.sendReplyMsg(broadcast.Clients, "系统", consts.WsGetHistoryError, consts.GetErrorCodeMsg(consts.WsGetHistoryError))
 		return
 	}
-	str := strings.Join(msgs, ",\n ")
-	finalInfo := str + fmt.Sprintf("\ntotal:%d", len(msgs))
-	replyMSg := chat.ReplyMsg{
-		From:    broadcast.Clients.ID + "and" + broadcast.Clients.SendID,
-		Code:    consts.Success,
-		Content: finalInfo,
-	}
-	msg, _ := protojson.Marshal(&replyMSg)
-	broadcast.Clients.Send <- msg
+	ws.sendReplyMsg(broadcast.Clients, broadcast.Clients.ID+"and"+broadcast.Clients.SendID, consts.Success, formatMessageList(msgs))
 }
 
 func (ws *WebsocketService) startBroadcastGroupOnline(groupBroadcast *GroupBroadcast) {
 	for _, client := range groupBroadcast.Clients {
-		replyMSg := chat.ReplyMsg{
-			From:    client.ID,
-			Code:    consts.Success,
-			Content: string(groupBroadcast.Message),
-		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		client.Send <- msg
+		ws.sendReplyMsg(client, client.ID, consts.Success, string(groupBroadcast.Message))
 	}
 }
 
 func (ws *WebsocketService) startBroadcastOneError(broadcast *Broadcast) {
-	replyMSg := chat.ReplyMsg{
-		From:    "system",
-		Code:    consts.WsReqValidError,
-		Content: consts.GetErrorCodeMsg(consts.WsReqValidError),
-	}
 	log.Println("请求类型不存在")
-	msg, _ := protojson.Marshal(&replyMSg)
-	broadcast.Clients.Send <- msg
+	ws.sendReplyMsg(broadcast.Clients, "system", consts.WsReqValidError, consts.GetErrorCodeMsg(consts.WsReqValidError))
 }
 
 func (ws *WebsocketService) aiReplyToClient(resp string, c *Client) {
 	if resp == "" {
-		replyMSg := chat.ReplyMsg{
-			From:    "AI",
-			Code:    consts.WsAIReplyEmpty,
-			Content: consts.GetErrorCodeMsg(consts.WsAIReplyEmpty),
-		}
-		msg, _ := protojson.Marshal(&replyMSg)
-		c.Send <- msg
-		if c.SendID != "" {
-			ws.Manager.mu.Lock()
-			for id, client := range ws.Manager.Clients {
-				if id == c.SendID {
-					client.Send <- msg
-					break
-				}
-			}
-			ws.Manager.mu.Unlock()
-		}
+		ws.sendReplyMsgAndSendID(c, "AI", consts.WsAIReplyEmpty, consts.GetErrorCodeMsg(consts.WsAIReplyEmpty))
 		return
 	}
-	replyContent := resp
-	replyMSg := chat.ReplyMsg{
-		From:    "AI",
-		Code:    consts.Success,
-		Content: replyContent,
-	}
+	ws.sendReplyMsgAndSendID(c, "AI", consts.Success, resp)
+}
+
+func (ws *WebsocketService) sendReplyMsg(client *Client, from string, code int32, content string) {
+	replyMSg := chat.ReplyMsg{From: from, Code: code, Content: content}
+	msg, _ := protojson.Marshal(&replyMSg)
+	client.Send <- msg
+}
+
+func (ws *WebsocketService) sendReplyMsgAndSendID(c *Client, from string, code int32, content string) {
+	replyMSg := chat.ReplyMsg{From: from, Code: code, Content: content}
 	msg, _ := protojson.Marshal(&replyMSg)
 	c.Send <- msg
 	if c.SendID != "" {
@@ -361,4 +282,11 @@ func (ws *WebsocketService) aiReplyToClient(resp string, c *Client) {
 		}
 		ws.Manager.mu.Unlock()
 	}
+}
+
+func formatMessageList(messages []string) string {
+	if len(messages) == 0 {
+		return ""
+	}
+	return strings.Join(messages, ",\n ") + fmt.Sprintf("\ntotal:%d", len(messages))
 }
