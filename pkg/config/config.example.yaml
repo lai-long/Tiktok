@@ -30,7 +30,8 @@ mcp:
   - id: ""
     name: ""
     connection_type: ""
-    command: ""
+    url: ""                  # HTTP/SSE模式时使用，如 "http://localhost:8080/mcp"
+    command: ""              # STDIO模式时使用， MCP服务器可执行文件路径
     args: []
     tools_to_execute: ["*"]
     tools_to_auto_execute: ["*"]

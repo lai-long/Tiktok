@@ -49,17 +49,26 @@ var ConnectType = map[string]schemas.MCPConnectionType{
 func NewChatClient(ctx context.Context) (*ChatClient, error) {
 	clientCfg := make([]*schemas.MCPClientConfig, len(config.Cfg.Mcp.Clients))
 	for i := range config.Cfg.Mcp.Clients {
-		clientCfg[i] = &schemas.MCPClientConfig{
-			ID:             config.Cfg.Mcp.Clients[i].ID,
-			Name:           config.Cfg.Mcp.Clients[i].Name,
-			ConnectionType: ConnectType[config.Cfg.Mcp.Clients[i].ConnectionType],
-			StdioConfig: &schemas.MCPStdioConfig{
-				Command: config.Cfg.Mcp.Clients[i].Command,
-				Args:    config.Cfg.Mcp.Clients[i].Args,
-			},
+		connType := ConnectType[config.Cfg.Mcp.Clients[i].ConnectionType]
+		cfg := &schemas.MCPClientConfig{
+			ID:                 config.Cfg.Mcp.Clients[i].ID,
+			Name:               config.Cfg.Mcp.Clients[i].Name,
+			ConnectionType:     connType,
 			ToolsToExecute:     config.Cfg.Mcp.Clients[i].ToolsToExecute,
 			ToolsToAutoExecute: config.Cfg.Mcp.Clients[i].ToolsToAutoExecute,
 		}
+		switch connType {
+		case schemas.MCPConnectionTypeSTDIO:
+			cfg.StdioConfig = &schemas.MCPStdioConfig{
+				Command: config.Cfg.Mcp.Clients[i].Command,
+				Args:    config.Cfg.Mcp.Clients[i].Args,
+			}
+		case schemas.MCPConnectionTypeHTTP, schemas.MCPConnectionTypeSSE:
+			if config.Cfg.Mcp.Clients[i].URL != "" {
+				cfg.ConnectionString = schemas.NewEnvVar(config.Cfg.Mcp.Clients[i].URL)
+			}
+		}
+		clientCfg[i] = cfg
 	}
 	toolManagerCfg := &schemas.MCPToolManagerConfig{
 		ToolExecutionTimeout: time.Duration(config.Cfg.Mcp.ToolManagerConfig.MaxTime) * time.Second,
