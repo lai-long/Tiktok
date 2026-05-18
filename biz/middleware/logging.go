@@ -42,11 +42,12 @@ func LoggingMiddleware() app.HandlerFunc {
 			fields = append(fields, logger.WithUserID(userID))
 		}
 
-		if status >= 500 {
+		switch {
+		case status >= 500:
 			logger.Error("request completed with server error", fields...)
-		} else if status >= 400 {
+		case status >= 400:
 			logger.Warn("request completed with client error", fields...)
-		} else {
+		default:
 			logger.Info("request completed", fields...)
 		}
 	}
