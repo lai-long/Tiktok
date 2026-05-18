@@ -7,7 +7,7 @@ import (
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
-	"log"
+	"Tiktok/pkg/logger"
 	"net"
 	"os"
 
@@ -16,28 +16,33 @@ import (
 	etcd "github.com/kitex-contrib/registry-etcd"
 
 	"github.com/cloudwego/kitex/server"
+	"go.uber.org/zap"
 )
 
 func main() {
 	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		log.Println("load env error:", err)
+		logger.Error("load env error", zap.Error(err))
 	}
 	cfgPath := os.Getenv("CONFIG_PATH")
-	log.Printf("Loading configuration from %s", cfgPath)
+	logger.Info("loading configuration", zap.String("config_path", cfgPath))
 	cfg, err := config.Load([]string{cfgPath})
 	if err != nil {
-		log.Fatal("加载config.yaml错误", err)
+		logger.Fatal("加载config.yaml错误", zap.Error(err))
 	}
-	log.Println(cfg)
+	logger.Info("config loaded", logger.WithServiceName(logger.ServiceName))
+	if err := logger.InitLogger(cfg.Log.Level, cfg.Log.Format, cfg.Log.Development, "user", cfg.Log.Path); err != nil {
+		logger.Fatal("初始化日志错误", zap.Error(err))
+	}
+	logger.Info("logger initialized", logger.WithServiceName("user"), zap.String("level", cfg.Log.Level), zap.String("format", cfg.Log.Format))
 	sentinelPath := os.Getenv("SENTINEL_PATH")
-	log.Printf("Loading sentinel from %s", sentinelPath)
+	logger.Info("loading sentinel", zap.String("sentinel_path", sentinelPath))
 	err = config.LoadRules([]string{sentinelPath})
 	if err != nil {
-		log.Fatal("加载sentinel rules错误", err)
+		logger.Fatal("加载sentinel rules错误", zap.Error(err))
 	}
 	r, err := etcd.NewEtcdRegistry([]string{"127.0.0.1:2379"})
 	if err != nil {
-		log.Println(err)
+		logger.Error("etcd registry error", zap.Error(err))
 	}
 	db := dao.InitDb()
 	mysqlDb := dao.NewMySQLdb(db)
@@ -58,14 +63,14 @@ func main() {
 	)
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Println("db close err", err)
+			logger.Error("db close error", zap.Error(err))
 		}
 		if err := rdb.Close(); err != nil {
-			log.Println("redis close err", err)
+			logger.Error("redis close error", zap.Error(err))
 		}
 	}()
-	log.Printf("User Kitex server started at %s", addr.String())
+	logger.Info("kitex server started", zap.String("addr", addr.String()))
 	if err := svr.Run(); err != nil {
-		log.Println("Kitex server error:", err)
+		logger.Error("Kitex server error", zap.Error(err))
 	}
 }

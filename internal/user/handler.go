@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/alibaba/sentinel-golang/api"
-	"github.com/pkg/errors"
 )
 
 // UserServiceImpl implements the last service interface defined in the IDL.
@@ -48,14 +47,15 @@ func (s *UserServiceImpl) UserLogin(ctx context.Context, req *user.LoginReq) (re
 	code, userInfo, reToken, acToken, err := s.service.Login(req.UserName, req.Password, req.Code, ctx)
 	if err != nil {
 		resp.Code = code
-		return resp, errors.Wrap(err, "login")
+		resp.Data = userInfo
+		resp.RefreshToken = reToken
+		resp.AccessToken = acToken
+		return resp, nil
 	}
-	resp = &user.LoginResp{
-		Code:         code,
-		Data:         userInfo,
-		RefreshToken: reToken,
-		AccessToken:  acToken,
-	}
+	resp.Code = code
+	resp.Data = userInfo
+	resp.RefreshToken = reToken
+	resp.AccessToken = acToken
 	return resp, nil
 }
 
@@ -72,12 +72,11 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 	userInfo, code, err := s.service.UserInfo(ctx, req.UserId)
 	if err != nil {
 		resp.Code = code
-		return resp, errors.Wrap(err, "UserInfo")
+		resp.Data = userInfo
+		return resp, nil
 	}
-	resp = &user.UserInfoResp{
-		Code: code,
-		Data: userInfo,
-	}
+	resp.Code = code
+	resp.Data = userInfo
 	return resp, nil
 }
 
@@ -96,12 +95,11 @@ func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarRe
 	if err != nil {
 		log.Println("userService.UserAvatar error:", err)
 		resp.Code = code
-		return resp, errors.Wrap(err, "UserAvatar")
+		resp.Data = userInfo
+		return resp, nil
 	}
-	resp = &user.UserAvatarResp{
-		Code: code,
-		Data: userInfo,
-	}
+	resp.Code = code
+	resp.Data = userInfo
 	return resp, nil
 }
 
@@ -118,12 +116,12 @@ func (s *UserServiceImpl) RefreshToken(ctx context.Context, req *user.RefreshTok
 	code, reToken, acToken, err := s.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		resp.Code = code
-		return resp, errors.Wrap(err, "RefreshToken")
+		resp.RefreshToken = reToken
+		resp.AccessToken = acToken
+		return resp, nil
 	}
-	resp = &user.RefreshTokenResp{
-		Code:         code,
-		RefreshToken: reToken,
-		AccessToken:  acToken,
-	}
+	resp.Code = code
+	resp.RefreshToken = reToken
+	resp.AccessToken = acToken
 	return resp, nil
 }

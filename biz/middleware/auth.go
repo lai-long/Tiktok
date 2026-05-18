@@ -5,17 +5,13 @@ import (
 	"Tiktok/biz/model/user"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/logger"
 	"context"
-	"log"
 	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/golang-jwt/jwt/v5"
-)
-
-const (
-	UserIDKey   = "userid"
-	UsernameKey = "username"
+	"go.uber.org/zap"
 )
 
 func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
@@ -30,7 +26,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	req := new(user.AuthReq)
 	err := c.BindAndValidate(req)
 	if err != nil {
-		log.Println("AuthMiddleware BindAndValidate err", err)
+		logger.Error("AuthMiddleware BindAndValidate error", zap.Error(err))
 		return
 	}
 	if req.AccessToken == "" {
@@ -58,7 +54,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 		return []byte(config.Cfg.Jwt.AccessSecret), nil
 	})
 	if err != nil {
-		log.Printf("JWT parse error: %v", err)
+		logger.Error("JWT parse error", zap.Error(err))
 		c.JSON(200, user.AuthResp{Base: &common.Base{
 			Code: consts.UserPasswordError,
 			Msg:  "JWT parse error",
@@ -76,7 +72,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	}
 	userid, _ := (*claims)["userid"].(string)
 	username, _ := (*claims)["username"].(string)
-	c.Set(UserIDKey, userid)
-	c.Set(UsernameKey, username)
+	c.Set(consts.UserIDKey, userid)
+	c.Set(consts.UsernameKey, username)
 	c.Next(ctx)
 }

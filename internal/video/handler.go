@@ -31,7 +31,7 @@ func (s *VideoServiceImpl) VideoPublish(ctx context.Context, req *video.VideoPub
 
 	code, err := s.videoService.VideoPublish(ctx, req.Title, req.Description, req.VideoURL, req.UserID)
 	resp.Code = code
-	return resp, err
+	return resp, nil
 }
 
 // VideoList implements the VideoServiceImpl interface.
@@ -53,7 +53,7 @@ func (s *VideoServiceImpl) VideoList(ctx context.Context, req *video.VideoListRe
 			Total: int64(len(info)),
 		},
 	}
-	return resp, err
+	return resp, nil
 }
 
 // VideoSearch implements the VideoServiceImpl interface.
@@ -74,7 +74,7 @@ func (s *VideoServiceImpl) VideoSearch(ctx context.Context, req *video.VideoSear
 			Total: int64(len(infos)),
 		},
 	}
-	return resp, err
+	return resp, nil
 }
 
 // VideoPopular implements the VideoServiceImpl interface.
@@ -95,7 +95,7 @@ func (s *VideoServiceImpl) VideoPopular(ctx context.Context, req *video.VideoHot
 			Total: int64(len(infos)),
 		},
 	}
-	return resp, err
+	return resp, nil
 }
 
 // VideoStream implements the VideoServiceImpl interface.
@@ -116,5 +116,5 @@ func (s *VideoServiceImpl) VideoStream(ctx context.Context, req *video.VideoStre
 			Total: int64(len(infos)),
 		},
 	}
-	return resp, err
+	return resp, nil
 }

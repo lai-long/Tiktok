@@ -3,6 +3,10 @@ package consts
 
 // 通用动作/类型常量
 const (
+	// UserIDKey 和 UsernameKey 用于在请求上下文中存储用户信息
+	UserIDKey   = "userid"
+	UsernameKey = "username"
+
 	// Action types (社交模块)
 	ActionFollow   = "0"
 	ActionUnfollow = "1"

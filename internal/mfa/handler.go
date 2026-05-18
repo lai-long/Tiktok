@@ -38,7 +38,7 @@ func (s *MfaServiceImpl) MfaQrcode(ctx context.Context, req *mfa.MfaQrcodeReq) (
 			Qrcode: qrCode,
 		},
 	}
-	return resp, err
+	return resp, nil
 }
 
 // MfaBind implements the MfaServiceImpl interface.
@@ -64,5 +64,5 @@ func (s *MfaServiceImpl) MfaBind(ctx context.Context, req *mfa.MfaBindReq) (resp
 	resp = &mfa.MfaBindResp{
 		Code: code,
 	}
-	return resp, err
+	return resp, nil
 }
