@@ -72,10 +72,8 @@ type APIConfig struct {
 
 // LogConfig 日志配置
 type LogConfig struct {
-	Level       string `mapstructure:"level"`
-	Format      string `mapstructure:"format"`
-	Development bool   `mapstructure:"development"`
-	Path        string `mapstructure:"path"`
+	Level string `mapstructure:"level"`
+	Path  string `mapstructure:"path"`
 }
 
 // Config 总配置

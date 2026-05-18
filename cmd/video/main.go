@@ -29,10 +29,10 @@ func main() {
 		logger.Fatal("加载config.yaml错误", zap.Error(err))
 	}
 	logger.Info("config loaded", logger.WithServiceName(logger.ServiceName))
-	if err := logger.InitLogger(cfg.Log.Level, cfg.Log.Format, cfg.Log.Development, "video", cfg.Log.Path); err != nil {
+	if err := logger.InitLogger(cfg.Log.Level, "video", cfg.Log.Path); err != nil {
 		logger.Fatal("初始化日志错误", zap.Error(err))
 	}
-	logger.Info("logger initialized", logger.WithServiceName("video"), zap.String("level", cfg.Log.Level), zap.String("format", cfg.Log.Format))
+	logger.Info("logger initialized", logger.WithServiceName("video"), zap.String("level", cfg.Log.Level))
 	sentinelPath := os.Getenv("SENTINEL_PATH")
 	logger.Info("loading sentinel", zap.String("sentinel_path", sentinelPath))
 	err = config.LoadRules([]string{sentinelPath})

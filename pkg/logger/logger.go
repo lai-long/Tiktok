@@ -12,7 +12,7 @@ import (
 var Logger *zap.Logger
 var ServiceName string
 
-func InitLogger(level, format string, development bool, serviceName string, logPath ...string) error {
+func InitLogger(level string, serviceName string, logPath ...string) error {
 	ServiceName = serviceName
 
 	var zapLevel zapcore.Level
@@ -29,7 +29,8 @@ func InitLogger(level, format string, development bool, serviceName string, logP
 		zapLevel = zapcore.InfoLevel
 	}
 
-	encoderConfig := zapcore.EncoderConfig{
+	// 终端输出：console 格式
+	consoleEncoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "ts",
 		LevelKey:       "level",
 		NameKey:        "service",
@@ -43,16 +44,27 @@ func InitLogger(level, format string, development bool, serviceName string, logP
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
 
-	var encoder zapcore.Encoder
-	if format == "console" {
-		encoder = zapcore.NewConsoleEncoder(encoderConfig)
-	} else {
-		encoder = zapcore.NewJSONEncoder(encoderConfig)
+	// 文件输出：JSON 格式
+	fileEncoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "ts",
+		LevelKey:       "level",
+		NameKey:        "service",
+		CallerKey:      "caller",
+		FunctionKey:    zapcore.OmitKey,
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
+	fileEncoder := zapcore.NewJSONEncoder(fileEncoderConfig)
 
 	cores := make([]zapcore.Core, 0, 2)
-	cores = append(cores, zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapLevel))
+	cores = append(cores, zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapLevel))
 
 	path := ""
 	if len(logPath) > 0 {
@@ -70,7 +82,7 @@ func InitLogger(level, format string, development bool, serviceName string, logP
 		LocalTime:  true,
 		Compress:   true,
 	}
-	cores = append(cores, zapcore.NewCore(encoder, zapcore.AddSync(lumberjackWriter), zapLevel))
+	cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(lumberjackWriter), zapLevel))
 
 	core := zapcore.NewTee(cores...)
 	Logger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
