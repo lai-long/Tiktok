@@ -11,7 +11,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -38,6 +38,8 @@ type Client struct {
 	Socket  *websocket.Conn
 	Send    chan []byte
 	Ctx     context.Context
+	agent   *Agent
+	agentMu sync.Mutex
 }
 type Broadcast struct {
 	Clients  *Client
@@ -56,6 +58,9 @@ func (ws *WebsocketService) Read(c *Client) {
 	defer func() {
 		ws.Manager.Unregister <- c
 		_ = c.Socket.Close()
+		if c.agent != nil {
+			c.agent.StopAction()
+		}
 	}()
 
 	c.Socket.SetPongHandler(func(string) error {
@@ -73,10 +78,16 @@ func (ws *WebsocketService) Read(c *Client) {
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
 			go func(q string) {
-				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-				defer cancel()
-				agent := NewAgent(ctx)
-				resp := agent.StartAction(question)
+				c.agentMu.Lock()
+				defer c.agentMu.Unlock()
+				if c.agent == nil {
+					c.agent = NewAgent(context.Background())
+				}
+				if c.agent == nil {
+					ws.aiReplyToClient("", c)
+					return
+				}
+				resp := c.agent.StartAction(q)
 				ws.aiReplyToClient(resp, c)
 			}(question)
 		}
