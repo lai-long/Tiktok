@@ -51,9 +51,8 @@ func InitLogger(level, format string, development bool, serviceName string, logP
 		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	}
 
-	cores := []zapcore.Core{
-		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapLevel),
-	}
+	cores := make([]zapcore.Core, 0, 2)
+	cores = append(cores, zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapLevel))
 
 	path := ""
 	if len(logPath) > 0 {

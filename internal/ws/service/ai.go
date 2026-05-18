@@ -67,6 +67,7 @@ func NewChatClient(ctx context.Context) (*ChatClient, error) {
 			if config.Cfg.Mcp.Clients[i].URL != "" {
 				cfg.ConnectionString = schemas.NewEnvVar(config.Cfg.Mcp.Clients[i].URL)
 			}
+		case schemas.MCPConnectionTypeInProcess:
 		}
 		clientCfg[i] = cfg
 	}
