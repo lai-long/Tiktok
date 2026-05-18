@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
@@ -139,4 +140,25 @@ func SaveUploadFile(dataFile multipart.File, dir string, filename string) (int32
 		return consts.IOOsError, errors.Wrap(err, "saveUploadFile io copy error")
 	}
 	return consts.Success, nil
+}
+
+// GetUserID 从请求上下文中获取用户ID
+func GetUserID(c *app.RequestContext) string {
+	if userID, ok := c.Get(consts.UserIDKey); ok {
+		if uid, ok := userID.(string); ok {
+			return uid
+		}
+	}
+	return ""
+}
+
+// GetUserIDAndName 从请求上下文中获取用户ID和用户名
+func GetUserIDAndName(c *app.RequestContext) (string, string) {
+	uid := GetUserID(c)
+	if userName, ok := c.Get(consts.UsernameKey); ok {
+		if name, ok := userName.(string); ok {
+			return uid, name
+		}
+	}
+	return uid, ""
 }

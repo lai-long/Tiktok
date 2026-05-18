@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"Tiktok/pkg/logger"
 	"sync"
 
 	"github.com/alibaba/sentinel-golang/core/circuitbreaker"
@@ -9,6 +9,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // Path 常用路径
@@ -69,6 +70,14 @@ type APIConfig struct {
 	MapAPI  string `mapstructure:"map_api"`
 }
 
+// LogConfig 日志配置
+type LogConfig struct {
+	Level       string `mapstructure:"level"`
+	Format      string `mapstructure:"format"`
+	Development bool   `mapstructure:"development"`
+	Path        string `mapstructure:"path"`
+}
+
 // Config 总配置
 type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
@@ -77,6 +86,7 @@ type Config struct {
 	API   APIConfig   `mapstructure:"api"`
 	Path  Path        `mapstructure:"filepath"`
 	Mcp   MCPConfig   `mapstructure:"mcp"`
+	Log   LogConfig   `mapstructure:"log"`
 }
 
 // Cfg 调用配置
@@ -137,15 +147,15 @@ func Load(confPath []string) (*Config, error) {
 	v.OnConfigChange(func(e fsnotify.Event) {
 		var newCfg Config
 		if err := v.Unmarshal(&newCfg); err != nil {
-			log.Println("failed to unmarshal config")
+			logger.Error("failed to unmarshal config", zap.Error(err))
 			return
 		}
 		lock.Lock()
 		Cfg = &newCfg
 		lock.Unlock()
-		log.Println("config changed successfully")
+		logger.Info("config changed successfully")
 	})
-	log.Println("config init successfully")
+	logger.Info("config init successfully")
 	return &cfg, nil
 }
 
@@ -191,7 +201,7 @@ func LoadRules(configPath []string) error {
 	if err := loadCircuitBreakerRules(cfg.CircuitBreaker); err != nil {
 		return errors.Wrap(err, "failed to load circuit breaker rules")
 	}
-	log.Println("Sentinel rules loaded successfully")
+	logger.Info("Sentinel rules loaded successfully")
 	return nil
 }
 
@@ -221,7 +231,7 @@ func loadFlowRules(flowRules []FlowRuleConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to load flow rules")
 	}
-	log.Printf("loaded %d flow rules", len(sentinelRules))
+	logger.Info("loaded flow rules", zap.Int("count", len(sentinelRules)))
 	return nil
 }
 
@@ -246,7 +256,7 @@ func loadCircuitBreakerRules(cbRules []CircuitBreakerConfig) error {
 		return errors.Wrap(err, "failed to load circuit breaker rules")
 	}
 
-	log.Printf("loaded %d circuit breaker rules", len(sentinelRules))
+	logger.Info("loaded circuit breaker rules", zap.Int("count", len(sentinelRules)))
 	return nil
 }
 

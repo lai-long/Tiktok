@@ -5,28 +5,29 @@ import (
 	"Tiktok/kitex_gen/react/commentservice"
 	"Tiktok/kitex_gen/react/likeservice"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/logger"
 	"context"
-	"log"
 
 	model "Tiktok/biz/model/react"
 	video "Tiktok/biz/model/video"
 
 	"github.com/cloudwego/kitex/client"
 	etcd "github.com/kitex-contrib/registry-etcd"
+	"go.uber.org/zap"
 )
 
 func InitReactRpc() {
 	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
 	commentCli, err := commentservice.NewClient("commentService", client.WithResolver(r))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("comment service client error", zap.Error(err))
 	}
 	likeCli, err := likeservice.NewClient("likeService", client.WithResolver(r))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("like service client error", zap.Error(err))
 	}
 	commentClient = commentCli
 	likeClient = likeCli

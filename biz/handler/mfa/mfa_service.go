@@ -3,40 +3,57 @@
 package mfa
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	Rpc "Tiktok/biz/rpc"
 	mfa2 "Tiktok/kitex_gen/mfa"
+	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
-	"log"
 
 	"Tiktok/biz/model/mfa"
 
 	"Tiktok/pkg/consts"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"go.uber.org/zap"
 )
 
 // MfaQrcode .
 // @router /auth/mfa/qrcode [GET]
 func MfaQrcode(ctx context.Context, c *app.RequestContext) {
+	userID, userName := utils.GetUserIDAndName(c)
 	var req mfa.MfaQrcodeReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
+		logger.Warn("mfa qrcode binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "mfa_qrcode"),
+			zap.Error(err))
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId := ctx.Value(middleware.UserIDKey).(string)
-	userName := ctx.Value(middleware.UsernameKey).(string)
 	code, secret, key, err := Rpc.MfaQrCodeRpc(ctx, &mfa2.MfaQrcodeReq{
 		UserName: userName,
-		UserID:   userId,
+		UserID:   userID,
 	})
 	if err != nil {
-		log.Println("MfaQrcode err: ", err)
+		logger.Error("mfa qrcode RPC failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("username", userName),
+			logger.WithField("action", "mfa_qrcode"),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("mfa qrcode generated",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("username", userName),
+			logger.WithField("action", "mfa_qrcode"))
 	}
 	resp := &mfa.MfaQrcodeResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -48,16 +65,21 @@ func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 // MfaBind .
 // @router /auth/mfa/bind [POST]
 func MfaBind(ctx context.Context, c *app.RequestContext) {
+	userID, _ := utils.GetUserIDAndName(c)
 	var req mfa.MfaBindReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
+		logger.Warn("mfa bind binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "mfa_bind"),
+			zap.Error(err))
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userID := ctx.Value(middleware.UserIDKey).(string)
 	var ty string
 	switch {
 	case req.Secret != "":
@@ -65,6 +87,10 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 	case req.Code != "":
 		ty = "qrcode"
 	default:
+		logger.Warn("mfa bind invalid request",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "mfa_bind"))
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -78,7 +104,19 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 		Type:    ty,
 	})
 	if err != nil {
-		log.Println("MfaBind err: ", err)
+		logger.Error("mfa bind RPC failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("mfa_type", ty),
+			logger.WithField("action", "mfa_bind"),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("mfa bind success",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("mfa_type", ty),
+			logger.WithField("action", "mfa_bind"))
 	}
 	resp := &mfa.MfaQrcodeResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

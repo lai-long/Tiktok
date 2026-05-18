@@ -29,7 +29,7 @@ func (s *CommentServiceImpl) CommentPublish(ctx context.Context, req *react.Comm
 
 	code, err := s.commentRepo.CommentPublish(req.TargetAt, req.UserID, req.Content, req.TargetType)
 	resp.Code = code
-	return resp, err
+	return resp, nil
 }
 
 func (s *CommentServiceImpl) CommentList(ctx context.Context, req *react.CommentListReq) (resp *react.CommentListResp, err error) {
@@ -50,7 +50,7 @@ func (s *CommentServiceImpl) CommentList(ctx context.Context, req *react.Comment
 			Total: int64(len(comments)),
 		},
 	}
-	return resp, err
+	return resp, nil
 }
 
 func (s *CommentServiceImpl) CommentDelete(ctx context.Context, req *react.CommentDeleteReq) (resp *react.CommentDeleteResp, err error) {
@@ -65,7 +65,7 @@ func (s *CommentServiceImpl) CommentDelete(ctx context.Context, req *react.Comme
 
 	code, err := s.commentRepo.CommentDelete(req.CommentId, req.TargetAt, req.UserID, req.TargetType)
 	resp.Code = code
-	return resp, err
+	return resp, nil
 }
 
 type LikeServiceImpl struct {
@@ -88,7 +88,7 @@ func (s *LikeServiceImpl) LikeAction(ctx context.Context, req *react.LikeActionR
 
 	code, err := s.likeRepo.LikeAction(ctx, req.UserID, req.TargetAt, req.ActionType, req.TargetType)
 	resp.Code = code
-	return resp, err
+	return resp, nil
 }
 
 func (s *LikeServiceImpl) LikeList(ctx context.Context, req *react.LikeListReq) (resp *react.LikeListResp, err error) {
@@ -109,5 +109,5 @@ func (s *LikeServiceImpl) LikeList(ctx context.Context, req *react.LikeListReq) 
 			Total: int64(len(videoInfos)),
 		},
 	}
-	return resp, err
+	return resp, nil
 }

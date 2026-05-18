@@ -5,21 +5,22 @@ import (
 	"Tiktok/kitex_gen/social"
 	"Tiktok/kitex_gen/social/socialservice"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/logger"
 	"context"
-	"log"
 
 	"github.com/cloudwego/kitex/client"
 	etcd "github.com/kitex-contrib/registry-etcd"
+	"go.uber.org/zap"
 )
 
 func InitSocialRpc() {
 	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
 	cli, err := socialservice.NewClient("socialService", client.WithResolver(r))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("social service client error", zap.Error(err))
 	}
 	socialClient = cli
 }

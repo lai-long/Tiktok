@@ -3,39 +3,62 @@
 package social
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	social "Tiktok/biz/model/social"
 	Rpc "Tiktok/biz/rpc"
 	social2 "Tiktok/kitex_gen/social"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
-	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"go.uber.org/zap"
 )
 
 // RelationAction .
 // @router /relation/action [POST]
 func RelationAction(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req social.RelationActionReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
+		logger.Warn("relation action binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "relation_action"),
+			zap.Error(err))
 		resp := &social.RelationActionResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId := c.Value(middleware.UserIDKey).(string)
 	rpcReq := &social2.RelationActionReq{
 		ToUserId:   req.ToUserId,
 		ActionType: req.ActionType,
-		UserId:     userId,
+		UserId:     userID,
 	}
 	code, err := Rpc.RelationActionRpc(ctx, rpcReq)
 	if err != nil {
-		log.Println("relation action err", err)
+		logger.Error("relation action failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("to_user_id", req.ToUserId),
+			logger.WithField("action_type", req.ActionType),
+			logger.WithField("action", "relation_action"),
+			zap.Error(err))
+	}
+	if code == 0 {
+		actionStr := "follow"
+		if req.ActionType == "2" {
+			actionStr = "unfollow"
+		}
+		logger.Info("relation action success",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("to_user_id", req.ToUserId),
+			logger.WithField("action", actionStr))
 	}
 	resp := &social.RelationActionResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -46,9 +69,15 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 // FollowingList .
 // @router /following/list [GET]
 func FollowingList(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req social.FollowingListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
+		logger.Warn("following list binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "following_list"),
+			zap.Error(err))
 		resp := &social.FollowingListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
@@ -62,7 +91,12 @@ func FollowingList(ctx context.Context, c *app.RequestContext) {
 	}
 	code, data, err := Rpc.FollowingListRpc(ctx, rpcReq)
 	if err != nil {
-		log.Println("following list err", err)
+		logger.Error("following list query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("target_user_id", req.UserId),
+			logger.WithField("action", "following_list"),
+			zap.Error(err))
 	}
 	if data == nil {
 		resp := &social.FollowingListResp{
@@ -81,9 +115,15 @@ func FollowingList(ctx context.Context, c *app.RequestContext) {
 // FollowerList .
 // @router /follower/list [GET]
 func FollowerList(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req social.FollowerListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
+		logger.Warn("follower list binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "follower_list"),
+			zap.Error(err))
 		resp := &social.FollowerListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
@@ -97,7 +137,12 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 	}
 	code, data, err := Rpc.FollowerListRpc(ctx, rpcReq)
 	if err != nil {
-		log.Println("follower list err", err)
+		logger.Error("follower list query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("target_user_id", req.UserId),
+			logger.WithField("action", "follower_list"),
+			zap.Error(err))
 	}
 	if data == nil {
 		resp := &social.FollowerListResp{
@@ -116,24 +161,33 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 // FriendList .
 // @router /friend/list [GET]
 func FriendList(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req social.FriendListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
+		logger.Warn("friend list binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "friend_list"),
+			zap.Error(err))
 		resp := &social.FriendListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId := c.Value(middleware.UserIDKey).(string)
 	rpcReq := &social2.FriendListReq{
-		UserId:   userId,
+		UserId:   userID,
 		PageNum:  req.PageNum,
 		PageSize: req.PageSize,
 	}
 	code, data, err := Rpc.FriendListRpc(ctx, rpcReq)
 	if err != nil {
-		log.Println("friend list err", err)
+		logger.Error("friend list query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "friend_list"),
+			zap.Error(err))
 	}
 	if data == nil {
 		resp := &social.FriendListResp{
