@@ -112,6 +112,10 @@ func Load(confPath []string) (*Config, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "openai_api_key bind env error")
 	}
+	err = v.BindEnv("api.map_api", "AMAP_KEY")
+	if err != nil {
+		return nil, errors.Wrap(err, "amap_key bind env error")
+	}
 	err = v.BindEnv("jwt.access_secret", "JWT_ACCESS_SECRET")
 	if err != nil {
 		return nil, errors.Wrap(err, "jwt_access_secret bind env error")
