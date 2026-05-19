@@ -73,6 +73,10 @@ func (m *MockUser) SetCachedUserInfo(ctx context.Context, userId string, info *e
 	args := m.Called(ctx, userId, info)
 	return args.Error(0)
 }
+func (m *MockUser) DelCachedUserInfo(ctx context.Context, userId string) error {
+	args := m.Called(ctx, userId)
+	return args.Error(0)
+}
 func TestRegister(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -252,6 +256,7 @@ func TestUserAvatar(t *testing.T) {
 			userID: "userID",
 			setMock: func(m *MockUser) {
 				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(nil)
+				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
 				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "user", Avatar_url: "http://example.com/avatar.jpg"}, nil)
 			},
 			wantCode: consts.Success,
@@ -273,6 +278,7 @@ func TestUserAvatar(t *testing.T) {
 			userID: "userID",
 			setMock: func(m *MockUser) {
 				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(nil)
+				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
 				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{}, errors.New("get error"))
 			},
 			wantCode: consts.UserDBSelectError,

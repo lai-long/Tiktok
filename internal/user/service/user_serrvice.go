@@ -20,6 +20,7 @@ type UserRedis interface {
 	UserTokenDelete(ctx context.Context, refreshToken string) error
 	GetCachedUserInfo(ctx context.Context, userId string) (*entity.UserEntity, error)
 	SetCachedUserInfo(ctx context.Context, userId string, info *entity.UserEntity) error
+	DelCachedUserInfo(ctx context.Context, userId string) error
 }
 
 type UserDatabase interface {
@@ -133,6 +134,9 @@ func (s *UserRepo) UserAvatar(url string, userID string) (int32, *user.UserInfo,
 	err := s.userDb.UpdateUserAvatar(url, userID)
 	if err != nil {
 		return consts.UserDBUpdateError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 更新头像错误")
+	}
+	if err := s.redis.DelCachedUserInfo(context.Background(), userID); err != nil {
+		return consts.UserRedisDelError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 删除缓存错误")
 	}
 	userEntity, err := s.userDb.GetUserByUserId(userID)
 	if err != nil {
