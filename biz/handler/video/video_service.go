@@ -15,7 +15,6 @@ import (
 
 	"Tiktok/pkg/consts"
 
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
 	"go.uber.org/zap"
 )
@@ -227,17 +226,6 @@ func VideoSearch(ctx context.Context, c *app.RequestContext) {
 // @router /video/popular [GET]
 func VideoPopular(ctx context.Context, c *app.RequestContext) {
 	userID := utils.GetUserID(c)
-	entry, blockErr := api.Entry("/video/popular")
-	if blockErr != nil {
-		logger.Warn("video popular sentinel blocked",
-			logger.WithServiceName("api"),
-			logger.WithUserID(userID),
-			logger.WithField("action", "video_popular"))
-		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
 	var req video.VideoHotReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -280,17 +268,6 @@ func VideoPopular(ctx context.Context, c *app.RequestContext) {
 // @router /video/feed [GET]
 func VideoStream(ctx context.Context, c *app.RequestContext) {
 	userID := utils.GetUserID(c)
-	entry, blockErr := api.Entry("/video/feed")
-	if blockErr != nil {
-		logger.Warn("video stream sentinel blocked",
-			logger.WithServiceName("api"),
-			logger.WithUserID(userID),
-			logger.WithField("action", "video_stream"))
-		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
 	var req video.VideoStreamReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
