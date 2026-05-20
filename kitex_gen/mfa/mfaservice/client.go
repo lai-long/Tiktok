@@ -13,6 +13,7 @@ import (
 type Client interface {
 	MfaQrcode(ctx context.Context, Req *mfa.MfaQrcodeReq, callOptions ...callopt.Option) (r *mfa.MfaQrcodeResp, err error)
 	MfaBind(ctx context.Context, Req *mfa.MfaBindReq, callOptions ...callopt.Option) (r *mfa.MfaBindResp, err error)
+	MfaConfirm(ctx context.Context, Req *mfa.MfaConfirmReq, callOptions ...callopt.Option) (r *mfa.MfaConfirmResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -52,4 +53,9 @@ func (p *kMfaServiceClient) MfaQrcode(ctx context.Context, Req *mfa.MfaQrcodeReq
 func (p *kMfaServiceClient) MfaBind(ctx context.Context, Req *mfa.MfaBindReq, callOptions ...callopt.Option) (r *mfa.MfaBindResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.MfaBind(ctx, Req)
+}
+
+func (p *kMfaServiceClient) MfaConfirm(ctx context.Context, Req *mfa.MfaConfirmReq, callOptions ...callopt.Option) (r *mfa.MfaConfirmResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MfaConfirm(ctx, Req)
 }

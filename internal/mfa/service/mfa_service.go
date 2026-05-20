@@ -41,7 +41,7 @@ func (s *MfaRepo) GenerateMfa(username string, userId string) (string, string, i
 func (s *MfaRepo) MfaBindByCode(code string, userId string) (int32, error) {
 	secret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
-		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
+		return consts.MfaDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
 	}
 	valid := totp.Validate(code, secret)
 	if !valid {
@@ -57,7 +57,7 @@ func (s *MfaRepo) MfaBindByCode(code string, userId string) (int32, error) {
 func (s *MfaRepo) MfaBindBySecret(secret string, userId string) (int32, error) {
 	dbSecret, err := s.mfaDb.GetMfaSecret(userId)
 	if err != nil {
-		return consts.UserDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")
+		return consts.MfaDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")
 	}
 	if dbSecret != secret {
 		return consts.MfaCodeFalse, nil
@@ -65,6 +65,26 @@ func (s *MfaRepo) MfaBindBySecret(secret string, userId string) (int32, error) {
 	err = s.mfaDb.MfaBindUpdate(userId)
 	if err != nil {
 		return consts.UserDBUpdateError, errors.Wrap(err, "->mfa bind by secret update MFA error")
+	}
+	return consts.Success, nil
+}
+
+func (s *MfaRepo) MfaConfirm(mfaCode string, userID string) (int32, error) {
+	isBind, err := s.mfaDb.CheckMfaBind(userID)
+	if err != nil {
+		return consts.MfaDBSelectError, errors.Wrap(err, "->check mfa bind error")
+	}
+	if isBind != 0 {
+		if mfaCode == "" {
+			return consts.MfaReqValidError, nil
+		}
+		mfaSecret, err := s.mfaDb.GetMfaSecret(userID)
+		if err != nil {
+			return consts.MfaDBSelectError, errors.Wrap(err, "->mfa confirm mfa secret error")
+		}
+		if !totp.Validate(mfaCode, mfaSecret) {
+			return consts.MfaCodeFalse, nil
+		}
 	}
 	return consts.Success, nil
 }

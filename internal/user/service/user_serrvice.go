@@ -1,7 +1,8 @@
 package service
 
 import (
-	mfa "Tiktok/internal/mfa/service"
+	"Tiktok/kitex_gen/mfa"
+	"Tiktok/kitex_gen/mfa/mfaservice"
 	"Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
@@ -10,8 +11,6 @@ import (
 	"database/sql"
 
 	"github.com/pkg/errors"
-
-	"github.com/pquerna/otp/totp"
 )
 
 type UserRedis interface {
@@ -29,15 +28,14 @@ type UserDatabase interface {
 	GetUserByUserId(userId string) (entity.UserEntity, error)
 	UpdateUserAvatar(url string, userId interface{}) error
 }
-
 type UserRepo struct {
-	userDb UserDatabase
-	mfaDb  mfa.MfaDatabase
-	redis  UserRedis
+	userDb    UserDatabase
+	mfaClient mfaservice.Client
+	redis     UserRedis
 }
 
-func NewUserRepo(userDb UserDatabase, mfaDb mfa.MfaDatabase, redis UserRedis) *UserRepo {
-	return &UserRepo{userDb: userDb, mfaDb: mfaDb, redis: redis}
+func NewUserRepo(userDb UserDatabase, mfaClient mfaservice.Client, redis UserRedis) *UserRepo {
+	return &UserRepo{userDb: userDb, mfaClient: mfaClient, redis: redis}
 }
 
 func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
@@ -86,21 +84,15 @@ func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context
 		return consts.UserPasswordError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check password failed")
 	}
 	userInfo := userEntity.ToUserInfo()
-	enable, err := s.mfaDb.CheckMfaBind(userInfo.ID)
-	if err != nil {
-		return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check mfa bind failed")
+	resp, err := s.mfaClient.MfaConfirm(ctx, &mfa.MfaConfirmReq{
+		UserID: userInfo.ID,
+		QrCode: mfaCode,
+	})
+	if err != nil || resp == nil {
+		return consts.MfaDBSelectError, &user.UserInfo{}, "", "", err
 	}
-	if enable != 0 {
-		if mfaCode == "" {
-			return consts.MfaLack, &user.UserInfo{}, "", "", nil
-		}
-		mfaSecret, err := s.mfaDb.GetMfaSecret(userInfo.ID)
-		if err != nil {
-			return consts.UserDBSelectError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login get mfa secret failed")
-		}
-		if !totp.Validate(mfaCode, mfaSecret) {
-			return consts.MfaCodeFalse, &user.UserInfo{}, "", "", nil
-		}
+	if resp.Code != consts.Success {
+		return resp.Code, &user.UserInfo{}, "", "", nil
 	}
 	reToken, acToken, err := utils.GenerateTokens(userInfo)
 	if err != nil {

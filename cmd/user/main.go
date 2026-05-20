@@ -50,7 +50,11 @@ func main() {
 	rdb := cache.InitRedis()
 	redis := cache.NewRedis(rdb)
 
-	userRepo := service.NewUserRepo(mysqlDb, mysqlDb, redis)
+	mfaClient, err := service.NewMfaRpcClient()
+	if err != nil {
+		logger.Fatal("init mfa rpc client error", zap.Error(err))
+	}
+	userRepo := service.NewUserRepo(mysqlDb, mfaClient, redis)
 	userService := handler.NewUserService(userRepo)
 
 	addr := &net.TCPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8889}

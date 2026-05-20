@@ -66,3 +66,16 @@ func (s *MfaServiceImpl) MfaBind(ctx context.Context, req *mfa.MfaBindReq) (resp
 	}
 	return resp, nil
 }
+
+// MfaConfirm implements the MfaServiceImpl interface.
+func (s *MfaServiceImpl) MfaConfirm(ctx context.Context, req *mfa.MfaConfirmReq) (resp *mfa.MfaConfirmResp, err error) {
+	// TODO: Your code here...
+	resp = &mfa.MfaConfirmResp{}
+	code, err := s.mfaRepo.MfaConfirm(req.QrCode, req.UserID)
+	if err != nil {
+		resp.Code = code
+		return resp, err
+	}
+	resp.Code = consts.Success
+	return resp, nil
+}

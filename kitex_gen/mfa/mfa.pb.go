@@ -141,7 +141,50 @@ func (x *MfaBindResp) GetCode() int32 {
 	return 0
 }
 
+type MfaConfirmReq struct {
+	UserID string `protobuf:"bytes,1,opt,name=userID" json:"userID,omitempty"`
+	QrCode string `protobuf:"bytes,2,opt,name=QrCode" json:"QrCode,omitempty"`
+}
+
+func (x *MfaConfirmReq) Reset() { *x = MfaConfirmReq{} }
+
+func (x *MfaConfirmReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaConfirmReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaConfirmReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *MfaConfirmReq) GetQrCode() string {
+	if x != nil {
+		return x.QrCode
+	}
+	return ""
+}
+
+type MfaConfirmResp struct {
+	Code int32 `protobuf:"varint,1,opt,name=Code" json:"Code,omitempty"`
+}
+
+func (x *MfaConfirmResp) Reset() { *x = MfaConfirmResp{} }
+
+func (x *MfaConfirmResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaConfirmResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaConfirmResp) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
 type MfaService interface {
 	MfaQrcode(ctx context.Context, req *MfaQrcodeReq) (res *MfaQrcodeResp, err error)
 	MfaBind(ctx context.Context, req *MfaBindReq) (res *MfaBindResp, err error)
+	MfaConfirm(ctx context.Context, req *MfaConfirmReq) (res *MfaConfirmResp, err error)
 }
