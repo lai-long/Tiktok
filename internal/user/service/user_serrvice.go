@@ -1,8 +1,6 @@
 package service
 
 import (
-	"Tiktok/kitex_gen/mfa"
-	"Tiktok/kitex_gen/mfa/mfaservice"
 	"Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
@@ -29,13 +27,13 @@ type UserDatabase interface {
 	UpdateUserAvatar(url string, userId interface{}) error
 }
 type UserRepo struct {
-	userDb    UserDatabase
-	mfaClient mfaservice.Client
-	redis     UserRedis
+	userDb     UserDatabase
+	mfaService MfaService
+	redis      UserRedis
 }
 
-func NewUserRepo(userDb UserDatabase, mfaClient mfaservice.Client, redis UserRedis) *UserRepo {
-	return &UserRepo{userDb: userDb, mfaClient: mfaClient, redis: redis}
+func NewUserRepo(userDb UserDatabase, mfaService MfaService, redis UserRedis) *UserRepo {
+	return &UserRepo{userDb: userDb, mfaService: mfaService, redis: redis}
 }
 
 func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
@@ -84,15 +82,12 @@ func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context
 		return consts.UserPasswordError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check password failed")
 	}
 	userInfo := userEntity.ToUserInfo()
-	resp, err := s.mfaClient.MfaConfirm(ctx, &mfa.MfaConfirmReq{
-		UserID: userInfo.ID,
-		QrCode: mfaCode,
-	})
-	if err != nil || resp == nil {
+	code, err := s.mfaService.MfaConfirm(ctx, userInfo.ID, mfaCode)
+	if err != nil {
 		return consts.MfaDBSelectError, &user.UserInfo{}, "", "", err
 	}
-	if resp.Code != consts.Success {
-		return resp.Code, &user.UserInfo{}, "", "", nil
+	if code != consts.Success {
+		return code, &user.UserInfo{}, "", "", nil
 	}
 	reToken, acToken, err := utils.GenerateTokens(userInfo)
 	if err != nil {

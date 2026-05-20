@@ -1,7 +1,6 @@
 package service
 
 import (
-	"Tiktok/kitex_gen/mfa"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
@@ -11,7 +10,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cloudwego/kitex/client/callopt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -64,23 +62,13 @@ func (m *MockUser) DelCachedUserInfo(ctx context.Context, userId string) error {
 	return args.Error(0)
 }
 
-type MockMfaClient struct {
+type MockMfaService struct {
 	mock.Mock
 }
 
-func (m *MockMfaClient) MfaQrcode(ctx context.Context, req *mfa.MfaQrcodeReq, opts ...callopt.Option) (*mfa.MfaQrcodeResp, error) {
-	args := m.Called(ctx, req, opts)
-	return args.Get(0).(*mfa.MfaQrcodeResp), args.Error(1)
-}
-
-func (m *MockMfaClient) MfaBind(ctx context.Context, req *mfa.MfaBindReq, opts ...callopt.Option) (*mfa.MfaBindResp, error) {
-	args := m.Called(ctx, req, opts)
-	return args.Get(0).(*mfa.MfaBindResp), args.Error(1)
-}
-
-func (m *MockMfaClient) MfaConfirm(ctx context.Context, req *mfa.MfaConfirmReq, opts ...callopt.Option) (*mfa.MfaConfirmResp, error) {
-	args := m.Called(ctx, req, opts)
-	return args.Get(0).(*mfa.MfaConfirmResp), args.Error(1)
+func (m *MockMfaService) MfaConfirm(ctx context.Context, userID string, mfaCode string) (int32, error) {
+	args := m.Called(ctx, userID, mfaCode)
+	return args.Get(0).(int32), args.Error(1)
 }
 
 func TestRegister(t *testing.T) {
@@ -127,7 +115,7 @@ func TestRegister(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
-			mockMfa := new(MockMfaClient)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, err := user.Register(tt.userName, tt.password)
@@ -149,7 +137,7 @@ func TestLogin(t *testing.T) {
 		password string
 		mfaCode  string
 		ctx      context.Context
-		setMock  func(*MockUser, *MockMfaClient)
+		setMock  func(*MockUser, *MockMfaService)
 		wantErr  bool
 		wantCode int32
 	}{
@@ -158,9 +146,9 @@ func TestLogin(t *testing.T) {
 			userName: "username",
 			password: "password",
 			ctx:      context.Background(),
-			setMock: func(m *MockUser, mc *MockMfaClient) {
+			setMock: func(m *MockUser, mc *MockMfaService) {
 				m.On("GetUserByUsername", "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
-				mc.On("MfaConfirm", mock.Anything, &mfa.MfaConfirmReq{UserID: "ID", QrCode: ""}, mock.Anything).Return(&mfa.MfaConfirmResp{Code: consts.Success}, nil)
+				mc.On("MfaConfirm", mock.Anything, "ID", "").Return(consts.Success, nil)
 				m.On("UserTokenSet", mock.Anything, mock.Anything, "ID").Return(nil)
 			},
 			wantErr:  false,
@@ -170,7 +158,7 @@ func TestLogin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
-			mockMfa := new(MockMfaClient)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser, mockMfa)
 			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, _, _, _, err := user.Login(tt.userName, tt.password, tt.mfaCode, tt.ctx)
@@ -240,7 +228,7 @@ func TestUserInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
-			mockMfa := new(MockMfaClient)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			_, code, err := user.UserInfo(tt.ctx, tt.userId)
@@ -298,7 +286,7 @@ func TestUserAvatar(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
-			mockMfa := new(MockMfaClient)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, _, err := user.UserAvatar(tt.url, tt.userID)
@@ -385,7 +373,7 @@ func TestRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
-			mockMfa := new(MockMfaClient)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, _, _, err := user.RefreshToken(tt.ctx, tt.refreshToken)

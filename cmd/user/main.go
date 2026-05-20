@@ -50,7 +50,7 @@ func main() {
 	rdb := cache.InitRedis()
 	redis := cache.NewRedis(rdb)
 
-	mfaClient, err := service.NewMfaRpcClient()
+	mfaClient, err := service.NewMfaService()
 	if err != nil {
 		logger.Fatal("init mfa rpc client error", zap.Error(err))
 	}
