@@ -7,30 +7,33 @@ import (
 	router "Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
 	"Tiktok/pkg/config"
-	"log"
+	"Tiktok/pkg/logger"
 	"os"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/hertz-contrib/logger/accesslog"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func main() {
 	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		log.Println("load env error:", err)
+		logger.Error("load env error", zap.Error(err))
 	}
 	cfgPath := os.Getenv("CONFIG_PATH")
-	log.Printf("Loading configuration from %s", cfgPath)
+	logger.Info("loading configuration", zap.String("config_path", cfgPath))
 	cfg, err := config.Load([]string{cfgPath})
 	if err != nil {
-		log.Fatal("加载config.yaml错误", err)
+		logger.Fatal("加载config.yaml错误", zap.Error(err))
 	}
-	log.Println(cfg)
+	if err := logger.InitLogger(cfg.Log.Level, "api", cfg.Log.Path); err != nil {
+		logger.Fatal("初始化日志错误", zap.Error(err))
+	}
+	logger.Info("logger initialized", logger.WithServiceName("api"), zap.String("level", cfg.Log.Level))
 	sentinelPath := os.Getenv("SENTINEL_PATH")
-	log.Printf("Loading sentinel from %s", sentinelPath)
+	logger.Info("loading sentinel", zap.String("sentinel_path", sentinelPath))
 	err = config.LoadRules([]string{sentinelPath})
 	if err != nil {
-		log.Fatal("加载sentinel rules错误", err)
+		logger.Fatal("加载sentinel rules错误", zap.Error(err))
 	}
 
 	Rpc.Init()
@@ -39,7 +42,7 @@ func main() {
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
 	)
-	h.Use(accesslog.New())
+	h.Use(middleware.LoggingMiddleware())
 	h.Use(middleware.AuthMiddleware)
 
 	router.GeneratedRegister(h)

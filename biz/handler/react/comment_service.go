@@ -3,17 +3,18 @@
 package react
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/react"
 	react2 "Tiktok/kitex_gen/react"
+	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
-	"log"
 
 	Rpc "Tiktok/biz/rpc"
 	"Tiktok/pkg/consts"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"go.uber.org/zap"
 )
 
 // CommentPublish .
@@ -28,7 +29,7 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := c.Value(middleware.UserIDKey).(string)
+	userId := utils.GetUserID(c)
 	code, err := Rpc.CommentPublish(ctx, &react2.CommentPublishReq{
 		TargetAt:   req.TargetAt,
 		TargetType: req.TargetType,
@@ -36,7 +37,7 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 		UserID:     userId,
 	})
 	if err != nil {
-		log.Println("CommentPublish err:", err)
+		logger.Error("CommentPublish error", zap.Error(err))
 	}
 	resp := &react.CommentPublishResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -62,7 +63,7 @@ func CommentList(ctx context.Context, c *app.RequestContext) {
 		PageNum:  req.PageNum,
 	})
 	if err != nil {
-		log.Println("CommentList err:", err)
+		logger.Error("CommentList error", zap.Error(err))
 	}
 	resp := &react.CommentListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -83,7 +84,7 @@ func CommentDelete(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := c.Value(middleware.UserIDKey).(string)
+	userId := utils.GetUserID(c)
 	code, err := Rpc.CommentDelete(ctx, &react2.CommentDeleteReq{
 		CommentId:  req.CommentId,
 		TargetAt:   req.TargetAt,
@@ -91,7 +92,7 @@ func CommentDelete(ctx context.Context, c *app.RequestContext) {
 		UserID:     userId,
 	})
 	if err != nil {
-		log.Println("CommentDelete err:", err)
+		logger.Error("CommentDelete error", zap.Error(err))
 	}
 	resp := &react.CommentDeleteResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

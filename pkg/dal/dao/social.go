@@ -2,7 +2,8 @@ package dao
 
 import (
 	"Tiktok/pkg/entity"
-	"log"
+	"Tiktok/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func (m *MySQLdb) CreateFollowing(userID string, toUserID string) error {
@@ -38,7 +39,7 @@ func (m *MySQLdb) FriendList(userID string, pageNum int64, pageSize int64) ([]en
 	var users []entity.UserEntity
 	err := m.db.Select(&users, sql, userID, userID, pageSize, offset)
 	if err != nil {
-		log.Println("Get FriendList err", err)
+		logger.Error("Get FriendList error", zap.Error(err))
 		return nil, false
 	}
 	return users, true

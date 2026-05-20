@@ -4,9 +4,10 @@ package cache
 
 import (
 	"Tiktok/pkg/config"
+	"Tiktok/pkg/logger"
 	"context"
 	"fmt"
-	"log"
+	"go.uber.org/zap"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -29,8 +30,8 @@ func InitRedis() *redis.Client {
 		DB:       config.Cfg.Redis.Database,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("re 连接失败 错误: %v", err)
+		logger.Fatal("redis connection failed", zap.Error(err))
 	}
-	log.Println("re 连接成功")
+	logger.Info("redis connection established")
 	return rdb
 }

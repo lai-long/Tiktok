@@ -3,17 +3,18 @@
 package react
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/react"
 	react2 "Tiktok/kitex_gen/react"
+	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
-	"log"
 
 	Rpc "Tiktok/biz/rpc"
 	"Tiktok/pkg/consts"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"go.uber.org/zap"
 )
 
 // LikeAction .
@@ -28,7 +29,7 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	userId := c.Value(middleware.UserIDKey).(string)
+	userId := utils.GetUserID(c)
 	if req.TargetType == "" {
 		c.JSON(200, react.LikeActionResp{Base: &common.Base{
 			Code: 0,
@@ -43,7 +44,7 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		UserID:     userId,
 	})
 	if err != nil {
-		log.Println("likeService.LikeAction:", err)
+		logger.Error("likeService.LikeAction error", zap.Error(err))
 	}
 	resp := &react.LikeActionResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -69,7 +70,7 @@ func LikeList(ctx context.Context, c *app.RequestContext) {
 		PageSize: req.PageSize,
 	})
 	if err != nil {
-		log.Println("likeService.LikeList:", err)
+		logger.Error("likeService.LikeList error", zap.Error(err))
 	}
 	resp := &react.LikeListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

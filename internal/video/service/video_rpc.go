@@ -5,6 +5,7 @@ import (
 
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
+	"Tiktok/pkg/utils"
 	"context"
 	"math/rand"
 
@@ -41,6 +42,7 @@ func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description 
 	videoEntity.VideoURL = url
 	videoEntity.UserID = userID
 	videoEntity.VisitCount = rand.Intn(100)
+	videoEntity.ID = utils.IDGenerate()
 	err := s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
 	if err != nil {
 		return consts.VideoRedisSetError, errors.Wrap(err, "->VideoPublish redis hot set err")

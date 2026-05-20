@@ -2,8 +2,9 @@ package dao
 
 import (
 	entity2 "Tiktok/pkg/entity"
+	"Tiktok/pkg/logger"
 	"fmt"
-	"log"
+	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
 )
@@ -65,7 +66,7 @@ func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity2.VideoEntity) {
 		var err error
 		videos[i], err = m.GetVideoByVideoId(videoId[i])
 		if err != nil {
-			log.Println("GetVideoByVideoId:", err)
+			logger.Error("GetVideoByVideoId error", zap.Error(err))
 			GetVideoErrors++
 		}
 	}

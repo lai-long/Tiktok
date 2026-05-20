@@ -2,8 +2,9 @@ package dao
 
 import (
 	"Tiktok/pkg/config"
+	"Tiktok/pkg/logger"
 	"fmt"
-	"log"
+	"go.uber.org/zap"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -12,15 +13,15 @@ import (
 func InitDb() *sqlx.DB {
 	var db *sqlx.DB
 	var err error
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset%v&parseTime=%v",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%v&parseTime=%v",
 		config.Cfg.MySQL.User, config.Cfg.MySQL.Password, config.Cfg.MySQL.Host, config.Cfg.MySQL.Port,
 		config.Cfg.MySQL.Database, config.Cfg.MySQL.Charset, config.Cfg.MySQL.ParseTime)
-	log.Println("dsn: [REDACTED]")
+	logger.Info("dsn: [REDACTED]")
 	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
-		log.Fatalf("InitDb err: %v", err)
+		logger.Fatal("InitDb error", zap.Error(err))
 	}
-	log.Println("数据库连接成功")
+	logger.Info("database connection established")
 	return db
 }
 

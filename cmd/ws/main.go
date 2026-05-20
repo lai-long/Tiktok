@@ -7,29 +7,34 @@ import (
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
-	"log"
+	"Tiktok/pkg/logger"
 	"os"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func main() {
 	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		log.Println("load env error:", err)
+		logger.Error("load env error", zap.Error(err))
 	}
 	cfgPath := os.Getenv("CONFIG_PATH")
-	log.Printf("Loading configuration from %s", cfgPath)
+	logger.Info("loading configuration", zap.String("config_path", cfgPath))
 	cfg, err := config.Load([]string{cfgPath})
 	if err != nil {
-		log.Fatal("加载config.yaml错误", err)
+		logger.Fatal("加载config.yaml错误", zap.Error(err))
 	}
-	log.Println(cfg)
+	logger.Info("config loaded", logger.WithServiceName(logger.ServiceName))
+	if err := logger.InitLogger(cfg.Log.Level, "ws", cfg.Log.Path); err != nil {
+		logger.Fatal("初始化日志错误", zap.Error(err))
+	}
+	logger.Info("logger initialized", logger.WithServiceName("ws"), zap.String("level", cfg.Log.Level))
 	sentinelPath := os.Getenv("SENTINEL_PATH")
-	log.Printf("Loading sentinel from %s", sentinelPath)
+	logger.Info("loading sentinel", zap.String("sentinel_path", sentinelPath))
 	err = config.LoadRules([]string{sentinelPath})
 	if err != nil {
-		log.Fatal("加载sentinel rules错误", err)
+		logger.Fatal("加载sentinel rules错误", zap.Error(err))
 	}
 
 	rdb := cache.InitRedis()
@@ -37,7 +42,7 @@ func main() {
 	defer func() {
 		err := rdb.Close()
 		if err != nil {
-			log.Println("main redis close err", err)
+			logger.Error("main redis close error", zap.Error(err))
 		}
 	}()
 
@@ -45,7 +50,7 @@ func main() {
 	defer func() {
 		err := ddb.Close()
 		if err != nil {
-			log.Println("main database close err", err)
+			logger.Error("main database close error", zap.Error(err))
 		}
 	}()
 	mysqlDb := dao.NewMySQLdb(ddb)

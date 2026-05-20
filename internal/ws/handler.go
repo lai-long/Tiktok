@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/chat"
 	"Tiktok/biz/model/common"
 	"Tiktok/internal/ws/service"
@@ -32,8 +31,8 @@ func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis, ws *service.WebsocketSe
 }
 
 func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
-	userid, ok := c.Value(middleware.UserIDKey).(string)
-	if !ok || userid == "" {
+	userid := utils.GetUserID(c)
+	if userid == "" {
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
 			Code: 200,
 			Msg:  "Unauthorized: user_id not found",
@@ -41,7 +40,6 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 		return
 	}
 	log.Println("User connected:", userid)
-	uid := userid
 	req := new(chat.WebsocketReq)
 	err := c.BindAndValidate(req)
 	if err != nil {
@@ -64,8 +62,8 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			return
 		}
 		client := &service.Client{
-			ID:      utils.CreateID(uid, req.ToUserId),
-			SendID:  utils.CreateID(req.ToUserId, uid),
+			ID:      utils.CreateID(userid, req.ToUserId),
+			SendID:  utils.CreateID(req.ToUserId, userid),
 			GroupId: req.GroupId,
 			Socket:  conn,
 			Send:    make(chan []byte, 128),

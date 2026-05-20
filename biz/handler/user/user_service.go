@@ -3,12 +3,11 @@
 package user
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	"Tiktok/pkg/config"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
-	"log"
 	"path/filepath"
 
 	"Tiktok/biz/model/user"
@@ -17,6 +16,7 @@ import (
 	"Tiktok/pkg/consts"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"go.uber.org/zap"
 )
 
 // UserRegister .
@@ -30,6 +30,11 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		}
 		c.JSON(200, resp)
+		logger.Warn("user register binding failed",
+			logger.WithServiceName("api"),
+			logger.WithField("username", req.UserName),
+			logger.WithField("action", "register"),
+			zap.Error(err))
 		return
 	}
 	code, err := Rpc.RegisterRpc(ctx, &user2.RegisterReq{
@@ -37,7 +42,11 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		Password: req.Password,
 	})
 	if err != nil {
-		log.Println("userService.Register error:", err)
+		logger.Error("user register failed",
+			logger.WithServiceName("api"),
+			logger.WithField("username", req.UserName),
+			logger.WithField("action", "register"),
+			zap.Error(err))
 	}
 	resp := new(user.RegisterResp)
 	resp.Base = &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)}
@@ -50,7 +59,11 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	var req user.LoginReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("userService.Login bind error:", err)
+		logger.Warn("user login binding failed",
+			logger.WithServiceName("api"),
+			logger.WithField("username", req.UserName),
+			logger.WithField("action", "login"),
+			zap.Error(err))
 		resp := &user.LoginResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -63,7 +76,17 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		Code:     req.Code,
 	})
 	if err != nil {
-		log.Println("userService.Login error:", err)
+		logger.Error("user login failed",
+			logger.WithServiceName("api"),
+			logger.WithField("username", req.UserName),
+			logger.WithField("action", "login"),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("user login success",
+			logger.WithServiceName("api"),
+			logger.WithField("username", req.UserName),
+			logger.WithField("action", "login"))
 	}
 	resp := &user.LoginResp{
 		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -77,10 +100,15 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 // UserInfo .
 // @router /user/info [GET]
 func UserInfo(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req user.UserInfoReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("userService.userinfo bind error:", err)
+		logger.Warn("user info binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "get_user_info"),
+			zap.Error(err))
 		resp := &user.UserInfoResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -89,7 +117,12 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	}
 	code, userInfo, err := Rpc.UserInfoRpc(ctx, &user2.UserInfoReq{UserId: req.UserId})
 	if err != nil {
-		log.Println("userService.UserInfo error:", err)
+		logger.Error("user info query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("target_user_id", req.UserId),
+			logger.WithField("action", "get_user_info"),
+			zap.Error(err))
 	}
 	resp := &user.UserInfoResp{
 		Base: &common.Base{
@@ -104,10 +137,15 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 // UserAvatar .
 // @router /user/avatar/upload [PUT]
 func UserAvatar(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req user.UserAvatarReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("userService.UserAvatar bind req error:", err)
+		logger.Warn("user avatar upload binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -117,7 +155,11 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 
 	data, err := c.FormFile("data")
 	if err != nil {
-		log.Println("userService.UserAvatar FormFile error:", err)
+		logger.Error("user avatar upload FormFile failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -126,53 +168,76 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 	}
 	file, err := data.Open()
 	if err != nil {
-		log.Println("userService.UserAvatar data.Open error:", err)
+		logger.Error("user avatar upload file open failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("filename", data.Filename),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 			Data: nil,
 		}
 		c.JSON(200, resp)
+		return
 	}
 	defer func() {
 		err = file.Close()
 		if err != nil {
-			log.Println("file err", err)
+			logger.Error("file close error",
+				logger.WithServiceName("api"),
+				logger.WithUserID(userID),
+				logger.WithField("action", "upload_avatar"),
+				zap.Error(err))
 		}
 	}()
 	ok, err := utils.IsImage(file)
 	if err != nil {
-		log.Println("userService.UserAvatar IsImage error:", err)
+		logger.Error("user avatar upload IsImage check failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("filename", data.Filename),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 			Data: nil,
 		}
 		c.JSON(200, resp)
+		return
 	}
 	if !ok {
+		logger.Warn("user avatar upload invalid file type",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("filename", data.Filename),
+			logger.WithField("action", "upload_avatar"))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.ImageFalse, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 			Data: nil,
 		}
 		c.JSON(200, resp)
+		return
 	}
 	filename := utils.IDGenerate()
-	code, err := utils.SaveUploadFile(file, config.Cfg.Path.AvatarPath, filename+filepath.Ext(data.Filename))
-	if err != nil {
-		log.Println(err)
-		resp := &user.UserAvatarResp{
-			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(consts.FileError)},
-			Data: nil,
-		}
-		c.JSON(200, resp)
-	}
-
-	userId := ctx.Value(middleware.UserIDKey).(string)
 	code, userInfo, err := Rpc.UserAvatarRpc(ctx, &user2.UserAvatarReq{
 		AvatarURL: config.Cfg.Path.AvatarPath + filename + filepath.Ext(data.Filename),
-		UserID:    userId,
+		UserID:    userID,
 	})
 	if err != nil {
-		log.Println("userService.UserAvatar error:", err)
+		logger.Error("user avatar upload save failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("avatar_url", config.Cfg.Path.AvatarPath+filename+filepath.Ext(data.Filename)),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("user avatar upload success",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("avatar_url", config.Cfg.Path.AvatarPath+filename+filepath.Ext(data.Filename)),
+			logger.WithField("action", "upload_avatar"))
 	}
 	resp := &user.UserAvatarResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -187,7 +252,10 @@ func RefreshToken(ctx context.Context, c *app.RequestContext) {
 	var req user.RefreshTokenReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("userService.RefreshToken bind req error:", err)
+		logger.Warn("refresh token binding failed",
+			logger.WithServiceName("api"),
+			logger.WithField("action", "refresh_token"),
+			zap.Error(err))
 		resp := &user.RefreshTokenResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -196,7 +264,15 @@ func RefreshToken(ctx context.Context, c *app.RequestContext) {
 	}
 	code, reToken, acToken, err := Rpc.RefreshTokenRpc(ctx, &user2.RefreshTokenReq{RefreshToken: req.RefreshToken})
 	if err != nil {
-		log.Println("userService.RefreshToken error:", err)
+		logger.Error("refresh token failed",
+			logger.WithServiceName("api"),
+			logger.WithField("action", "refresh_token"),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("refresh token success",
+			logger.WithServiceName("api"),
+			logger.WithField("action", "refresh_token"))
 	}
 	resp := &user.RefreshTokenResp{
 		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

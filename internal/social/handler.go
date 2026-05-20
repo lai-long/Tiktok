@@ -33,7 +33,7 @@ func (s *SocialServiceImpl) RelationAction(ctx context.Context, req *social.Rela
 	code, err := s.socialService.RelationAction(ctx, req.ToUserId, req.ActionType, req.UserId)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
-	return resp, err
+	return resp, nil
 }
 
 // FollowingList implements the SocialServiceImpl interface.
@@ -55,7 +55,7 @@ func (s *SocialServiceImpl) FollowingList(ctx context.Context, req *social.Follo
 		Items: userInfos,
 		Total: int64(len(userInfos)),
 	}
-	return resp, err
+	return resp, nil
 }
 
 // FollowerList implements the SocialServiceImpl interface.
@@ -77,7 +77,7 @@ func (s *SocialServiceImpl) FollowerList(ctx context.Context, req *social.Follow
 		Items: userInfos,
 		Total: int64(len(userInfos)),
 	}
-	return resp, err
+	return resp, nil
 }
 
 // FriendList implements the SocialServiceImpl interface.
@@ -99,5 +99,5 @@ func (s *SocialServiceImpl) FriendList(ctx context.Context, req *social.FriendLi
 		Items: userInfos,
 		Total: int64(len(userInfos)),
 	}
-	return resp, err
+	return resp, nil
 }

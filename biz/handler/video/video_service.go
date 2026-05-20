@@ -3,30 +3,34 @@
 package video
 
 import (
-	"Tiktok/biz/middleware"
 	"Tiktok/biz/model/common"
 	video "Tiktok/biz/model/video"
 	Rpc "Tiktok/biz/rpc"
 	video2 "Tiktok/kitex_gen/video"
 	"Tiktok/pkg/config"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
-	"log"
 	"path/filepath"
 
 	"Tiktok/pkg/consts"
 
-	"github.com/alibaba/sentinel-golang/api"
 	"github.com/cloudwego/hertz/pkg/app"
+	"go.uber.org/zap"
 )
 
 // VideoPublish .
 // @router /video/publish [POST]
 func VideoPublish(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req video.VideoPublishReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("video publish  bind err:", err)
+		logger.Warn("video publish binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_publish"),
+			zap.Error(err))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -34,37 +38,58 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	data, err := c.FormFile("data")
-	log.Printf("VideoPublish: FormFile data, filename=%s, err=%v", data.Filename, err)
 	if err != nil {
-		log.Println("video publish postform err:", err)
+		logger.Error("video publish FormFile failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_publish"),
+			zap.Error(err))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
-	userId, ok := c.Value(middleware.UserIDKey).(string)
-	if !ok || userId == "" {
-		log.Println("video publish user id not found")
+	if userID == "" {
+		logger.Warn("video publish user id not found",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_publish"))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
 		c.JSON(200, resp)
 		return
 	}
+	logger.Info("video publish started",
+		logger.WithServiceName("api"),
+		logger.WithUserID(userID),
+		logger.WithField("filename", data.Filename),
+		logger.WithField("action", "video_publish"))
+
 	dataFile, err := data.Open()
 	if err != nil {
-		resp := &video.VideoPublishResp{
+		logger.Error("video publish file open failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("filename", data.Filename),
+			logger.WithField("action", "video_publish"),
+			zap.Error(err))
+		c.JSON(200, &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
-		}
-		c.JSON(200, resp)
+		})
 		return
 	}
 	filename := utils.IDGenerate()
 	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
 	_ = dataFile.Close()
 	if err != nil {
-		log.Println("save upload file err:", err)
+		logger.Error("video publish save file failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("filename", data.Filename),
+			logger.WithField("action", "video_publish"),
+			zap.Error(err))
 		c.JSON(200, &video.VideoPublishResp{
 			Base: &common.Base{
 				Code: code,
@@ -77,16 +102,29 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		Title:       req.Title,
 		Description: req.Description,
 		VideoURL:    config.Cfg.Path.VideoPath + filename + filepath.Ext(data.Filename),
-		UserID:      userId,
+		UserID:      userID,
 	}
 	code, err = Rpc.VideoPublish(ctx, rpcReq)
 	if err != nil {
-		log.Println("video publish err:", err)
+		logger.Error("video publish RPC failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("video_url", rpcReq.VideoURL),
+			logger.WithField("action", "video_publish"),
+			zap.Error(err))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		}
 		c.JSON(200, resp)
 		return
+	}
+	if code == 0 {
+		logger.Info("video publish success",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("video_url", rpcReq.VideoURL),
+			logger.WithField("title", req.Title),
+			logger.WithField("action", "video_publish"))
 	}
 	resp := new(video.VideoPublishResp)
 	resp.Base = &common.Base{
@@ -99,10 +137,15 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 // VideoList .
 // @router /video/list [GET]
 func VideoList(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req video.VideoListReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("video list  bind err:", err)
+		logger.Warn("video list binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_list"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -116,7 +159,12 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 	}
 	code, data, err := Rpc.VideoList(ctx, rpcReq)
 	if err != nil {
-		log.Println("video list err:", err)
+		logger.Error("video list query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("target_user_id", req.UserId),
+			logger.WithField("action", "video_list"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		}
@@ -133,10 +181,15 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 // VideoSearch .
 // @router /video/search [POST]
 func VideoSearch(ctx context.Context, c *app.RequestContext) {
+	userID := utils.GetUserID(c)
 	var req video.VideoSearchReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("video search bind err:", err)
+		logger.Warn("video search binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_search"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -150,7 +203,12 @@ func VideoSearch(ctx context.Context, c *app.RequestContext) {
 	}
 	code, data, err := Rpc.VideoSearch(ctx, rpcReq)
 	if err != nil {
-		log.Println("video search err:", err)
+		logger.Error("video search query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("keyword", req.KeyWord),
+			logger.WithField("action", "video_search"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		}
@@ -167,17 +225,15 @@ func VideoSearch(ctx context.Context, c *app.RequestContext) {
 // VideoPopular .
 // @router /video/popular [GET]
 func VideoPopular(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/video/popular")
-	if blockErr != nil {
-		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+	userID := utils.GetUserID(c)
 	var req video.VideoHotReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("video popular bind err:", err)
+		logger.Warn("video popular binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_popular"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -190,7 +246,11 @@ func VideoPopular(ctx context.Context, c *app.RequestContext) {
 	}
 	code, data, err := Rpc.VideoPopular(ctx, rpcReq)
 	if err != nil {
-		log.Println("video popular err:", err)
+		logger.Error("video popular query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_popular"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		}
@@ -207,17 +267,15 @@ func VideoPopular(ctx context.Context, c *app.RequestContext) {
 // VideoStream .
 // @router /video/feed [GET]
 func VideoStream(ctx context.Context, c *app.RequestContext) {
-	entry, blockErr := api.Entry("/video/feed")
-	if blockErr != nil {
-		c.JSON(200, &video.VideoListResp{Base: &common.Base{Code: consts.SentinelBlock, Msg: consts.GetErrorCodeMsg(consts.SentinelBlock)}})
-		return
-	}
-	defer entry.Exit()
-
+	userID := utils.GetUserID(c)
 	var req video.VideoStreamReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
-		log.Println("video stream bind err:", err)
+		logger.Warn("video stream binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_stream"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -227,7 +285,11 @@ func VideoStream(ctx context.Context, c *app.RequestContext) {
 	rpcReq := &video2.VideoStreamReq{}
 	code, data, err := Rpc.VideoStream(ctx, rpcReq)
 	if err != nil {
-		log.Println("video stream err:", err)
+		logger.Error("video stream query failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "video_stream"),
+			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
 		}
