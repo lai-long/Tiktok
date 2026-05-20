@@ -92,7 +92,7 @@ func TestMfaBindByCode(t *testing.T) {
 			mockSetup: func(m *MockMfaDb) {
 				m.On("GetMfaSecret", "userID").Return("", errors.New("db error"))
 			},
-			wantCode: consts.UserDBSelectError,
+			wantCode: consts.MfaDBSelectError,
 			wantErr:  true,
 		},
 		{
@@ -135,7 +135,7 @@ func TestMfaBindBySecret(t *testing.T) {
 			mockSetup: func(m *MockMfaDb) {
 				m.On("GetMfaSecret", "userID").Return("", errors.New("db error"))
 			},
-			wantCode: consts.UserDBSelectError,
+			wantCode: consts.MfaDBSelectError,
 			wantErr:  true,
 		},
 		{

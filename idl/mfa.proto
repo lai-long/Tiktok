@@ -25,7 +25,15 @@ message MfaBindReq{
 message MfaBindResp{
     int32 Code=1;
 }
+message MfaConfirmReq{
+    string userID=1;
+    string QrCode=2;
+}
+message MfaConfirmResp{
+    int32 Code=1;
+}
 service MfaService{
     rpc MfaQrcode(MfaQrcodeReq) returns(MfaQrcodeResp){}
     rpc MfaBind(MfaBindReq)returns(MfaBindResp){}
+    rpc MfaConfirm(MfaConfirmReq)returns(MfaConfirmResp){}
 }

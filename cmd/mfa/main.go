@@ -59,6 +59,7 @@ func main() {
 		IP:   net.ParseIP("0.0.0.0"),
 		Port: 8890,
 	}
+
 	svr := mfaservice.NewServer(mfaService,
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
