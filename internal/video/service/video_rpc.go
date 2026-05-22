@@ -43,11 +43,11 @@ func toVideoInfo(e entity.VideoEntity) *video.VideoInfo {
 		Title:        e.Title,
 		Description:  e.Description,
 		CommentCount: int64(e.CommentCount),
-		CoverURL:     e.CoverURL,
+		CoverURL:     utils.SignQiNiuURL(e.CoverURL),
 		CreatedAt:    e.CreatedAt,
 		LikeCount:    int64(e.LikeCount),
 		UpdatedAt:    e.UpdatedAt,
-		VideoURL:     e.VideoURL,
+		VideoURL:     utils.SignQiNiuURL(e.VideoURL),
 		VisitCount:   int64(e.VisitCount),
 	}
 }

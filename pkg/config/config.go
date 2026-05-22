@@ -63,6 +63,14 @@ type JwtConfig struct {
 	RefreshSecret string `mapstructure:"refresh_secret"`
 }
 
+// QiNiuConfig 七牛云配置
+type QiNiuConfig struct {
+	AccessKey string `mapstructure:"access_key"`
+	SecretKey string `mapstructure:"secret_key"`
+	Bucket    string `mapstructure:"bucket"`
+	Domain    string `mapstructure:"domain"`
+}
+
 // APIConfig a
 type APIConfig struct {
 	APIKey  string `mapstructure:"api_key"`
@@ -82,6 +90,7 @@ type Config struct {
 	Redis RedisConfig `mapstructure:"redis"`
 	Jwt   JwtConfig   `mapstructure:"jwt"`
 	API   APIConfig   `mapstructure:"api"`
+	QiNiu QiNiuConfig `mapstructure:"qi"`
 	Path  Path        `mapstructure:"filepath"`
 	Mcp   MCPConfig   `mapstructure:"mcp"`
 	Log   LogConfig   `mapstructure:"log"`
@@ -123,6 +132,14 @@ func Load(confPath []string) (*Config, error) {
 	err = v.BindEnv("jwt.refresh_secret", "JWT_REFRESH_SECRET")
 	if err != nil {
 		return nil, errors.Wrap(err, "jwt_refresh_secret bind env error")
+	}
+	err = v.BindEnv("qi.access_key", "QINIU_ACCESS_KEY")
+	if err != nil {
+		return nil, errors.Wrap(err, "qiniu_access_key bind env error")
+	}
+	err = v.BindEnv("qi.secret_key", "QINIU_SECRET_KEY")
+	if err != nil {
+		return nil, errors.Wrap(err, "qiniu_secret_key bind env error")
 	}
 
 	v.SetDefault("mysql.host", "localhost")

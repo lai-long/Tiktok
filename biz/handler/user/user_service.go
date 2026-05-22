@@ -4,7 +4,6 @@ package user
 
 import (
 	"Tiktok/biz/model/common"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
@@ -220,15 +219,49 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	filename := utils.IDGenerate()
+	ext := filepath.Ext(data.Filename)
+	objectName := "avatar/" + filename + ext
+
+	_, seekErr := file.Seek(0, 0)
+	if seekErr != nil {
+		logger.Error("user avatar upload file seek failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(seekErr))
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Data: nil,
+		}
+		c.JSON(200, resp)
+		return
+	}
+
+	qiniuKey, uploadErr := utils.UploadToQiNiu(file, objectName, data.Filename)
+	if uploadErr != nil {
+		logger.Error("user avatar upload to qiniu failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("object_name", objectName),
+			logger.WithField("action", "upload_avatar"),
+			zap.Error(uploadErr))
+		resp := &user.UserAvatarResp{
+			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
+			Data: nil,
+		}
+		c.JSON(200, resp)
+		return
+	}
+
 	code, userInfo, err := Rpc.UserAvatarRpc(ctx, &user2.UserAvatarReq{
-		AvatarURL: config.Cfg.Path.AvatarPath + filename + filepath.Ext(data.Filename),
+		AvatarURL: qiniuKey,
 		UserID:    userID,
 	})
 	if err != nil {
 		logger.Error("user avatar upload save failed",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
-			logger.WithField("avatar_url", config.Cfg.Path.AvatarPath+filename+filepath.Ext(data.Filename)),
+			logger.WithField("avatar_url", qiniuKey),
 			logger.WithField("action", "upload_avatar"),
 			zap.Error(err))
 	}
@@ -236,7 +269,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 		logger.Info("user avatar upload success",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
-			logger.WithField("avatar_url", config.Cfg.Path.AvatarPath+filename+filepath.Ext(data.Filename)),
+			logger.WithField("avatar_url", qiniuKey),
 			logger.WithField("action", "upload_avatar"))
 	}
 	resp := &user.UserAvatarResp{
