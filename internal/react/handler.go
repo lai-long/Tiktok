@@ -27,7 +27,7 @@ func (s *CommentServiceImpl) CommentPublish(ctx context.Context, req *react.Comm
 	}
 	defer entry.Exit()
 
-	code, err := s.commentRepo.CommentPublish(req.TargetAt, req.UserID, req.Content, req.TargetType)
+	code, _ := s.commentRepo.CommentPublish(req.TargetAt, req.UserID, req.Content, req.TargetType)
 	resp.Code = code
 	return resp, nil
 }
@@ -42,7 +42,7 @@ func (s *CommentServiceImpl) CommentList(ctx context.Context, req *react.Comment
 	}
 	defer entry.Exit()
 
-	code, comments, err := s.commentRepo.CommentList(req.TargetAt, req.PageSize, req.PageNum)
+	code, comments, _ := s.commentRepo.CommentList(req.TargetAt, req.PageSize, req.PageNum)
 	resp = &react.CommentListResp{
 		Code: code,
 		Data: &react.CommentData{
@@ -63,7 +63,7 @@ func (s *CommentServiceImpl) CommentDelete(ctx context.Context, req *react.Comme
 	}
 	defer entry.Exit()
 
-	code, err := s.commentRepo.CommentDelete(req.CommentId, req.TargetAt, req.UserID, req.TargetType)
+	code, _ := s.commentRepo.CommentDelete(req.CommentId, req.TargetAt, req.UserID, req.TargetType)
 	resp.Code = code
 	return resp, nil
 }
@@ -86,7 +86,7 @@ func (s *LikeServiceImpl) LikeAction(ctx context.Context, req *react.LikeActionR
 	}
 	defer entry.Exit()
 
-	code, err := s.likeRepo.LikeAction(ctx, req.UserID, req.TargetAt, req.ActionType, req.TargetType)
+	code, _ := s.likeRepo.LikeAction(ctx, req.UserID, req.TargetAt, req.ActionType, req.TargetType)
 	resp.Code = code
 	return resp, nil
 }
@@ -101,7 +101,7 @@ func (s *LikeServiceImpl) LikeList(ctx context.Context, req *react.LikeListReq) 
 	}
 	defer entry.Exit()
 
-	code, videoIds, total, err := s.likeRepo.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
+	code, videoIds, total, _ := s.likeRepo.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
 	resp = &react.LikeListResp{
 		Code: code,
 		Data: &react.LikeVideoData{

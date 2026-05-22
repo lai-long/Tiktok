@@ -30,7 +30,7 @@ func (s *SocialServiceImpl) RelationAction(ctx context.Context, req *social.Rela
 	}
 	defer entry.Exit()
 
-	code, err := s.socialService.RelationAction(ctx, req.ToUserId, req.ActionType, req.UserId)
+	code, _ := s.socialService.RelationAction(ctx, req.ToUserId, req.ActionType, req.UserId)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	return resp, nil
@@ -48,7 +48,7 @@ func (s *SocialServiceImpl) FollowingList(ctx context.Context, req *social.Follo
 	}
 	defer entry.Exit()
 
-	code, userInfos, err := s.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, _ := s.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	resp.Data = &social.SocialData{
@@ -70,7 +70,7 @@ func (s *SocialServiceImpl) FollowerList(ctx context.Context, req *social.Follow
 	}
 	defer entry.Exit()
 
-	code, userInfos, err := s.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, _ := s.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	resp.Data = &social.SocialData{
@@ -92,7 +92,7 @@ func (s *SocialServiceImpl) FriendList(ctx context.Context, req *social.FriendLi
 	}
 	defer entry.Exit()
 
-	code, userInfos, err := s.socialService.FriendList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, _ := s.socialService.FriendList(req.UserId, req.PageNum, req.PageSize)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	resp.Data = &social.SocialData{

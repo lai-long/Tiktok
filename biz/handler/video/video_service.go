@@ -7,7 +7,6 @@ import (
 	video "Tiktok/biz/model/video"
 	Rpc "Tiktok/biz/rpc"
 	video2 "Tiktok/kitex_gen/video"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
@@ -81,30 +80,47 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	filename := utils.IDGenerate()
-	code, err := utils.SaveUploadFile(dataFile, config.Cfg.Path.VideoPath, filename+filepath.Ext(data.Filename))
+	ext := filepath.Ext(data.Filename)
+	objectName := "video/" + filename + ext
+
+	qiniuKey, uploadErr := utils.UploadToQiNiu(dataFile, objectName, data.Filename)
 	_ = dataFile.Close()
-	if err != nil {
-		logger.Error("video publish save file failed",
+	if uploadErr != nil {
+		logger.Error("video publish upload to qiniu failed",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
-			logger.WithField("filename", data.Filename),
+			logger.WithField("object_name", objectName),
 			logger.WithField("action", "video_publish"),
-			zap.Error(err))
+			zap.Error(uploadErr))
 		c.JSON(200, &video.VideoPublishResp{
 			Base: &common.Base{
-				Code: code,
-				Msg:  consts.GetErrorCodeMsg(code),
+				Code: consts.FileError,
+				Msg:  consts.GetErrorCodeMsg(consts.FileError),
 			},
 		})
 		return
 	}
+	var coverKey string
+	if coverFileHeader, coverErr := c.FormFile("cover"); coverErr == nil {
+		if coverFile, openErr := coverFileHeader.Open(); openErr == nil {
+			defer func() { _ = coverFile.Close() }()
+			if ok, _ := utils.IsImage(coverFile); ok {
+				_, _ = coverFile.Seek(0, 0)
+				coverExt := filepath.Ext(coverFileHeader.Filename)
+				coverName := utils.IDGenerate() + coverExt
+				coverKey, _ = utils.UploadToQiNiu(coverFile, "cover/"+coverName, coverFileHeader.Filename)
+			}
+		}
+	}
+
 	rpcReq := &video2.VideoPublishReq{
 		Title:       req.Title,
 		Description: req.Description,
-		VideoURL:    config.Cfg.Path.VideoPath + filename + filepath.Ext(data.Filename),
+		VideoURL:    qiniuKey,
 		UserID:      userID,
+		CoverURL:    coverKey,
 	}
-	code, err = Rpc.VideoPublish(ctx, rpcReq)
+	code, err := Rpc.VideoPublish(ctx, rpcReq)
 	if err != nil {
 		logger.Error("video publish RPC failed",
 			logger.WithServiceName("api"),

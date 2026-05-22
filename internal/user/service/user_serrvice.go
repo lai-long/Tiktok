@@ -40,7 +40,7 @@ func toUserInfo(e entity.UserEntity) *user.UserInfo {
 	return &user.UserInfo{
 		ID:        e.ID,
 		Username:  e.Username,
-		AvatarURL: e.Avatar_url,
+		AvatarURL: utils.SignQiNiuURL(e.Avatar_url),
 		CreatedAt: e.Created_at.String(),
 		UpdatedAt: e.Updated_at.String(),
 	}
