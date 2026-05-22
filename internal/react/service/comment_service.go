@@ -28,6 +28,20 @@ func NewCommentService(db CommentDatabase) *CommentRepo {
 	return &CommentRepo{db: db}
 }
 
+func toCommentInfo(e entity.CommentEntity) *react.CommentInfo {
+	return &react.CommentInfo{
+		UserId:       e.UserID,
+		TargetId:     e.TargetID,
+		CommentId:    e.CommentID,
+		Content:      e.Content,
+		LikeCount:    e.LikeCount,
+		CreatedAt:    e.CreatedAt,
+		UpdatedAt:    e.UpdatedAt,
+		TargetType:   e.TargetType,
+		CommentCount: e.CommentCount,
+	}
+}
+
 func (s *CommentRepo) CommentPublish(targetId, userId, content, targetType string) (int32, error) {
 	switch targetType {
 	case "1":
@@ -63,7 +77,7 @@ func (s *CommentRepo) CommentList(targetId string, pageSize int64, pageNum int64
 	}
 	var comments []*react.CommentInfo
 	for i := range commentEntity {
-		comments = append(comments, commentEntity[i].ToCommentInfo())
+		comments = append(comments, toCommentInfo(commentEntity[i]))
 	}
 	return consts.Success, comments, nil
 }

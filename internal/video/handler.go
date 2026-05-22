@@ -118,3 +118,23 @@ func (s *VideoServiceImpl) VideoStream(ctx context.Context, req *video.VideoStre
 	}
 	return resp, nil
 }
+
+// BatchGetVideo implements the VideoServiceImpl interface.
+func (s *VideoServiceImpl) BatchGetVideo(ctx context.Context, req *video.BatchGetVideoReq) (resp *video.BatchGetVideoResp, err error) {
+	resp = &video.BatchGetVideoResp{}
+	entry, blockErr := api.Entry("/video/batch")
+	if blockErr != nil {
+		resp.Code = consts.SentinelBlock
+		return resp, nil
+	}
+	defer entry.Exit()
+	code, infos, err := s.videoService.BatchGetVideo(req.Ids)
+	resp = &video.BatchGetVideoResp{
+		Code: code,
+		Data: &video.VideoData{
+			Items: infos,
+			Total: int64(len(infos)),
+		},
+	}
+	return resp, nil
+}

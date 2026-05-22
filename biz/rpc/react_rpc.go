@@ -9,7 +9,6 @@ import (
 	"context"
 
 	model "Tiktok/biz/model/react"
-	video "Tiktok/biz/model/video"
 
 	"github.com/cloudwego/kitex/client"
 	etcd "github.com/kitex-contrib/registry-etcd"
@@ -89,25 +88,16 @@ func LikeList(ctx context.Context, req *react.LikeListReq) (int32, *model.LikeVi
 	if err != nil || resp.Data == nil {
 		return consts.ReactDBSelectError, nil, err
 	}
-	infos := make([]*video.VideoInfo, 0, resp.Data.Total)
-	for i := 0; i < len(resp.Data.Items); i++ {
-		infos = append(infos, &video.VideoInfo{
-			ID:           resp.Data.Items[i].ID,
-			UserID:       resp.Data.Items[i].UserID,
-			Title:        resp.Data.Items[i].Title,
-			Description:  resp.Data.Items[i].Description,
-			CommentCount: resp.Data.Items[i].CommentCount,
-			CoverURL:     resp.Data.Items[i].CoverURL,
-			CreatedAt:    resp.Data.Items[i].CreatedAt,
-			LikeCount:    resp.Data.Items[i].LikeCount,
-			UpdatedAt:    resp.Data.Items[i].UpdatedAt,
-			VideoURL:     resp.Data.Items[i].VideoURL,
-			VisitCount:   resp.Data.Items[i].VisitCount,
-		})
+	if len(resp.Data.VideoIds) == 0 {
+		return resp.Code, &model.LikeVideoData{Total: 0}, nil
+	}
+	_, videoInfos, err := BatchGetVideo(ctx, resp.Data.VideoIds)
+	if err != nil {
+		return consts.VideoDBSelectError, nil, err
 	}
 	data := &model.LikeVideoData{
-		Items: infos,
-		Total: int64(len(infos)),
+		Items: videoInfos,
+		Total: int64(len(videoInfos)),
 	}
-	return resp.Code, data, err
+	return resp.Code, data, nil
 }

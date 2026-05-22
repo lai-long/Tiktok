@@ -66,10 +66,19 @@ message VideoStreamResp{
     VideoData Data=2;
 }
 
+message BatchGetVideoReq{
+    repeated string Ids=1;
+}
+message BatchGetVideoResp{
+    int32 Code=1;
+    VideoData Data=2;
+}
+
 service VideoService {
     rpc VideoPublish(VideoPublishReq) returns (VideoPublishResp);
     rpc VideoList(VideoListReq) returns (VideoListResp);
     rpc VideoSearch(VideoSearchReq) returns (VideoSearchResp);
     rpc VideoPopular(VideoHotReq) returns (VideoHotResp);
     rpc VideoStream(VideoStreamReq) returns (VideoStreamResp);
+    rpc BatchGetVideo(BatchGetVideoReq) returns (BatchGetVideoResp);
 }

@@ -68,6 +68,11 @@ func (m *MockVideoDb) GetVideoStream() ([]entity.VideoEntity, error) {
 	return args.Get(0).([]entity.VideoEntity), args.Error(1)
 }
 
+func (m *MockVideoDb) GetVideoByIds(ids []string) ([]entity.VideoEntity, error) {
+	args := m.Called(ids)
+	return args.Get(0).([]entity.VideoEntity), args.Error(1)
+}
+
 func TestVideoPublish(t *testing.T) {
 	tests := []struct {
 		name        string

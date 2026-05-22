@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"Tiktok/kitex_gen/user"
 	"database/sql"
 	"time"
 )
@@ -17,15 +16,4 @@ type UserEntity struct {
 	Deleted_at sql.NullTime `db:"deleted_at"`
 	MfaSecret  string       `db:"mfa_secret"`
 	MfaEnabled bool         `db:"mfa_enabled"`
-}
-
-// ToUserInfo is to exchange userEntity to UserInfo
-func (u *UserEntity) ToUserInfo() *user.UserInfo {
-	return &user.UserInfo{
-		ID:        u.ID,
-		Username:  u.Username,
-		AvatarURL: u.Avatar_url,
-		CreatedAt: u.Created_at.String(),
-		UpdatedAt: u.Updated_at.String(),
-	}
 }

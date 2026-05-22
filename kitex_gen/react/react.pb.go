@@ -3,7 +3,6 @@
 package react
 
 import (
-	"Tiktok/kitex_gen/video"
 	"context"
 
 	"github.com/cloudwego/prutal"
@@ -389,8 +388,8 @@ func (x *LikeListReq) GetPageSize() int64 {
 }
 
 type LikeVideoData struct {
-	Items []*video.VideoInfo `protobuf:"bytes,1,rep,name=items" json:"items,omitempty"`
-	Total int64              `protobuf:"varint,2,opt,name=Total" json:"Total,omitempty"`
+	VideoIds []string `protobuf:"bytes,1,rep,name=video_ids" json:"video_ids,omitempty"`
+	Total    int64    `protobuf:"varint,2,opt,name=Total" json:"Total,omitempty"`
 }
 
 func (x *LikeVideoData) Reset() { *x = LikeVideoData{} }
@@ -399,9 +398,9 @@ func (x *LikeVideoData) Marshal(in []byte) ([]byte, error) { return prutal.Marsh
 
 func (x *LikeVideoData) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
 
-func (x *LikeVideoData) GetItems() []*video.VideoInfo {
+func (x *LikeVideoData) GetVideoIds() []string {
 	if x != nil {
-		return x.Items
+		return x.VideoIds
 	}
 	return nil
 }
