@@ -30,7 +30,7 @@ jobs:
           cache: true
 
       - name: Run golang CI
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.12.2
           args: --timeout=5m
@@ -73,5 +73,6 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache: true
+      - run: cp pkg/config/config.example.yaml pkg/config/config.yaml
       - run: go test -race -count=1 -coverprofile=coverage.out ./...
       - run: go tool cover -func=coverage.out
