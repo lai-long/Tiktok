@@ -74,5 +74,6 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: true
       - run: cp pkg/config/config.example.yaml pkg/config/config.yaml
+      - run: cat .env.example >> $GITHUB_ENV
       - run: go test -race -count=1 -coverprofile=coverage.out ./...
       - run: go tool cover -func=coverage.out
