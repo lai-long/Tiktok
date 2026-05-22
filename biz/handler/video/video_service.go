@@ -101,20 +101,15 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	var coverKey string
-	coverFileHeader, coverErr := c.FormFile("cover")
-	if coverErr == nil {
-		coverFile, openErr := coverFileHeader.Open()
-		if openErr == nil {
-			ok, _ := utils.IsImage(coverFile)
-			if ok {
-				_, seekErr := coverFile.Seek(0, 0)
-				if seekErr == nil {
-					coverExt := filepath.Ext(coverFileHeader.Filename)
-					coverName := utils.IDGenerate() + coverExt
-					coverKey, _ = utils.UploadToQiNiu(coverFile, "cover/"+coverName, coverFileHeader.Filename)
-				}
+	if coverFileHeader, coverErr := c.FormFile("cover"); coverErr == nil {
+		if coverFile, openErr := coverFileHeader.Open(); openErr == nil {
+			defer func() { _ = coverFile.Close() }()
+			if ok, _ := utils.IsImage(coverFile); ok {
+				_, _ = coverFile.Seek(0, 0)
+				coverExt := filepath.Ext(coverFileHeader.Filename)
+				coverName := utils.IDGenerate() + coverExt
+				coverKey, _ = utils.UploadToQiNiu(coverFile, "cover/"+coverName, coverFileHeader.Filename)
 			}
-			coverFile.Close()
 		}
 	}
 
