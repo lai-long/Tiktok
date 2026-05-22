@@ -2,7 +2,6 @@ mysql:
   host: "localhost"
   port: 3306
   user: "root"
-  password: "your_password"
   database: "tiktok"
   charset: "utf8"
   parse_time: true
@@ -11,27 +10,29 @@ mysql:
 redis:
   host: "localhost"
   port: 6379
-  password: "your_password"
-  db: 0
+  database: 0
 
 api:
-  #支持openAI规范
+  # 支持 openAI 规范
   base_url: "your_base_url"
-  map_api: "your_map_api_key"
 
 filepath:
   video_path: "./videos/"
   avatar_path: "./avatars/"
   env_path: "./.env"
 
+log:
+  level: "info"
+  path: "./logs/"
+
 mcp:
-  #mcp client配置 可以同时配置多个mcp client
+  # mcp client配置，可以同时配置多个mcp client
   clients:
   - id: ""
     name: ""
     connection_type: ""
     url: ""                  # HTTP/SSE模式时使用，如 "http://localhost:8080/mcp"
-    command: ""              # STDIO模式时使用， MCP服务器可执行文件路径
+    command: ""              # STDIO模式时使用，MCP服务器可执行文件路径
     args: []
     tools_to_execute: ["*"]
     tools_to_auto_execute: ["*"]
