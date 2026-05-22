@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"Tiktok/kitex_gen/react"
 	"database/sql"
 )
 
@@ -17,19 +16,4 @@ type CommentEntity struct {
 	UpdatedAt    string       `db:"updated_at"`
 	DeletedAt    sql.NullTime `db:"deleted_at"`
 	TargetType   string       `db:"target_type"`
-}
-
-// ToCommentInfo is used to exchange CommentEntity to commentInfo
-func (c *CommentEntity) ToCommentInfo() *react.CommentInfo {
-	return &react.CommentInfo{
-		UserId:       c.UserID,
-		TargetId:     c.TargetID,
-		CommentId:    c.CommentID,
-		Content:      c.Content,
-		LikeCount:    c.LikeCount,
-		CreatedAt:    c.CreatedAt,
-		UpdatedAt:    c.UpdatedAt,
-		TargetType:   c.TargetType,
-		CommentCount: c.CommentCount,
-	}
 }

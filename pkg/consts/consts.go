@@ -100,6 +100,15 @@ const (
 	WsGetHistoryError int32 = 205002 // 获取历史消息错误
 )
 
+// 06 mfa模块
+const (
+	MfaReqValidError int32 = 106001 // mfa请求参数错误
+	MfaDBSelectError int32 = 206001 // mfa模块数据库select错误
+	MfaDBInsertError int32 = 206002 // mfa模块数据库insert错误
+	MfaDBUpdateError int32 = 206003 // mfa模块数据库update错误
+	MfaDBDeleteError int32 = 206004 // mfa模块数据库delete错误
+)
+
 var mapErrorMsg = map[int32]string{
 	Success:             "success",
 	FileError:           "FILE错误",
@@ -143,6 +152,11 @@ var mapErrorMsg = map[int32]string{
 	SocialDBUpdateError: "社交模块模块数据库update错误",
 	SocialDBDeleteError: "社交模块模块数据库delete错误",
 	SocialDBSelectError: "社交模块模块数据库select错误",
+	MfaReqValidError:    "mfa请求参数错误",
+	MfaDBSelectError:    "mfa模块数据库select错误",
+	MfaDBInsertError:    "mfa模块数据库insert错误",
+	MfaDBUpdateError:    "mfa模块数据库update错误",
+	MfaDBDeleteError:    "mfa模块数据库delete错误",
 	WsReqValidError:     "websocket参数错误",
 	WsClientNotOnline:   "对方不在线",
 	WsClientOnline:      "对方在线",

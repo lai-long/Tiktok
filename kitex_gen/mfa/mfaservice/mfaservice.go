@@ -29,6 +29,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"MfaConfirm": kitex.NewMethodInfo(
+		mfaConfirmHandler,
+		newMfaConfirmArgs,
+		newMfaConfirmResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -317,6 +324,117 @@ func (p *MfaBindResult) GetResult() interface{} {
 	return p.Success
 }
 
+func mfaConfirmHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(mfa.MfaConfirmReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(mfa.MfaService).MfaConfirm(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *MfaConfirmArgs:
+		success, err := handler.(mfa.MfaService).MfaConfirm(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*MfaConfirmResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newMfaConfirmArgs() interface{} {
+	return &MfaConfirmArgs{}
+}
+
+func newMfaConfirmResult() interface{} {
+	return &MfaConfirmResult{}
+}
+
+type MfaConfirmArgs struct {
+	Req *mfa.MfaConfirmReq
+}
+
+func (p *MfaConfirmArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *MfaConfirmArgs) Unmarshal(in []byte) error {
+	msg := new(mfa.MfaConfirmReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var MfaConfirmArgs_Req_DEFAULT *mfa.MfaConfirmReq
+
+func (p *MfaConfirmArgs) GetReq() *mfa.MfaConfirmReq {
+	if !p.IsSetReq() {
+		return MfaConfirmArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *MfaConfirmArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *MfaConfirmArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type MfaConfirmResult struct {
+	Success *mfa.MfaConfirmResp
+}
+
+var MfaConfirmResult_Success_DEFAULT *mfa.MfaConfirmResp
+
+func (p *MfaConfirmResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *MfaConfirmResult) Unmarshal(in []byte) error {
+	msg := new(mfa.MfaConfirmResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *MfaConfirmResult) GetSuccess() *mfa.MfaConfirmResp {
+	if !p.IsSetSuccess() {
+		return MfaConfirmResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *MfaConfirmResult) SetSuccess(x interface{}) {
+	p.Success = x.(*mfa.MfaConfirmResp)
+}
+
+func (p *MfaConfirmResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *MfaConfirmResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -342,6 +460,16 @@ func (p *kClient) MfaBind(ctx context.Context, Req *mfa.MfaBindReq) (r *mfa.MfaB
 	_args.Req = Req
 	var _result MfaBindResult
 	if err = p.c.Call(ctx, "MfaBind", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) MfaConfirm(ctx context.Context, Req *mfa.MfaConfirmReq) (r *mfa.MfaConfirmResp, err error) {
+	var _args MfaConfirmArgs
+	_args.Req = Req
+	var _result MfaConfirmResult
+	if err = p.c.Call(ctx, "MfaConfirm", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

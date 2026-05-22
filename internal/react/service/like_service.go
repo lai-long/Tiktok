@@ -1,9 +1,7 @@
 package service
 
 import (
-	"Tiktok/kitex_gen/video"
 	"Tiktok/pkg/consts"
-	"Tiktok/pkg/entity"
 	"context"
 	"log"
 	"time"
@@ -25,7 +23,6 @@ type LikeVideoDatabase interface {
 	VideoLikeCountUp(videoId string) error
 	VideoLikeCountDown(videoId string) error
 	LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error)
-	LikeVideos(videoId []string) (bool, []entity.VideoEntity)
 }
 type LikeDatabase interface {
 	LikeCreate(userId string, targetId string, targetType string) error
@@ -140,49 +137,33 @@ func (s *LikeRepo) LikeAction(ctx context.Context, userId string, targetId strin
 	}
 }
 
-func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []string, int64, error) {
 	results, err := s.likeRedis.VideoLikeGet(ctx, userId)
 	if err == nil && len(results) > 0 {
 		start := pageNum * pageSize
 		end := pageSize + start
 		if start >= int64(len(results)) {
-			return consts.ReactReqValueError, nil, errors.New("pageNum out of range")
+			return consts.ReactReqValueError, nil, 0, errors.New("pageNum out of range")
 		}
 		if end > int64(len(results)) {
 			end = int64(len(results))
 		}
 		result := results[start:end]
-		ok, videos := s.videoDb.LikeVideos(result)
-		if !ok {
-			return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
-		}
-		return consts.Success, buildVideoInfos(videos), nil
+		return consts.Success, result, int64(len(result)), nil
 	}
-	videoId, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
+	videoIds, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
 	if err != nil {
-		return consts.ReactDBSelectError, nil, errors.Wrap(err, "->LikeList select LikeVideo error")
-	}
-	ok, videos := s.videoDb.LikeVideos(videoId)
-	if !ok {
-		return consts.ReactDBSelectError, nil, errors.New("->LikeList LikeVideos err")
+		return consts.ReactDBSelectError, nil, 0, errors.Wrap(err, "->LikeList select LikeVideo error")
 	}
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		for _, id := range videoId {
+		for _, id := range videoIds {
 			err = s.likeRedis.VideoLikeSAdd(ctx, userId, id)
 			if err != nil {
 				log.Println("LikeAction LikeSAdd error:", err)
 			}
 		}
 	}()
-	return consts.Success, buildVideoInfos(videos), nil
-}
-
-func buildVideoInfos(videos []entity.VideoEntity) []*video.VideoInfo {
-	result := make([]*video.VideoInfo, 0, len(videos))
-	for _, v := range videos {
-		result = append(result, v.ToVideoInfo())
-	}
-	return result
+	return consts.Success, videoIds, int64(len(videoIds)), nil
 }

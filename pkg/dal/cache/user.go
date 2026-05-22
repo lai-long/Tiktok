@@ -57,3 +57,11 @@ func (rdb *Redis) GetCachedUserInfo(ctx context.Context, userId string) (*entity
 	}
 	return &info, nil
 }
+
+func (rdb *Redis) DelCachedUserInfo(ctx context.Context, userId string) error {
+	err := rdb.redis.Del(ctx, "user:info:"+userId).Err()
+	if err != nil {
+		return errors.Wrap(err, "del cache user info")
+	}
+	return nil
+}

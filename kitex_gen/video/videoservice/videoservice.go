@@ -50,6 +50,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"BatchGetVideo": kitex.NewMethodInfo(
+		batchGetVideoHandler,
+		newBatchGetVideoArgs,
+		newBatchGetVideoResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -671,6 +678,117 @@ func (p *VideoStreamResult) GetResult() interface{} {
 	return p.Success
 }
 
+func batchGetVideoHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(video.BatchGetVideoReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(video.VideoService).BatchGetVideo(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *BatchGetVideoArgs:
+		success, err := handler.(video.VideoService).BatchGetVideo(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*BatchGetVideoResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newBatchGetVideoArgs() interface{} {
+	return &BatchGetVideoArgs{}
+}
+
+func newBatchGetVideoResult() interface{} {
+	return &BatchGetVideoResult{}
+}
+
+type BatchGetVideoArgs struct {
+	Req *video.BatchGetVideoReq
+}
+
+func (p *BatchGetVideoArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *BatchGetVideoArgs) Unmarshal(in []byte) error {
+	msg := new(video.BatchGetVideoReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var BatchGetVideoArgs_Req_DEFAULT *video.BatchGetVideoReq
+
+func (p *BatchGetVideoArgs) GetReq() *video.BatchGetVideoReq {
+	if !p.IsSetReq() {
+		return BatchGetVideoArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *BatchGetVideoArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *BatchGetVideoArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type BatchGetVideoResult struct {
+	Success *video.BatchGetVideoResp
+}
+
+var BatchGetVideoResult_Success_DEFAULT *video.BatchGetVideoResp
+
+func (p *BatchGetVideoResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *BatchGetVideoResult) Unmarshal(in []byte) error {
+	msg := new(video.BatchGetVideoResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *BatchGetVideoResult) GetSuccess() *video.BatchGetVideoResp {
+	if !p.IsSetSuccess() {
+		return BatchGetVideoResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *BatchGetVideoResult) SetSuccess(x interface{}) {
+	p.Success = x.(*video.BatchGetVideoResp)
+}
+
+func (p *BatchGetVideoResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *BatchGetVideoResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -726,6 +844,16 @@ func (p *kClient) VideoStream(ctx context.Context, Req *video.VideoStreamReq) (r
 	_args.Req = Req
 	var _result VideoStreamResult
 	if err = p.c.Call(ctx, "VideoStream", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) BatchGetVideo(ctx context.Context, Req *video.BatchGetVideoReq) (r *video.BatchGetVideoResp, err error) {
+	var _args BatchGetVideoArgs
+	_args.Req = Req
+	var _result BatchGetVideoResult
+	if err = p.c.Call(ctx, "BatchGetVideo", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

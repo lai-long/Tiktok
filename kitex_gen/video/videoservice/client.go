@@ -16,6 +16,7 @@ type Client interface {
 	VideoSearch(ctx context.Context, Req *video.VideoSearchReq, callOptions ...callopt.Option) (r *video.VideoSearchResp, err error)
 	VideoPopular(ctx context.Context, Req *video.VideoHotReq, callOptions ...callopt.Option) (r *video.VideoHotResp, err error)
 	VideoStream(ctx context.Context, Req *video.VideoStreamReq, callOptions ...callopt.Option) (r *video.VideoStreamResp, err error)
+	BatchGetVideo(ctx context.Context, Req *video.BatchGetVideoReq, callOptions ...callopt.Option) (r *video.BatchGetVideoResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -70,4 +71,9 @@ func (p *kVideoServiceClient) VideoPopular(ctx context.Context, Req *video.Video
 func (p *kVideoServiceClient) VideoStream(ctx context.Context, Req *video.VideoStreamReq, callOptions ...callopt.Option) (r *video.VideoStreamResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.VideoStream(ctx, Req)
+}
+
+func (p *kVideoServiceClient) BatchGetVideo(ctx context.Context, Req *video.BatchGetVideoReq, callOptions ...callopt.Option) (r *video.BatchGetVideoResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.BatchGetVideo(ctx, Req)
 }

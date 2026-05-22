@@ -388,10 +388,53 @@ func (x *VideoStreamResp) GetData() *VideoData {
 	return nil
 }
 
+type BatchGetVideoReq struct {
+	Ids []string `protobuf:"bytes,1,rep,name=Ids" json:"Ids,omitempty"`
+}
+
+func (x *BatchGetVideoReq) Reset() { *x = BatchGetVideoReq{} }
+
+func (x *BatchGetVideoReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *BatchGetVideoReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *BatchGetVideoReq) GetIds() []string {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+type BatchGetVideoResp struct {
+	Code int32      `protobuf:"varint,1,opt,name=Code" json:"Code,omitempty"`
+	Data *VideoData `protobuf:"bytes,2,opt,name=Data" json:"Data,omitempty"`
+}
+
+func (x *BatchGetVideoResp) Reset() { *x = BatchGetVideoResp{} }
+
+func (x *BatchGetVideoResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *BatchGetVideoResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *BatchGetVideoResp) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *BatchGetVideoResp) GetData() *VideoData {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 type VideoService interface {
 	VideoPublish(ctx context.Context, req *VideoPublishReq) (res *VideoPublishResp, err error)
 	VideoList(ctx context.Context, req *VideoListReq) (res *VideoListResp, err error)
 	VideoSearch(ctx context.Context, req *VideoSearchReq) (res *VideoSearchResp, err error)
 	VideoPopular(ctx context.Context, req *VideoHotReq) (res *VideoHotResp, err error)
 	VideoStream(ctx context.Context, req *VideoStreamReq) (res *VideoStreamResp, err error)
+	BatchGetVideo(ctx context.Context, req *BatchGetVideoReq) (res *BatchGetVideoResp, err error)
 }

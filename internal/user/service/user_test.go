@@ -46,22 +46,6 @@ func (m *MockUser) UpdateUserAvatar(url string, userId interface{}) error {
 	args := m.Called(url, userId)
 	return args.Error(0)
 }
-func (m *MockUser) SaveMfaSecret(mfa string, userId string) error {
-	args := m.Called(mfa, userId)
-	return args.Error(0)
-}
-func (m *MockUser) GetMfaSecret(userId string) (string, error) {
-	args := m.Called(userId)
-	return args.String(0), args.Error(1)
-}
-func (m *MockUser) MfaBindUpdate(userId string) error {
-	args := m.Called(userId)
-	return args.Error(0)
-}
-func (m *MockUser) CheckMfaBind(userId string) (int, error) {
-	args := m.Called(userId)
-	return args.Int(0), args.Error(1)
-}
 func (m *MockUser) GetCachedUserInfo(ctx context.Context, userId string) (*entity.UserEntity, error) {
 	args := m.Called(ctx, userId)
 	if args.Get(0) == nil {
@@ -73,6 +57,20 @@ func (m *MockUser) SetCachedUserInfo(ctx context.Context, userId string, info *e
 	args := m.Called(ctx, userId, info)
 	return args.Error(0)
 }
+func (m *MockUser) DelCachedUserInfo(ctx context.Context, userId string) error {
+	args := m.Called(ctx, userId)
+	return args.Error(0)
+}
+
+type MockMfaService struct {
+	mock.Mock
+}
+
+func (m *MockMfaService) MfaConfirm(ctx context.Context, userID string, mfaCode string) (int32, error) {
+	args := m.Called(ctx, userID, mfaCode)
+	return args.Get(0).(int32), args.Error(1)
+}
+
 func TestRegister(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -117,8 +115,9 @@ func TestRegister(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
-			user := NewUserRepo(mockUser, mockUser, mockUser)
+			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, err := user.Register(tt.userName, tt.password)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantCode, code)
@@ -127,7 +126,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	_, err := config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
+	_, err := config.Load([]string{"../../../pkg/config"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +137,7 @@ func TestLogin(t *testing.T) {
 		password string
 		mfaCode  string
 		ctx      context.Context
-		setMock  func(*MockUser)
+		setMock  func(*MockUser, *MockMfaService)
 		wantErr  bool
 		wantCode int32
 	}{
@@ -147,9 +146,9 @@ func TestLogin(t *testing.T) {
 			userName: "username",
 			password: "password",
 			ctx:      context.Background(),
-			setMock: func(m *MockUser) {
+			setMock: func(m *MockUser, mc *MockMfaService) {
 				m.On("GetUserByUsername", "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
-				m.On("CheckMfaBind", "ID").Return(0, nil)
+				mc.On("MfaConfirm", mock.Anything, "ID", "").Return(consts.Success, nil)
 				m.On("UserTokenSet", mock.Anything, mock.Anything, "ID").Return(nil)
 			},
 			wantErr:  false,
@@ -159,12 +158,14 @@ func TestLogin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
-			tt.setMock(mockUser)
-			user := NewUserRepo(mockUser, mockUser, mockUser)
+			mockMfa := new(MockMfaService)
+			tt.setMock(mockUser, mockMfa)
+			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, _, _, _, err := user.Login(tt.userName, tt.password, tt.mfaCode, tt.ctx)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantCode, code)
 			mockUser.AssertExpectations(t)
+			mockMfa.AssertExpectations(t)
 		})
 	}
 }
@@ -227,8 +228,9 @@ func TestUserInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
-			user := NewUserRepo(mockUser, mockUser, mockUser)
+			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			_, code, err := user.UserInfo(tt.ctx, tt.userId)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -252,6 +254,7 @@ func TestUserAvatar(t *testing.T) {
 			userID: "userID",
 			setMock: func(m *MockUser) {
 				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(nil)
+				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
 				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "user", Avatar_url: "http://example.com/avatar.jpg"}, nil)
 			},
 			wantCode: consts.Success,
@@ -273,6 +276,7 @@ func TestUserAvatar(t *testing.T) {
 			userID: "userID",
 			setMock: func(m *MockUser) {
 				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(nil)
+				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
 				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{}, errors.New("get error"))
 			},
 			wantCode: consts.UserDBSelectError,
@@ -282,8 +286,9 @@ func TestUserAvatar(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
-			user := NewUserRepo(mockUser, mockUser, mockUser)
+			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, _, err := user.UserAvatar(tt.url, tt.userID)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -293,7 +298,7 @@ func TestUserAvatar(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	_, err := config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
+	_, err := config.Load([]string{"../../../pkg/config"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -368,8 +373,9 @@ func TestRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUser := new(MockUser)
+			mockMfa := new(MockMfaService)
 			tt.setMock(mockUser)
-			user := NewUserRepo(mockUser, mockUser, mockUser)
+			user := NewUserRepo(mockUser, mockMfa, mockUser)
 			code, _, _, err := user.RefreshToken(tt.ctx, tt.refreshToken)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)

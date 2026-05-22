@@ -141,3 +141,27 @@ func VideoStream(ctx context.Context, req *video.VideoStreamReq) (int32, *model.
 	}
 	return resp.Code, data, err
 }
+
+func BatchGetVideo(ctx context.Context, ids []string) (int32, []*model.VideoInfo, error) {
+	resp, err := videoClient.BatchGetVideo(ctx, &video.BatchGetVideoReq{Ids: ids})
+	if err != nil || resp == nil {
+		return consts.VideoDBSelectError, nil, err
+	}
+	infos := make([]*model.VideoInfo, 0, len(resp.Data.Items))
+	for i := 0; i < len(resp.Data.Items); i++ {
+		infos = append(infos, &model.VideoInfo{
+			ID:           resp.Data.Items[i].ID,
+			UserID:       resp.Data.Items[i].UserID,
+			Title:        resp.Data.Items[i].Title,
+			Description:  resp.Data.Items[i].Description,
+			CommentCount: resp.Data.Items[i].CommentCount,
+			CoverURL:     resp.Data.Items[i].CoverURL,
+			CreatedAt:    resp.Data.Items[i].CreatedAt,
+			LikeCount:    resp.Data.Items[i].LikeCount,
+			UpdatedAt:    resp.Data.Items[i].UpdatedAt,
+			VideoURL:     resp.Data.Items[i].VideoURL,
+			VisitCount:   resp.Data.Items[i].VisitCount,
+		})
+	}
+	return resp.Code, infos, nil
+}
