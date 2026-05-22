@@ -30,7 +30,7 @@ func (s *MfaServiceImpl) MfaQrcode(ctx context.Context, req *mfa.MfaQrcodeReq) (
 		return resp, nil
 	}
 	defer entry.Exit()
-	qrCode, secret, code, err := s.mfaRepo.GenerateMfa(req.UserName, req.UserID)
+	qrCode, secret, code, _ := s.mfaRepo.GenerateMfa(req.UserName, req.UserID)
 	resp = &mfa.MfaQrcodeResp{
 		Code: code,
 		Data: &mfa.MfaData{
@@ -54,12 +54,11 @@ func (s *MfaServiceImpl) MfaBind(ctx context.Context, req *mfa.MfaBindReq) (resp
 	var code int32
 	switch req.Type {
 	case "secret":
-		code, err = s.mfaRepo.MfaBindBySecret(req.Secret, req.UserID)
+		code, _ = s.mfaRepo.MfaBindBySecret(req.Secret, req.UserID)
 	case "qrcode":
-		code, err = s.mfaRepo.MfaBindByCode(req.MfaCode, req.UserID)
+		code, _ = s.mfaRepo.MfaBindByCode(req.MfaCode, req.UserID)
 	default:
 		code = consts.MfaCodeFalse
-		err = nil
 	}
 	resp = &mfa.MfaBindResp{
 		Code: code,

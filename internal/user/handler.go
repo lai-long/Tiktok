@@ -29,7 +29,7 @@ func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterRe
 		return resp, blockErr
 	}
 	defer entry.Exit()
-	code, err := s.service.Register(req.UserName, req.Password)
+	code, _ := s.service.Register(req.UserName, req.Password)
 	resp.Code = code
 	return resp, nil
 }
