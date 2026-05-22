@@ -135,6 +135,7 @@ type VideoPublishReq struct {
 	Description string `protobuf:"bytes,2,opt,name=Description" json:"Description,omitempty"`
 	VideoURL    string `protobuf:"bytes,3,opt,name=VideoURL" json:"VideoURL,omitempty"`
 	UserID      string `protobuf:"bytes,4,opt,name=UserID" json:"UserID,omitempty"`
+	CoverURL    string `protobuf:"bytes,5,opt,name=CoverURL" json:"CoverURL,omitempty"`
 }
 
 func (x *VideoPublishReq) Reset() { *x = VideoPublishReq{} }
@@ -167,6 +168,13 @@ func (x *VideoPublishReq) GetVideoURL() string {
 func (x *VideoPublishReq) GetUserID() string {
 	if x != nil {
 		return x.UserID
+	}
+	return ""
+}
+
+func (x *VideoPublishReq) GetCoverURL() string {
+	if x != nil {
+		return x.CoverURL
 	}
 	return ""
 }

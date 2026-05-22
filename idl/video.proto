@@ -24,6 +24,7 @@ message VideoPublishReq{
     string Description=2;
     string VideoURL=3;
     string UserID=4;
+    string CoverURL=5;
 }
 message VideoPublishResp{
     int32 Code=1;

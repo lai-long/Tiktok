@@ -52,11 +52,12 @@ func toVideoInfo(e entity.VideoEntity) *video.VideoInfo {
 	}
 }
 
-func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description string, url string, userID string) (int32, error) {
+func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description string, url string, coverURL string, userID string) (int32, error) {
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = title
 	videoEntity.Description = description
 	videoEntity.VideoURL = url
+	videoEntity.CoverURL = coverURL
 	videoEntity.UserID = userID
 	videoEntity.VisitCount = rand.Intn(100)
 	videoEntity.ID = utils.IDGenerate()
