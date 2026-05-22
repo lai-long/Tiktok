@@ -2,9 +2,7 @@ package dao
 
 import (
 	entity2 "Tiktok/pkg/entity"
-	"Tiktok/pkg/logger"
 	"fmt"
-	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
 )
@@ -57,23 +55,6 @@ func (m *MySQLdb) LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]
 	var videoId []string
 	err := m.db.Select(&videoId, sql, userId, pageSize, pageNum*pageSize)
 	return videoId, errors.Wrap(err, "dao Like video list")
-}
-
-func (m *MySQLdb) LikeVideos(videoId []string) (bool, []entity2.VideoEntity) {
-	videos := make([]entity2.VideoEntity, len(videoId))
-	var GetVideoErrors = 0
-	for i := range videos {
-		var err error
-		videos[i], err = m.GetVideoByVideoId(videoId[i])
-		if err != nil {
-			logger.Error("GetVideoByVideoId error", zap.Error(err))
-			GetVideoErrors++
-		}
-	}
-	if GetVideoErrors == 0 {
-		return true, videos
-	}
-	return false, videos
 }
 
 func (m *MySQLdb) CreateComment(commentId string, videoId string, userId string, content string, targetType string) error {

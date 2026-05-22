@@ -2,7 +2,6 @@ package service
 
 import (
 	"Tiktok/pkg/consts"
-	"Tiktok/pkg/entity"
 	"context"
 	"errors"
 	"testing"
@@ -30,10 +29,6 @@ func (m *MockLike) VideoLikeCountDown(videoId string) error {
 func (m *MockLike) LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error) {
 	args := m.Called(userId, pageNum, pageSize)
 	return args.Get(0).([]string), args.Error(1)
-}
-func (m *MockLike) LikeVideos(videoId []string) (bool, []entity.VideoEntity) {
-	args := m.Called(videoId)
-	return args.Bool(0), args.Get(1).([]entity.VideoEntity)
 }
 func (m *MockLike) LikeCreate(userId string, targetID string, targetType string) error {
 	args := m.Called(userId, targetID, targetType)
@@ -189,7 +184,6 @@ func TestLikeList(t *testing.T) {
 			mockSetUp: func(m *MockLike) {
 				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
 				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
-				m.On("LikeVideos", []string{"1", "2"}).Return(true, []entity.VideoEntity{})
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -206,26 +200,13 @@ func TestLikeList(t *testing.T) {
 			wantErr:  true,
 			wantCode: consts.ReactDBSelectError,
 		},
-		{
-			name:     "Fail_likeList2",
-			userId:   "userID",
-			pageNum:  1,
-			pageSize: 10,
-			mockSetUp: func(m *MockLike) {
-				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
-				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
-				m.On("LikeVideos", []string{"1", "2"}).Return(false, []entity.VideoEntity{})
-			},
-			wantErr:  true,
-			wantCode: consts.ReactDBSelectError,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLike := new(MockLike)
 			tt.mockSetUp(mockLike)
 			like := NewLikeRepo(mockLike, mockLike, mockLike, mockLike)
-			code, _, err := like.LikeList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
+			code, _, _, err := like.LikeList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockLike.AssertExpectations(t)

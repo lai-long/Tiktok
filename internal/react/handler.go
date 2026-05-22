@@ -101,12 +101,12 @@ func (s *LikeServiceImpl) LikeList(ctx context.Context, req *react.LikeListReq) 
 	}
 	defer entry.Exit()
 
-	code, videoInfos, err := s.likeRepo.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
+	code, videoIds, total, err := s.likeRepo.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
 	resp = &react.LikeListResp{
 		Code: code,
 		Data: &react.LikeVideoData{
-			Items: videoInfos,
-			Total: int64(len(videoInfos)),
+			VideoIds: videoIds,
+			Total:    total,
 		},
 	}
 	return resp, nil

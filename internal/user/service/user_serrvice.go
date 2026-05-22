@@ -36,6 +36,16 @@ func NewUserRepo(userDb UserDatabase, mfaService MfaService, redis UserRedis) *U
 	return &UserRepo{userDb: userDb, mfaService: mfaService, redis: redis}
 }
 
+func toUserInfo(e entity.UserEntity) *user.UserInfo {
+	return &user.UserInfo{
+		ID:        e.ID,
+		Username:  e.Username,
+		AvatarURL: e.Avatar_url,
+		CreatedAt: e.Created_at.String(),
+		UpdatedAt: e.Updated_at.String(),
+	}
+}
+
 func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
 	_, err := s.userDb.GetUserByUsername(username)
 	if err != nil {
@@ -81,7 +91,7 @@ func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context
 	if err != nil {
 		return consts.UserPasswordError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check password failed")
 	}
-	userInfo := userEntity.ToUserInfo()
+	userInfo := toUserInfo(userEntity)
 	code, err := s.mfaService.MfaConfirm(ctx, userInfo.ID, mfaCode)
 	if err != nil {
 		return consts.MfaDBSelectError, &user.UserInfo{}, "", "", err
@@ -103,13 +113,13 @@ func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context
 func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo, int32, error) {
 	userEntity, err := s.redis.GetCachedUserInfo(ctx, userId)
 	if err == nil && userEntity != nil {
-		return userEntity.ToUserInfo(), consts.Success, nil
+		return toUserInfo(*userEntity), consts.Success, nil
 	}
 	userEntity2, err := s.userDb.GetUserByUserId(userId)
 	if err != nil {
 		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo GetUserByUserId error")
 	}
-	userInfo := userEntity2.ToUserInfo()
+	userInfo := toUserInfo(userEntity2)
 	err = s.redis.SetCachedUserInfo(ctx, userId, &userEntity2)
 	if err != nil {
 		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo SetCachedUserInfo error")
@@ -129,7 +139,7 @@ func (s *UserRepo) UserAvatar(url string, userID string) (int32, *user.UserInfo,
 	if err != nil {
 		return consts.UserDBSelectError, &user.UserInfo{}, errors.Wrap(err, "->userinfo get user by userid failed")
 	}
-	userInfo := userEntity.ToUserInfo()
+	userInfo := toUserInfo(userEntity)
 	return consts.Success, userInfo, nil
 }
 
@@ -142,7 +152,7 @@ func (s *UserRepo) RefreshToken(ctx context.Context, refreshToken string) (int32
 	if err != nil {
 		return consts.UserDBSelectError, "", "", errors.Wrap(err, "->RefreshToken GetUserByUserId error")
 	}
-	userInfo := userEntity.ToUserInfo()
+	userInfo := toUserInfo(userEntity)
 	refreshToken2, accessToken, err := utils.GenerateTokens(userInfo)
 	if err != nil {
 		return consts.GenerateTokenError, "", "", errors.Wrap(err, "->RefreshToken GenerateTokens error")

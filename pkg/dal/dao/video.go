@@ -2,6 +2,8 @@ package dao
 
 import (
 	"Tiktok/pkg/entity"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func (m *MySQLdb) CreatVideo(entity entity.VideoEntity) error {
@@ -43,4 +45,14 @@ func (m *MySQLdb) GetVideoStream() ([]entity.VideoEntity, error) {
 		return video, err
 	}
 	return video, nil
+}
+
+func (m *MySQLdb) GetVideoByIds(ids []string) ([]entity.VideoEntity, error) {
+	var videos []entity.VideoEntity
+	query, args, err := sqlx.In("SELECT * FROM videos WHERE id IN (?)", ids)
+	if err != nil {
+		return nil, err
+	}
+	err = m.db.Select(&videos, query, args...)
+	return videos, err
 }
