@@ -25,6 +25,10 @@ log:
   level: "info"
   path: "./logs/"
 
+qi:
+  bucket: "your_bucket_name"
+  domain: "http://your-qiniu-domain.com"
+
 mcp:
   # mcp client配置，可以同时配置多个mcp client
   clients:
