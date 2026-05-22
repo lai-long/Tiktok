@@ -29,7 +29,7 @@ func (s *VideoServiceImpl) VideoPublish(ctx context.Context, req *video.VideoPub
 	}
 	defer entry.Exit()
 
-	code, err := s.videoService.VideoPublish(ctx, req.Title, req.Description, req.VideoURL, req.UserID)
+	code, err := s.videoService.VideoPublish(ctx, req.Title, req.Description, req.VideoURL, req.CoverURL, req.UserID)
 	resp.Code = code
 	return resp, nil
 }

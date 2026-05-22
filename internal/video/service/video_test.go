@@ -79,6 +79,7 @@ func TestVideoPublish(t *testing.T) {
 		title       string
 		description string
 		url         string
+		coverURL    string
 		userID      string
 		mockSetup   func(*MockVideoRedis, *MockVideoDb)
 		wantCode    int32
@@ -89,6 +90,7 @@ func TestVideoPublish(t *testing.T) {
 			title:       "title",
 			description: "description",
 			url:         "http://example.com/video.mp4",
+			coverURL:    "qiniu://cover/xxx.jpg",
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
@@ -103,6 +105,7 @@ func TestVideoPublish(t *testing.T) {
 			title:       "title",
 			description: "description",
 			url:         "http://example.com/video.mp4",
+			coverURL:    "",
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(errors.New("redis error"))
@@ -116,6 +119,7 @@ func TestVideoPublish(t *testing.T) {
 			title:       "title",
 			description: "description",
 			url:         "http://example.com/video.mp4",
+			coverURL:    "",
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
@@ -132,7 +136,7 @@ func TestVideoPublish(t *testing.T) {
 			mockDb := new(MockVideoDb)
 			tt.mockSetup(mockRedis, mockDb)
 			videoRepo := NewVideoRepo(mockDb, mockRedis)
-			code, err := videoRepo.VideoPublish(context.Background(), tt.title, tt.description, tt.url, tt.userID)
+			code, err := videoRepo.VideoPublish(context.Background(), tt.title, tt.description, tt.url, tt.coverURL, tt.userID)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)

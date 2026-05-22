@@ -100,11 +100,30 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		})
 		return
 	}
+	var coverKey string
+	coverFileHeader, coverErr := c.FormFile("cover")
+	if coverErr == nil {
+		coverFile, openErr := coverFileHeader.Open()
+		if openErr == nil {
+			ok, _ := utils.IsImage(coverFile)
+			if ok {
+				_, seekErr := coverFile.Seek(0, 0)
+				if seekErr == nil {
+					coverExt := filepath.Ext(coverFileHeader.Filename)
+					coverName := utils.IDGenerate() + coverExt
+					coverKey, _ = utils.UploadToQiNiu(coverFile, "cover/"+coverName, coverFileHeader.Filename)
+				}
+			}
+			coverFile.Close()
+		}
+	}
+
 	rpcReq := &video2.VideoPublishReq{
 		Title:       req.Title,
 		Description: req.Description,
 		VideoURL:    qiniuKey,
 		UserID:      userID,
+		CoverURL:    coverKey,
 	}
 	code, err := Rpc.VideoPublish(ctx, rpcReq)
 	if err != nil {
