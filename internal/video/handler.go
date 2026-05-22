@@ -29,7 +29,7 @@ func (s *VideoServiceImpl) VideoPublish(ctx context.Context, req *video.VideoPub
 	}
 	defer entry.Exit()
 
-	code, err := s.videoService.VideoPublish(ctx, req.Title, req.Description, req.VideoURL, req.CoverURL, req.UserID)
+	code, _ := s.videoService.VideoPublish(ctx, req.Title, req.Description, req.VideoURL, req.CoverURL, req.UserID)
 	resp.Code = code
 	return resp, nil
 }
@@ -45,7 +45,7 @@ func (s *VideoServiceImpl) VideoList(ctx context.Context, req *video.VideoListRe
 	}
 	defer entry.Exit()
 
-	code, info, err := s.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
+	code, info, _ := s.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
 	resp = &video.VideoListResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -66,7 +66,7 @@ func (s *VideoServiceImpl) VideoSearch(ctx context.Context, req *video.VideoSear
 		return resp, nil
 	}
 	defer entry.Exit()
-	code, infos, err := s.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
+	code, infos, _ := s.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
 	resp = &video.VideoSearchResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -87,7 +87,7 @@ func (s *VideoServiceImpl) VideoPopular(ctx context.Context, req *video.VideoHot
 		return resp, nil
 	}
 	defer entry.Exit()
-	code, infos, err := s.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
+	code, infos, _ := s.videoService.VideoPopular(ctx, req.PageNum, req.PageSize)
 	resp = &video.VideoHotResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -108,7 +108,7 @@ func (s *VideoServiceImpl) VideoStream(ctx context.Context, req *video.VideoStre
 		return resp, nil
 	}
 	defer entry.Exit()
-	code, infos, err := s.videoService.VideoStream()
+	code, infos, _ := s.videoService.VideoStream()
 	resp = &video.VideoStreamResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -128,7 +128,7 @@ func (s *VideoServiceImpl) BatchGetVideo(ctx context.Context, req *video.BatchGe
 		return resp, nil
 	}
 	defer entry.Exit()
-	code, infos, err := s.videoService.BatchGetVideo(req.Ids)
+	code, infos, _ := s.videoService.BatchGetVideo(req.Ids)
 	resp = &video.BatchGetVideoResp{
 		Code: code,
 		Data: &video.VideoData{
