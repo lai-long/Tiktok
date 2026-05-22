@@ -126,7 +126,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	_, err := config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
+	_, err := config.Load([]string{"../../pkg/config"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,7 +298,7 @@ func TestUserAvatar(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	_, err := config.Load([]string{"/home/lai-long/Tiktok/pkg/config"})
+	_, err := config.Load([]string{"../../pkg/config"})
 	if err != nil {
 		t.Fatal(err)
 	}
