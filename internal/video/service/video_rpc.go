@@ -52,6 +52,14 @@ func toVideoInfo(e entity.VideoEntity) *video.VideoInfo {
 	}
 }
 
+func toVideoInfoList(videos []entity.VideoEntity) []*video.VideoInfo {
+	result := make([]*video.VideoInfo, len(videos))
+	for i, v := range videos {
+		result[i] = toVideoInfo(v)
+	}
+	return result
+}
+
 func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description string, url string, coverURL string, userID string) (int32, error) {
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = title
@@ -80,11 +88,7 @@ func (s *VideoRepo) VideoList(userId string, pageSize int64, pageNum int64) (int
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoList GetVideo err")
 	}
-	videoInfos := []*video.VideoInfo{}
-	for i := 0; i < len(videoList); i++ {
-		videoInfos = append(videoInfos, toVideoInfo(videoList[i]))
-	}
-	return consts.Success, videoInfos, nil
+	return consts.Success, toVideoInfoList(videoList), nil
 }
 
 func (s *VideoRepo) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
@@ -92,11 +96,7 @@ func (s *VideoRepo) VideoSearch(keyword string, pageNum int64, pageSize int64) (
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoSearch GetVideo Error")
 	}
-	videoInfos := []*video.VideoInfo{}
-	for i := 0; i < len(videoEntity); i++ {
-		videoInfos = append(videoInfos, toVideoInfo(videoEntity[i]))
-	}
-	return consts.Success, videoInfos, nil
+	return consts.Success, toVideoInfoList(videoEntity), nil
 }
 
 func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
@@ -117,11 +117,7 @@ func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize in
 			_ = s.VideoRedis.VideoInfoSet(ctx, z[i].Member.(string), &videoEntity[i])
 		}
 	}
-	var videoInfos []*video.VideoInfo
-	for i := 0; i < len(z); i++ {
-		videoInfos = append(videoInfos, toVideoInfo(videoEntity[i]))
-	}
-	return consts.Success, videoInfos, nil
+	return consts.Success, toVideoInfoList(videoEntity), nil
 }
 
 func (s *VideoRepo) VideoStream() (int32, []*video.VideoInfo, error) {
@@ -129,11 +125,7 @@ func (s *VideoRepo) VideoStream() (int32, []*video.VideoInfo, error) {
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video stream select video error")
 	}
-	videoInfos := []*video.VideoInfo{}
-	for i := range videoEntity {
-		videoInfos = append(videoInfos, toVideoInfo(videoEntity[i]))
-	}
-	return consts.Success, videoInfos, nil
+	return consts.Success, toVideoInfoList(videoEntity), nil
 }
 
 func (s *VideoRepo) BatchGetVideo(ids []string) (int32, []*video.VideoInfo, error) {
@@ -141,9 +133,5 @@ func (s *VideoRepo) BatchGetVideo(ids []string) (int32, []*video.VideoInfo, erro
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->BatchGetVideo GetVideoByIds err")
 	}
-	videoInfos := make([]*video.VideoInfo, 0, len(videos))
-	for _, v := range videos {
-		videoInfos = append(videoInfos, toVideoInfo(v))
-	}
-	return consts.Success, videoInfos, nil
+	return consts.Success, toVideoInfoList(videos), nil
 }
