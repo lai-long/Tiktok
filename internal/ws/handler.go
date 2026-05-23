@@ -72,6 +72,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 		m.websocket.Manager.Register <- client
 		go m.websocket.Read(client)
 		go m.websocket.Write(client)
+		go m.websocket.Heartbeat(client)
 	})
 	wsAdaptor := adaptor.HertzHandler(stdHandler)
 	wsAdaptor(ctx, c)

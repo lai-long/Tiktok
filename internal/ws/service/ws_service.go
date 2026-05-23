@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -32,14 +33,16 @@ func NewWebsocketService(mysql *dao.MySQLdb, re *cache.Redis) *WebsocketService 
 }
 
 type Client struct {
-	ID      string
-	GroupId string
-	SendID  string
-	Socket  *websocket.Conn
-	Send    chan []byte
-	Ctx     context.Context
-	agent   *Agent
-	agentMu sync.Mutex
+	ID       string
+	GroupId  string
+	SendID   string
+	Socket   *websocket.Conn
+	Send     chan []byte
+	Ctx      context.Context
+	agent    *Agent
+	agentMu  sync.Mutex
+	lastPong time.Time
+	mu       sync.Mutex
 }
 type Broadcast struct {
 	Clients  *Client
@@ -64,7 +67,10 @@ func (ws *WebsocketService) Read(c *Client) {
 	}()
 
 	c.Socket.SetPongHandler(func(string) error {
-		return nil
+		c.mu.Lock()
+		c.lastPong = time.Now()
+		c.mu.Unlock()
+		return c.Socket.SetReadDeadline(time.Now().Add(30 * time.Second))
 	})
 	for {
 		sendMsg := new(chat.SendMsg)
@@ -129,6 +135,33 @@ func (ws *WebsocketService) Write(c *Client) {
 	for message := range c.Send {
 		_ = c.Socket.WriteMessage(websocket.TextMessage, message)
 
+	}
+}
+
+func (ws *WebsocketService) Heartbeat(c *Client) {
+	ticker := time.NewTicker(15 * time.Second)
+	defer func() {
+		ticker.Stop()
+		c.mu.Lock()
+		c.Socket.Close()
+		c.mu.Unlock()
+		ws.Manager.Unregister <- c
+	}()
+
+	for {
+		<-ticker.C
+		c.mu.Lock()
+		if time.Since(c.lastPong) > 40*time.Second {
+			c.mu.Unlock()
+			log.Printf("客户端 %s 心跳超时，断开连接", c.ID)
+			return
+		}
+		c.mu.Unlock()
+
+		if err := c.Socket.WriteMessage(websocket.PingMessage, nil); err != nil {
+			log.Printf("发送 ping 给 %s 失败: %v", c.ID, err)
+			return
+		}
 	}
 }
 
