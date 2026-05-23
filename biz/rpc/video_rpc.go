@@ -6,8 +6,8 @@ import (
 	"Tiktok/kitex_gen/video"
 	"Tiktok/kitex_gen/video/videoservice"
 	"Tiktok/pkg/consts"
-	"Tiktok/pkg/converter"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 
 	model "Tiktok/biz/model/video"
 
@@ -40,28 +40,28 @@ func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.Vide
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
 	}
-	return resp.Code, converter.ToVideoData(resp.Data), nil
+	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 func VideoSearch(ctx context.Context, req *video.VideoSearchReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoSearch(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
 	}
-	return resp.Code, converter.ToVideoData(resp.Data), nil
+	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 func VideoPopular(ctx context.Context, req *video.VideoHotReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoPopular(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
 	}
-	return resp.Code, converter.ToVideoData(resp.Data), nil
+	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 func VideoStream(ctx context.Context, req *video.VideoStreamReq) (int32, *model.VideoData, error) {
 	resp, err := videoClient.VideoStream(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
 	}
-	return resp.Code, converter.ToVideoData(resp.Data), nil
+	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 
 func BatchGetVideo(ctx context.Context, ids []string) (int32, []*model.VideoInfo, error) {
@@ -69,5 +69,5 @@ func BatchGetVideo(ctx context.Context, ids []string) (int32, []*model.VideoInfo
 	if err != nil || resp == nil {
 		return consts.VideoDBSelectError, nil, err
 	}
-	return resp.Code, converter.ToBizVideoInfoList(resp.Data.Items), nil
+	return resp.Code, utils.ToBizVideoInfoList(resp.Data.Items), nil
 }

@@ -7,8 +7,8 @@ import (
 	"Tiktok/kitex_gen/user"
 	"Tiktok/kitex_gen/user/userservice"
 	"Tiktok/pkg/consts"
-	"Tiktok/pkg/converter"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 
 	"github.com/cloudwego/kitex/client"
 	etcd "github.com/kitex-contrib/registry-etcd"
@@ -38,21 +38,21 @@ func LoginRpc(ctx context.Context, req *user.LoginReq) (code int32, data *model.
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, &model.UserInfo{}, "", "", err
 	}
-	return resp.Code, converter.ToBizUserInfo(resp.Data), resp.RefreshToken, resp.AccessToken, nil
+	return resp.Code, utils.ToBizUserInfo(resp.Data), resp.RefreshToken, resp.AccessToken, nil
 }
 func UserInfoRpc(ctx context.Context, req *user.UserInfoReq) (int32, *model.UserInfo, error) {
 	resp, err := userClient.UserInfo(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, &model.UserInfo{}, err
 	}
-	return resp.Code, converter.ToBizUserInfo(resp.Data), nil
+	return resp.Code, utils.ToBizUserInfo(resp.Data), nil
 }
 func UserAvatarRpc(ctx context.Context, req *user.UserAvatarReq) (int32, *model.UserInfo, error) {
 	resp, err := userClient.UserAvatar(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, &model.UserInfo{}, err
 	}
-	return resp.Code, converter.ToBizUserInfo(resp.Data), nil
+	return resp.Code, utils.ToBizUserInfo(resp.Data), nil
 }
 func RefreshTokenRpc(ctx context.Context, req *user.RefreshTokenReq) (int32, string, string, error) {
 	resp, err := userClient.RefreshToken(ctx, req)
