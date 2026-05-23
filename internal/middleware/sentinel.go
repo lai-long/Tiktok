@@ -20,7 +20,7 @@ func SentinelMiddleware(next endpoint.Endpoint) endpoint.Endpoint {
 
 		entry, blockErr := api.Entry(ri.To().Method())
 		if blockErr != nil {
-			if v := reflect.ValueOf(resp); v.Kind() == reflect.Ptr && !v.IsNil() {
+			if v := reflect.ValueOf(resp); v.Kind() == reflect.Pointer && !v.IsNil() {
 				if f := v.Elem().FieldByName("Code"); f.IsValid() && f.CanSet() {
 					f.SetInt(int64(consts.SentinelBlock))
 				}
