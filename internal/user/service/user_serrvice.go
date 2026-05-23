@@ -9,6 +9,7 @@ import (
 	"database/sql"
 
 	"github.com/pkg/errors"
+	"github.com/pquerna/otp/totp"
 )
 
 type UserRedis interface {
@@ -25,15 +26,16 @@ type UserDatabase interface {
 	GetUserByUsername(username string) (entity.UserEntity, error)
 	GetUserByUserId(userId string) (entity.UserEntity, error)
 	UpdateUserAvatar(url string, userId interface{}) error
+	CheckMfaBind(userId string) (int, error)
+	GetMfaSecret(userId string) (string, error)
 }
 type UserRepo struct {
-	userDb     UserDatabase
-	mfaService MfaService
-	redis      UserRedis
+	userDb UserDatabase
+	redis  UserRedis
 }
 
-func NewUserRepo(userDb UserDatabase, mfaService MfaService, redis UserRedis) *UserRepo {
-	return &UserRepo{userDb: userDb, mfaService: mfaService, redis: redis}
+func NewUserRepo(userDb UserDatabase, redis UserRedis) *UserRepo {
+	return &UserRepo{userDb: userDb, redis: redis}
 }
 
 func toUserInfo(e entity.UserEntity) *user.UserInfo {
@@ -92,7 +94,7 @@ func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context
 		return consts.UserPasswordError, &user.UserInfo{}, "", "", errors.Wrap(err, "->login: check password failed")
 	}
 	userInfo := toUserInfo(userEntity)
-	code, err := s.mfaService.MfaConfirm(ctx, userInfo.ID, mfaCode)
+	code, err := s.mfaConfirm(ctx, userInfo.ID, mfaCode)
 	if err != nil {
 		return consts.MfaDBSelectError, &user.UserInfo{}, "", "", err
 	}
@@ -166,4 +168,24 @@ func (s *UserRepo) RefreshToken(ctx context.Context, refreshToken string) (int32
 		return consts.UserRedisSetError, "", "", errors.Wrap(err, "->RefreshToken SetToken error")
 	}
 	return consts.Success, refreshToken2, accessToken, nil
+}
+
+func (s *UserRepo) mfaConfirm(ctx context.Context, userID string, mfaCode string) (int32, error) {
+	isBind, err := s.userDb.CheckMfaBind(userID)
+	if err != nil {
+		return consts.MfaDBSelectError, errors.Wrap(err, "->check mfa bind error")
+	}
+	if isBind != 0 {
+		if mfaCode == "" {
+			return consts.MfaReqValidError, nil
+		}
+		mfaSecret, err := s.userDb.GetMfaSecret(userID)
+		if err != nil {
+			return consts.MfaDBSelectError, errors.Wrap(err, "->mfa confirm mfa secret error")
+		}
+		if !totp.Validate(mfaCode, mfaSecret) {
+			return consts.MfaCodeFalse, nil
+		}
+	}
+	return consts.Success, nil
 }
