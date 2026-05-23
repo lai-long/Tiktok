@@ -143,7 +143,7 @@ func (ws *WebsocketService) Heartbeat(c *Client) {
 	defer func() {
 		ticker.Stop()
 		c.mu.Lock()
-		c.Socket.Close()
+		_ = c.Socket.Close()
 		c.mu.Unlock()
 		ws.Manager.Unregister <- c
 	}()
