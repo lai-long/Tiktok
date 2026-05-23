@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/user"
 	"Tiktok/internal/user/service"
 	userservice "Tiktok/kitex_gen/user/userservice"
@@ -12,10 +13,9 @@ import (
 	"os"
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
+	"github.com/cloudwego/kitex/server"
 	"github.com/joho/godotenv"
 	etcd "github.com/kitex-contrib/registry-etcd"
-
-	"github.com/cloudwego/kitex/server"
 	"go.uber.org/zap"
 )
 
@@ -57,6 +57,7 @@ func main() {
 	svr := userservice.NewServer(userService,
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "userService",
 		}),

@@ -3,6 +3,7 @@ package main
 import (
 	handler "Tiktok/internal/mfa"
 	"Tiktok/internal/mfa/service"
+	"Tiktok/internal/middleware"
 	"Tiktok/kitex_gen/mfa/mfaservice"
 	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/dao"
@@ -63,6 +64,7 @@ func main() {
 	svr := mfaservice.NewServer(mfaService,
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "mfaService",
 		}),

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/social"
 	"Tiktok/internal/social/service"
 	socialservice "Tiktok/kitex_gen/social/socialservice"
@@ -52,6 +53,7 @@ func main() {
 	svr := socialservice.NewServer(socialService,
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "socialService",
 		}),
