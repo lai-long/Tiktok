@@ -17,7 +17,6 @@ func NewMfaService(mfaRepo *service.MfaRepo) *MfaServiceImpl {
 }
 
 func (s *MfaServiceImpl) MfaQrcode(ctx context.Context, req *mfa.MfaQrcodeReq) (resp *mfa.MfaQrcodeResp, err error) {
-	resp = &mfa.MfaQrcodeResp{}
 	qrCode, secret, code, _ := s.mfaRepo.GenerateMfa(req.UserName, req.UserID)
 	resp = &mfa.MfaQrcodeResp{
 		Code: code,
@@ -30,7 +29,6 @@ func (s *MfaServiceImpl) MfaQrcode(ctx context.Context, req *mfa.MfaQrcodeReq) (
 }
 
 func (s *MfaServiceImpl) MfaBind(ctx context.Context, req *mfa.MfaBindReq) (resp *mfa.MfaBindResp, err error) {
-	resp = &mfa.MfaBindResp{}
 	var code int32
 	switch req.Type {
 	case "secret":

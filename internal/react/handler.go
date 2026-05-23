@@ -22,7 +22,6 @@ func (s *CommentServiceImpl) CommentPublish(ctx context.Context, req *react.Comm
 }
 
 func (s *CommentServiceImpl) CommentList(ctx context.Context, req *react.CommentListReq) (resp *react.CommentListResp, err error) {
-	resp = &react.CommentListResp{}
 	code, comments, _ := s.commentRepo.CommentList(req.TargetAt, req.PageSize, req.PageNum)
 	resp = &react.CommentListResp{
 		Code: code,
@@ -57,7 +56,6 @@ func (s *LikeServiceImpl) LikeAction(ctx context.Context, req *react.LikeActionR
 }
 
 func (s *LikeServiceImpl) LikeList(ctx context.Context, req *react.LikeListReq) (resp *react.LikeListResp, err error) {
-	resp = &react.LikeListResp{}
 	code, videoIds, total, _ := s.likeRepo.LikeList(ctx, req.UserId, req.PageNum, req.PageSize)
 	resp = &react.LikeListResp{
 		Code: code,
