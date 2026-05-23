@@ -1,0 +1,176 @@
+── biz/
+│   ├── handler/
+│   │   ├── mfa/
+│   │   │   └── mfa_service.go
+│   │   ├── react/
+│   │   │   ├── comment_service.go
+│   │   │   └── like_service.go
+│   │   ├── social/
+│   │   │   └── social_service.go
+│   │   ├── user/
+│   │   │   └── user_service.go
+│   │   └── video/
+│   │       └── video_service.go
+│   ├── middleware/
+│   │   ├── auth.go
+│   │   └── logging.go
+│   ├── model/
+│   │   ├── ai/
+│   │   │   └── ai.pb.go
+│   │   ├── api/
+│   │   │   └── api.pb.go
+│   │   ├── chat/
+│   │   │   └── websocket.pb.go
+│   │   ├── common/
+│   │   │   └── common.pb.go
+│   │   ├── mfa/
+│   │   │   └── mfa.pb.go
+│   │   ├── react/
+│   │   │   └── react.pb.go
+│   │   ├── social/
+│   │   │   └── social.pb.go
+│   │   ├── user/
+│   │   │   └── user.pb.go
+│   │   └── video/
+│   │       └── video.pb.go
+│   ├── router/
+│   │   ├── mfa/
+│   │   │   ├── mfa.go
+│   │   │   └── middleware.go
+│   │   ├── react/
+│   │   │   ├── middleware.go
+│   │   │   └── react.go
+│   │   ├── social/
+│   │   │   ├── middleware.go
+│   │   │   └── social.go
+│   │   ├── user/
+│   │   │   ├── middleware.go
+│   │   │   └── user.go
+│   │   ├── video/
+│   │   │   ├── middleware.go
+│   │   │   └── video.go
+│   │   └── register.go
+│   └── rpc/
+│       ├── init.go
+│       ├── mfa_rpc.go
+│       ├── react_rpc.go
+│       ├── social_rpc.go
+│       ├── user_rpc.go
+│       └── video_rpc.go
+├── cmd/
+│   ├── api/
+│   │   └── main.go
+│   ├── mfa/
+│   │   ├── kitex_info.yaml
+│   │   └── main.go
+│   ├── react/
+│   │   ├── kitex_info.yaml
+│   │   └── main.go
+│   ├── social/
+│   │   ├── kitex_info.yaml
+│   │   └── main.go
+│   ├── user/
+│   │   ├── kitex_info.yaml
+│   │   └── main.go
+│   ├── video/
+│   │   ├── kitex_info.yaml
+│   │   └── main.go
+│   └── ws/
+│       └── main.go
+├── idl/
+│   ├── api/
+│   │   ├── ai.proto
+│   │   ├── api.proto
+│   │   ├── common.proto
+│   │   ├── mfa.proto
+│   │   ├── react.proto
+│   │   ├── social.proto
+│   │   ├── user.proto
+│   │   ├── video.proto
+│   │   └── websocket.proto
+│   ├── mfa.proto
+│   ├── react.proto
+│   ├── social.proto
+│   ├── user.proto
+│   └── video.proto
+├── internal/
+│   ├── mfa/
+│   │   ├── service/
+│   │   │   ├── mfa_service.go
+│   │   │   └── mfa_test.go
+│   │   └── handler.go
+│   ├── middleware/
+│   │   └── sentinel.go
+│   ├── react/
+│   │   ├── service/
+│   │   │   ├── comment_service.go
+│   │   │   ├── comment_test.go
+│   │   │   ├── like_service.go
+│   │   │   └── like_test.go
+│   │   └── handler.go
+│   ├── social/
+│   │   ├── service/
+│   │   │   ├── social_rpc.go
+│   │   │   └── social_test.go
+│   │   └── handler.go
+│   ├── user/
+│   │   ├── service/
+│   │   │   ├── user_service.go
+│   │   │   └── user_test.go
+│   │   └── handler.go
+│   ├── video/
+│   │   ├── service/
+│   │   │   ├── video_rpc.go
+│   │   │   └── video_test.go
+│   │   └── handler.go
+│   └── ws/
+│       ├── service/
+│       │   ├── ai.go
+│       │   ├── manager.go
+│       │   └── ws_service.go
+│       └── handler.go
+├── mcp_service/
+│   ├── tools/
+│   │   └── amap.go
+│   ├── main.go
+│   └── mcp_service*
+├── pkg/
+│   ├── config/
+│   │   ├── config.example.yaml
+│   │   ├── config.go
+│   │   ├── config_test.go
+│   │   ├── config.yaml
+│   │   ├── init.sql
+│   │   └── sentinel.yaml
+│   ├── consts/
+│   │   └── consts.go
+│   ├── dal/
+│   │   ├── cache/
+│   │   │   ├── like.go
+│   │   │   ├── redisInit.go
+│   │   │   ├── user.go
+│   │   │   ├── video.go
+│   │   │   └── websocket.go
+│   │   └── dao/
+│   │       ├── dbInit.go
+│   │       ├── mfa.go
+│   │       ├── react.go
+│   │       ├── social.go
+│   │       ├── user.go
+│   │       ├── video.go
+│   │       └── websocket.go
+│   ├── entity/
+│   │   ├── comment.go
+│   │   ├── user_entity.go
+│   │   └── video.go
+│   ├── logger/
+│   │   └── logger.go
+│   └── utils/
+│       ├── converter.go
+│       ├── qiniu.go
+│       ├── utils.go
+│       └── utils_test.go
+├── build.sh*
+├── Dockerfile
+├── go.mod
+└── go.sum

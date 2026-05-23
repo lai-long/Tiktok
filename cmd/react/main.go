@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/react"
 	"Tiktok/internal/react/service"
 	"Tiktok/kitex_gen/react/commentservice"
@@ -62,6 +63,7 @@ func main() {
 	commentSvc := commentservice.NewServer(commentServiceImpl,
 		server.WithServiceAddr(commentAddr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "commentService",
 		}),
@@ -69,6 +71,7 @@ func main() {
 	likeSvc := likeservice.NewServer(likeServiceImpl,
 		server.WithServiceAddr(likeAddr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "likeService",
 		}),

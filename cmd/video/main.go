@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/video"
 	"Tiktok/internal/video/service"
 	"Tiktok/kitex_gen/video/videoservice"
@@ -56,6 +57,7 @@ func main() {
 	svr := videoservice.NewServer(videoService,
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "videoService",
 		}),

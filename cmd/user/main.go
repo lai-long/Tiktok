@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/user"
 	"Tiktok/internal/user/service"
 	userservice "Tiktok/kitex_gen/user/userservice"
@@ -12,10 +13,9 @@ import (
 	"os"
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
+	"github.com/cloudwego/kitex/server"
 	"github.com/joho/godotenv"
 	etcd "github.com/kitex-contrib/registry-etcd"
-
-	"github.com/cloudwego/kitex/server"
 	"go.uber.org/zap"
 )
 
@@ -50,17 +50,14 @@ func main() {
 	rdb := cache.InitRedis()
 	redis := cache.NewRedis(rdb)
 
-	mfaClient, err := service.NewMfaService()
-	if err != nil {
-		logger.Fatal("init mfa rpc client error", zap.Error(err))
-	}
-	userRepo := service.NewUserRepo(mysqlDb, mfaClient, redis)
+	userRepo := service.NewUserRepo(mysqlDb, redis)
 	userService := handler.NewUserService(userRepo)
 
 	addr := &net.TCPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8889}
 	svr := userservice.NewServer(userService,
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
+		server.WithMiddleware(middleware.SentinelMiddleware),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "userService",
 		}),
