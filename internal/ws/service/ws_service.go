@@ -70,7 +70,7 @@ func (ws *WebsocketService) Read(c *Client) {
 		c.mu.Lock()
 		c.lastPong = time.Now()
 		c.mu.Unlock()
-		return c.Socket.SetReadDeadline(time.Now().Add(30 * time.Second))
+		return nil
 	})
 	for {
 		sendMsg := new(chat.SendMsg)
