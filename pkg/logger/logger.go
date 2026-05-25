@@ -71,7 +71,7 @@ func InitLogger(level string, serviceName string, logPath ...string) error {
 		path = logPath[0]
 	}
 	if path == "" {
-		path = "/home/lai-long/logs"
+		path = "./logs"
 	}
 	logFile := filepath.Join(path, serviceName+".log")
 	lumberjackWriter := &lumberjack.Logger{
