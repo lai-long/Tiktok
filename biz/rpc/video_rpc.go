@@ -5,6 +5,7 @@ import (
 
 	"Tiktok/kitex_gen/video"
 	"Tiktok/kitex_gen/video/videoservice"
+	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
@@ -17,7 +18,7 @@ import (
 )
 
 func InitVideoRpc() {
-	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	r, err := etcd.NewEtcdResolver([]string{config.Cfg.EtcdAddr})
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}

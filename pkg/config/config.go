@@ -2,11 +2,13 @@ package config
 
 import (
 	"Tiktok/pkg/logger"
+	"os"
 	"sync"
 
 	"github.com/alibaba/sentinel-golang/core/circuitbreaker"
 	"github.com/alibaba/sentinel-golang/core/flow"
 	"github.com/fsnotify/fsnotify"
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -86,14 +88,15 @@ type LogConfig struct {
 
 // Config 总配置
 type Config struct {
-	MySQL MySQLConfig `mapstructure:"mysql"`
-	Redis RedisConfig `mapstructure:"redis"`
-	Jwt   JwtConfig   `mapstructure:"jwt"`
-	API   APIConfig   `mapstructure:"api"`
-	QiNiu QiNiuConfig `mapstructure:"qi"`
-	Path  Path        `mapstructure:"filepath"`
-	Mcp   MCPConfig   `mapstructure:"mcp"`
-	Log   LogConfig   `mapstructure:"log"`
+	EtcdAddr string      `mapstructure:"etcd_addr"`
+	MySQL    MySQLConfig `mapstructure:"mysql"`
+	Redis    RedisConfig `mapstructure:"redis"`
+	Jwt      JwtConfig   `mapstructure:"jwt"`
+	API      APIConfig   `mapstructure:"api"`
+	QiNiu    QiNiuConfig `mapstructure:"qi"`
+	Path     Path        `mapstructure:"filepath"`
+	Mcp      MCPConfig   `mapstructure:"mcp"`
+	Log      LogConfig   `mapstructure:"log"`
 }
 
 // Cfg 调用配置
@@ -141,6 +144,10 @@ func Load(confPath []string) (*Config, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "qiniu_secret_key bind env error")
 	}
+	err = v.BindEnv("etcd_addr", "ETCD_ADDR")
+	if err != nil {
+		return nil, errors.Wrap(err, "etcd_addr bind env error")
+	}
 
 	v.SetDefault("mysql.host", "localhost")
 	v.SetDefault("mysql.port", 3306)
@@ -149,6 +156,8 @@ func Load(confPath []string) (*Config, error) {
 	v.SetDefault("re.host", "localhost")
 	v.SetDefault("re.port", 6379)
 	v.SetDefault("re.password", "123456")
+
+	v.SetDefault("etcd_addr", "127.0.0.1:2379")
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, errors.Wrap(err, "failed to read config")
@@ -176,6 +185,18 @@ func Load(confPath []string) (*Config, error) {
 	})
 	logger.Info("config init successfully")
 	return &cfg, nil
+}
+
+// LoadEnv 加载 .env 文件，优先使用 ENV_PATH 环境变量指定的路径
+func LoadEnv() error {
+	envPath := os.Getenv("ENV_PATH")
+	if envPath == "" {
+		envPath = ".env"
+	}
+	if err := godotenv.Load(envPath); err != nil {
+		logger.Warn("load .env file error", zap.String("path", envPath), zap.Error(err))
+	}
+	return nil
 }
 
 type FlowRuleConfig struct {
