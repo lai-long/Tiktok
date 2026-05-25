@@ -144,6 +144,14 @@ func Load(confPath []string) (*Config, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "qiniu_secret_key bind env error")
 	}
+	err = v.BindEnv("qi.bucket", "QINIU_BUCKET")
+	if err != nil {
+		return nil, errors.Wrap(err, "qiniu_bucket bind env error")
+	}
+	err = v.BindEnv("qi.domain", "QINIU_DOMAIN")
+	if err != nil {
+		return nil, errors.Wrap(err, "qiniu_domain bind env error")
+	}
 	err = v.BindEnv("etcd_addr", "ETCD_ADDR")
 	if err != nil {
 		return nil, errors.Wrap(err, "etcd_addr bind env error")
