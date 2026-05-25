@@ -3,8 +3,9 @@ package handler
 import (
 	"Tiktok/internal/user/service"
 	user "Tiktok/kitex_gen/user"
+	"Tiktok/pkg/logger"
 	"context"
-	"log"
+	"go.uber.org/zap"
 )
 
 // UserServiceImpl implements the last service interface defined in the IDL.
@@ -43,6 +44,7 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 	resp = &user.UserInfoResp{}
 	userInfo, code, err := s.service.UserInfo(ctx, req.UserId)
 	if err != nil {
+		logger.Error("UserInfo failed", zap.Error(err), zap.String("user_id", req.UserId))
 		resp.Code = code
 		resp.Data = userInfo
 		return resp, nil
@@ -57,7 +59,7 @@ func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarRe
 	resp = &user.UserAvatarResp{}
 	code, userInfo, err := s.service.UserAvatar(req.AvatarURL, req.UserID)
 	if err != nil {
-		log.Println("userService.UserAvatar error:", err)
+		logger.Error("UserAvatar failed", zap.Error(err), zap.String("user_id", req.UserID))
 		resp.Code = code
 		resp.Data = userInfo
 		return resp, nil
@@ -72,6 +74,7 @@ func (s *UserServiceImpl) RefreshToken(ctx context.Context, req *user.RefreshTok
 	resp = &user.RefreshTokenResp{}
 	code, reToken, acToken, err := s.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
+		logger.Error("RefreshToken failed", zap.Error(err))
 		resp.Code = code
 		resp.RefreshToken = reToken
 		resp.AccessToken = acToken
