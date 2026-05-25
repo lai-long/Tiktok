@@ -112,9 +112,21 @@ func Load(confPath []string) (*Config, error) {
 		v.AddConfigPath(p)
 	}
 	v.AutomaticEnv()
-	err := v.BindEnv("mysql.password", "MYSQL_PASSWORD")
+	err := v.BindEnv("mysql.host", "MYSQL_HOST")
+	if err != nil {
+		return nil, errors.Wrap(err, "mysql host bind env error")
+	}
+	err = v.BindEnv("mysql.user", "MYSQL_USER")
+	if err != nil {
+		return nil, errors.Wrap(err, "mysql user bind env error")
+	}
+	err = v.BindEnv("mysql.password", "MYSQL_PASSWORD")
 	if err != nil {
 		return nil, errors.Wrap(err, "mysql password bind env error")
+	}
+	err = v.BindEnv("redis.host", "REDIS_HOST")
+	if err != nil {
+		return nil, errors.Wrap(err, "redis host bind env error")
 	}
 	err = v.BindEnv("redis.password", "REDIS_PASSWORD")
 	if err != nil {
