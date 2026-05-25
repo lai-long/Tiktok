@@ -1,73 +1,148 @@
 # Tiktok
 
+基于 Go + CloudWeGo 生态的短视频平台，采用微服务架构。
+
 ## 技术栈
 
-| 分类     | 技术选型          |
-|----------|-------------------|
-| web框架   | Hertz             |
-| 数据库   | MySQL + sqlx      |
-| 缓存     | Redis             |
+| 分类 | 技术选型 |
+|------|---------|
+| Web 框架 | Hertz |
+| RPC 框架 | Kitex + etcd |
+| 数据库 | MySQL + sqlx |
+| 缓存 | Redis (go-redis) |
+| 消息协议 | Protobuf |
+| 认证 | JWT (Access + Refresh Token) |
+| 双因素认证 | TOTP |
+| 文件存储 | 七牛云 |
+| AI 对话 | Bifrost (MCP) + MiniMax |
+| 限流熔断 | Sentinel |
+| 日志 | Zap + Lumberjack |
+| WebSocket | Gorilla WebSocket |
+| 配置管理 | Viper (热更新) |
 
-## 实现接口
-### 用户模块：
 
-    [x] 注册。
-    [x] 登陆。(通过json返回access_token和refresh_token)
-    [x] 用户信息。
-    [x] 上传头像。
-    [x] 绑定mfa。
-    [x] 获取mfa qrcode。
-    [x] 刷新token。
-### 视频模块：
 
-    [x] 视频流
-    [x] 发布视频。
-    [x] 视频列表。
-    [x] 热门排行榜。
-    [x] 搜索视频。
-### 互动模块：
+## 服务列表
 
-    [x] 点赞操作。
-    [x] 点赞列表。
-    [x] 评论。
-    [x] 评论列表。
-    [x] 删除评论。
-### 社交模块：
+| 服务 | 端口 | 协议 | 发现 |
+|------|------|------|------|
+| API Gateway | 8888 | HTTP | — |
+| WebSocket | 8881 | HTTP+WS | — |
+| userService | — | Kitex | etcd |
+| videoService | — | Kitex | etcd |
+| reactService | — | Kitex | etcd |
+| socialService | — | Kitex | etcd |
+| mfaService | — | Kitex | etcd |
 
-    [x] websocket聊天(仅实现一对一聊天,在线群聊)
-    [x] 关注操作。
-    [x] 关注列表。
-    [x] 粉丝列表。
-    [x] 好友列表。
-    [x] 添加好友
-    [x] 删除好友
+## 功能模块
 
-## 目录
-    ├── biz                     # HTTP层 (Hertz handlers)
-    │   ├── handler             # HTTP请求处理
-    │   ├── middleware          # 中间件 (auth认证)
-    │   ├── model               # 请求/响应模型
-    │   ├── router              # 路由注册
-    │   └── rpc                 # RPC客户端
-    ├── cmd                     # 服务入口
-    │   ├── api                 # HTTP API服务 (:8888)
-    │   ├── mfa/react/social/user/video  # RPC服务 (Kitex)
-    │   └── ws                  # WebSocket服务 (:8881)
-    ├── idl                     # protobuf IDL定义
-    │   └── api
-    ├── internal                # RPC层 (Kitex handlers)
-    │   ├── mfa/react/social/user/video/ws
-    │   │   ├── handler.go      # Kitex服务实现
-    │   │   └── service/        # 业务逻辑
-    │   └── ws
-    ├── kitex_gen               # 生成的Kitex代码
-    │   ├── mfa/react/social/user/video
-    ├── pkg                     # 公共包
-    │   ├── config              # 配置
-    │   ├── consts             # 常量
-    │   ├── dal                # 数据访问层 (dao/cache)
-    │   ├── entity             # 实体
-    │   └── utils              # 工具函数
-    ├── Dockerfile, go.mod, go.sum, README.md
-## 接口文档
-k7wl3pn34m.apifox.cn
+### 用户
+- 注册 / 登录（JWT 双 Token）
+- 用户信息 / 上传头像（七牛云）
+- Token 刷新
+- MFA 绑定（TOTP 二维码）
+
+### 视频
+- 视频流 / 发布 / 列表
+- 热门排行榜
+- 搜索视频
+
+### 互动
+- 点赞 / 取消点赞 / 点赞列表
+- 评论 / 删除评论 / 评论列表
+
+### 社交
+- 关注/取消关注、关注/粉丝/好友列表
+- 添加/删除好友
+
+### WebSocket 聊天
+- 私信、群聊
+- 15s 心跳 / 30s 超时
+- 离线消息、历史记录分页
+- AI 对话（`@AI` 触发，MCP + MiniMax）
+
+## 快速开始
+
+### 环境要求
+Go 1.26+, MySQL, Redis, etcd
+
+```bash
+# 数据库初始化
+mysql -u root -p < pkg/config/init.sql
+
+# 配置（支持环境变量覆盖）
+cp pkg/config/config.example.yaml pkg/config/config.yaml
+
+# 构建所有服务
+./build.sh
+
+# 启动 RPC 服务（各开终端）
+go run ./cmd/user/
+go run ./cmd/video/
+go run ./cmd/react/
+go run ./cmd/social/
+go run ./cmd/mfa/
+
+# 启动网关和 WS
+go run ./cmd/api/    # :8888
+go run ./cmd/ws/     # :8881
+```
+
+### 环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `MYSQL_PASSWORD` | MySQL 密码 |
+| `REDIS_PASSWORD` | Redis 密码 |
+| `JWT_ACCESS_SECRET` | JWT 密钥 |
+| `JWT_REFRESH_SECRET` | Refresh 密钥 |
+| `OPENAI_API_KEY` | MiniMax API Key |
+| `QINIU_ACCESS_KEY` | 七牛云 Access |
+| `QINIU_SECRET_KEY` | 七牛云 Secret |
+
+### 测试
+
+```bash
+go test -race -count=1 -coverprofile=coverage.out ./...
+```
+
+## 项目结构
+
+```
+├── biz/                  # HTTP API 层 (Hertz)
+│   ├── handler/          # 请求处理器
+│   ├── middleware/       # JWT 认证、日志
+│   ├── model/            # 请求/响应模型 (pb 生成)
+│   ├── router/           # 路由注册
+│   └── rpc/              # RPC 客户端
+├── cmd/                  # 服务入口
+│   ├── api/ ws/ user/ video/ react/ social/ mfa/
+├── internal/             # RPC 服务实现
+│   ├── user/video/react/social/mfa/ws/
+│   │   └── handler.go + service/   # 各模块处理器+业务逻辑
+│   └── middleware/       # Sentinel 限流
+├── idl/                  # Protobuf IDL
+├── kitex_gen/            # Kitex 生成代码
+├── pkg/
+│   ├── config/           # Viper 配置 (含 sentinel.yaml)
+│   ├── consts/           # 错误码 (格式: XYYZZZ)
+│   ├── dal/dao/          # MySQL (sqlx)
+│   ├── dal/cache/        # Redis 缓存
+│   ├── entity/           # 数据库实体
+│   ├── logger/           # Zap 日志
+│   └── utils/            # JWT、bcrypt、七牛云上传
+├── mcp_service/          # MCP 工具服务 (天气查询等)
+└── build.sh
+```
+
+## 错误码规范
+
+格式 `XYYZZZ`：X=模块(1用户/2视频/3互动/4社交/5WS/6MFA)，YY=层级(00通用/01请求/02DB)，ZZZ=具体错误。使用 `GetErrorCodeMsg()` 获取错误信息。
+
+## Sentinel 限流熔断
+
+规则配置在 `pkg/config/sentinel.yaml`，支持流控（快速失败/排队等待）和熔断（慢调用/错误比例/错误计数）。
+
+## 配置热更新
+
+基于 Viper + fsnotify，配置文件变更自动热加载。
