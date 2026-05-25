@@ -2,8 +2,6 @@ package dao
 
 import (
 	"Tiktok/pkg/entity"
-	"Tiktok/pkg/logger"
-	"go.uber.org/zap"
 )
 
 func (m *MySQLdb) CreateUser(user entity.UserEntity) error {
@@ -23,9 +21,6 @@ func (m *MySQLdb) GetUserByUserId(userID string) (entity.UserEntity, error) {
 	var user entity.UserEntity
 	sql := `SELECT * FROM users WHERE id = ?`
 	err := m.db.Get(&user, sql, userID)
-	if err != nil {
-		logger.Error("GetUserByUserId error", zap.Error(err))
-	}
 	return user, err
 }
 
