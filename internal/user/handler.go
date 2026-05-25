@@ -18,7 +18,6 @@ func NewUserService(service *service.UserRepo) *UserServiceImpl {
 
 // UserRegister implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterReq) (resp *user.RegisterResp, err error) {
-	// TODO: Your code here...
 	resp = &user.RegisterResp{}
 	code, _ := s.service.Register(req.UserName, req.Password)
 	resp.Code = code
@@ -27,7 +26,6 @@ func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterRe
 
 // UserLogin implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserLogin(ctx context.Context, req *user.LoginReq) (resp *user.LoginResp, err error) {
-	// TODO: Your code here...
 	resp = &user.LoginResp{}
 	code, userInfo, reToken, acToken, err := s.service.Login(req.UserName, req.Password, req.Code, ctx)
 	if err != nil {
@@ -42,7 +40,6 @@ func (s *UserServiceImpl) UserLogin(ctx context.Context, req *user.LoginReq) (re
 
 // UserInfo implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (resp *user.UserInfoResp, err error) {
-	// TODO: Your code here...
 	resp = &user.UserInfoResp{}
 	userInfo, code, err := s.service.UserInfo(ctx, req.UserId)
 	if err != nil {
@@ -57,7 +54,6 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 
 // UserAvatar implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarReq) (resp *user.UserAvatarResp, err error) {
-	// TODO: Your code here...
 	resp = &user.UserAvatarResp{}
 	code, userInfo, err := s.service.UserAvatar(req.AvatarURL, req.UserID)
 	if err != nil {
@@ -73,7 +69,6 @@ func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarRe
 
 // RefreshToken implements the UserServiceImpl interface.
 func (s *UserServiceImpl) RefreshToken(ctx context.Context, req *user.RefreshTokenReq) (resp *user.RefreshTokenResp, err error) {
-	// TODO: Your code here...
 	resp = &user.RefreshTokenResp{}
 	code, reToken, acToken, err := s.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
