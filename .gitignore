@@ -38,3 +38,10 @@ dumped_hertz_remote_config.json
 /a
 /mcp_service
 /pkg/config/config.yaml
+/api
+/user
+/video
+/react
+/social
+/mfa
+/ws
