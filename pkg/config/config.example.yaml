@@ -9,11 +9,11 @@ mysql:
 
 redis:
   host: "localhost"
-  port: 6379
-  database: 0
+  port: "6379"
+  password: "your_redis_password"
+  db: 0
 
 api:
-  # 支持 openAI 规范
   base_url: "your_base_url"
 
 filepath:
@@ -30,13 +30,11 @@ qi:
   domain: "http://your-qiniu-domain.com"
 
 mcp:
-  # mcp client配置，可以同时配置多个mcp client
   clients:
-  - id: ""
-    name: ""
-    connection_type: ""
-    url: ""                  # HTTP/SSE模式时使用，如 "http://localhost:8080/mcp"
-    command: ""              # STDIO模式时使用，MCP服务器可执行文件路径
+  - id: "mcp_client_1"
+    name: "mcp"
+    connection_type: "stdio"
+    command: "./mcp_service/mcp_service"
     args: []
     tools_to_execute: ["*"]
     tools_to_auto_execute: ["*"]

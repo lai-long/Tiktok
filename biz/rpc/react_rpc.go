@@ -4,6 +4,7 @@ import (
 	"Tiktok/kitex_gen/react"
 	"Tiktok/kitex_gen/react/commentservice"
 	"Tiktok/kitex_gen/react/likeservice"
+	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"context"
@@ -16,7 +17,7 @@ import (
 )
 
 func InitReactRpc() {
-	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	r, err := etcd.NewEtcdResolver([]string{config.Cfg.EtcdAddr})
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
