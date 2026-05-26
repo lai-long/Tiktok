@@ -10,32 +10,32 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func (m *MockLike) CommentLikeCountUp(commentId string) error {
-	args := m.Called(commentId)
+func (m *MockLike) CommentLikeCountUp(ctx context.Context, commentId string) error {
+	args := m.Called(ctx, commentId)
 	return args.Error(0)
 }
-func (m *MockLike) CommentLikeCountDown(commentId string) error {
-	args := m.Called(commentId)
+func (m *MockLike) CommentLikeCountDown(ctx context.Context, commentId string) error {
+	args := m.Called(ctx, commentId)
 	return args.Error(0)
 }
-func (m *MockLike) VideoLikeCountUp(videoId string) error {
-	args := m.Called(videoId)
+func (m *MockLike) VideoLikeCountUp(ctx context.Context, videoId string) error {
+	args := m.Called(ctx, videoId)
 	return args.Error(0)
 }
-func (m *MockLike) VideoLikeCountDown(videoId string) error {
-	args := m.Called(videoId)
+func (m *MockLike) VideoLikeCountDown(ctx context.Context, videoId string) error {
+	args := m.Called(ctx, videoId)
 	return args.Error(0)
 }
-func (m *MockLike) LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error) {
-	args := m.Called(userId, pageNum, pageSize)
+func (m *MockLike) LikeVideoIds(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]string, error) {
+	args := m.Called(ctx, userId, pageNum, pageSize)
 	return args.Get(0).([]string), args.Error(1)
 }
-func (m *MockLike) LikeCreate(userId string, targetID string, targetType string) error {
-	args := m.Called(userId, targetID, targetType)
+func (m *MockLike) LikeCreate(ctx context.Context, userId string, targetID string, targetType string) error {
+	args := m.Called(ctx, userId, targetID, targetType)
 	return args.Error(0)
 }
-func (m *MockLike) LikeDelete(userId, targetId string, targetType string) error {
-	args := m.Called(userId, targetId, targetType)
+func (m *MockLike) LikeDelete(ctx context.Context, userId, targetId string, targetType string) error {
+	args := m.Called(ctx, userId, targetId, targetType)
 	return args.Error(0)
 }
 func (m *MockLike) VideoLikeSAdd(ctx context.Context, userId string, videoId string) error {
@@ -71,8 +71,8 @@ func TestLikeAction(t *testing.T) {
 			action:     "1",
 			targetType: "1",
 			mockSetUp: func(m *MockLike) {
-				m.On("VideoLikeCountUp", "targetID").Return(nil)
-				m.On("LikeCreate", "userID", "targetID", "1").Return(nil)
+				m.On("VideoLikeCountUp", mock.Anything, "targetID").Return(nil)
+				m.On("LikeCreate", mock.Anything, "userID", "targetID", "1").Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -84,8 +84,8 @@ func TestLikeAction(t *testing.T) {
 			action:     "1",
 			targetType: "2",
 			mockSetUp: func(m *MockLike) {
-				m.On("CommentLikeCountUp", "targetID").Return(nil)
-				m.On("LikeCreate", "userID", "targetID", "2").Return(nil)
+				m.On("CommentLikeCountUp", mock.Anything, "targetID").Return(nil)
+				m.On("LikeCreate", mock.Anything, "userID", "targetID", "2").Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -97,7 +97,7 @@ func TestLikeAction(t *testing.T) {
 			action:     "1",
 			targetType: "1",
 			mockSetUp: func(m *MockLike) {
-				m.On("LikeCreate", "userID", "targetID", "1").Return(errors.New("fail"))
+				m.On("LikeCreate", mock.Anything, "userID", "targetID", "1").Return(errors.New("fail"))
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBInsertError,
@@ -109,7 +109,7 @@ func TestLikeAction(t *testing.T) {
 			action:     "1",
 			targetType: "2",
 			mockSetUp: func(m *MockLike) {
-				m.On("LikeCreate", "userID", "targetID", "2").Return(errors.New("fail"))
+				m.On("LikeCreate", mock.Anything, "userID", "targetID", "2").Return(errors.New("fail"))
 			},
 			wantCode: consts.ReactDBInsertError,
 			wantErr:  true,
@@ -121,8 +121,8 @@ func TestLikeAction(t *testing.T) {
 			action:     "2",
 			targetType: "2",
 			mockSetUp: func(m *MockLike) {
-				m.On("CommentLikeCountDown", "targetID").Return(nil)
-				m.On("LikeDelete", "userID", "targetID", "2").Return(nil)
+				m.On("CommentLikeCountDown", mock.Anything, "targetID").Return(nil)
+				m.On("LikeDelete", mock.Anything, "userID", "targetID", "2").Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -134,7 +134,7 @@ func TestLikeAction(t *testing.T) {
 			action:     "2",
 			targetType: "1",
 			mockSetUp: func(m *MockLike) {
-				m.On("LikeDelete", "userID", "targetID", "1").Return(errors.New("fail"))
+				m.On("LikeDelete", mock.Anything, "userID", "targetID", "1").Return(errors.New("fail"))
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBDeleteError,
@@ -146,8 +146,8 @@ func TestLikeAction(t *testing.T) {
 			action:     "2",
 			targetType: "1",
 			mockSetUp: func(m *MockLike) {
-				m.On("LikeDelete", "userID", "targetID", "1").Return(nil)
-				m.On("VideoLikeCountDown", "targetID").Return(errors.New("fail"))
+				m.On("LikeDelete", mock.Anything, "userID", "targetID", "1").Return(nil)
+				m.On("VideoLikeCountDown", mock.Anything, "targetID").Return(errors.New("fail"))
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBUpdateError,
@@ -183,7 +183,7 @@ func TestLikeList(t *testing.T) {
 			pageSize: 10,
 			mockSetUp: func(m *MockLike) {
 				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
-				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
+				m.On("LikeVideoIds", mock.Anything, "userID", int64(1), int64(10)).Return([]string{"1", "2"}, nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -195,7 +195,7 @@ func TestLikeList(t *testing.T) {
 			pageSize: 10,
 			mockSetUp: func(m *MockLike) {
 				m.On("VideoLikeGet", mock.Anything, "userID").Return([]string{}, errors.New("cache miss"))
-				m.On("LikeVideoIds", "userID", int64(1), int64(10)).Return([]string{"1", "2"}, errors.New("fail"))
+				m.On("LikeVideoIds", mock.Anything, "userID", int64(1), int64(10)).Return([]string{"1", "2"}, errors.New("fail"))
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBSelectError,

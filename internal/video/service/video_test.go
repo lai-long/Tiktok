@@ -43,33 +43,33 @@ type MockVideoDb struct {
 	mock.Mock
 }
 
-func (m *MockVideoDb) CreatVideo(entity entity.VideoEntity) error {
-	args := m.Called(entity)
+func (m *MockVideoDb) CreatVideo(ctx context.Context, entity entity.VideoEntity) error {
+	args := m.Called(ctx, entity)
 	return args.Error(0)
 }
 
-func (m *MockVideoDb) GetVideoByUserID(userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error) {
-	args := m.Called(userId, pageSize, pageNum)
+func (m *MockVideoDb) GetVideoByUserID(ctx context.Context, userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error) {
+	args := m.Called(ctx, userId, pageSize, pageNum)
 	return args.Get(0).([]entity.VideoEntity), args.Error(1)
 }
 
-func (m *MockVideoDb) GetVideoByKeyWord(keyword string, pageNum int64, pageSize int64) ([]entity.VideoEntity, error) {
-	args := m.Called(keyword, pageNum, pageSize)
+func (m *MockVideoDb) GetVideoByKeyWord(ctx context.Context, keyword string, pageNum int64, pageSize int64) ([]entity.VideoEntity, error) {
+	args := m.Called(ctx, keyword, pageNum, pageSize)
 	return args.Get(0).([]entity.VideoEntity), args.Error(1)
 }
 
-func (m *MockVideoDb) GetVideoByVideoId(videoId string) (entity.VideoEntity, error) {
-	args := m.Called(videoId)
+func (m *MockVideoDb) GetVideoByVideoId(ctx context.Context, videoId string) (entity.VideoEntity, error) {
+	args := m.Called(ctx, videoId)
 	return args.Get(0).(entity.VideoEntity), args.Error(1)
 }
 
-func (m *MockVideoDb) GetVideoStream() ([]entity.VideoEntity, error) {
-	args := m.Called()
+func (m *MockVideoDb) GetVideoStream(ctx context.Context) ([]entity.VideoEntity, error) {
+	args := m.Called(ctx)
 	return args.Get(0).([]entity.VideoEntity), args.Error(1)
 }
 
-func (m *MockVideoDb) GetVideoByIds(ids []string) ([]entity.VideoEntity, error) {
-	args := m.Called(ids)
+func (m *MockVideoDb) GetVideoByIds(ctx context.Context, ids []string) ([]entity.VideoEntity, error) {
+	args := m.Called(ctx, ids)
 	return args.Get(0).([]entity.VideoEntity), args.Error(1)
 }
 
@@ -94,7 +94,7 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
-				md.On("CreatVideo", mock.Anything).Return(nil)
+				md.On("CreatVideo", mock.Anything, mock.Anything).Return(nil)
 				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			wantCode: consts.Success,
@@ -123,7 +123,7 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
-				md.On("CreatVideo", mock.Anything).Return(errors.New("db error"))
+				md.On("CreatVideo", mock.Anything, mock.Anything).Return(errors.New("db error"))
 				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			wantCode: consts.VideoDBInsertError,
@@ -160,7 +160,7 @@ func TestVideoList(t *testing.T) {
 			pageSize: 10,
 			pageNum:  1,
 			mockSetup: func(m *MockVideoDb) {
-				m.On("GetVideoByUserID", "userID", int64(10), int64(1)).Return([]entity.VideoEntity{
+				m.On("GetVideoByUserID", mock.Anything, "userID", int64(10), int64(1)).Return([]entity.VideoEntity{
 					{ID: "1", Title: "title1"},
 					{ID: "2", Title: "title2"},
 				}, nil)
@@ -174,7 +174,7 @@ func TestVideoList(t *testing.T) {
 			pageSize: 10,
 			pageNum:  1,
 			mockSetup: func(m *MockVideoDb) {
-				m.On("GetVideoByUserID", "userID", int64(10), int64(1)).Return([]entity.VideoEntity{}, errors.New("db error"))
+				m.On("GetVideoByUserID", mock.Anything, "userID", int64(10), int64(1)).Return([]entity.VideoEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.VideoDBSelectError,
 			wantErr:  true,
@@ -185,7 +185,7 @@ func TestVideoList(t *testing.T) {
 			mockDb := new(MockVideoDb)
 			tt.mockSetup(mockDb)
 			videoRepo := NewVideoRepo(mockDb, nil)
-			code, _, err := videoRepo.VideoList(tt.userId, tt.pageSize, tt.pageNum)
+			code, _, err := videoRepo.VideoList(context.Background(), tt.userId, tt.pageSize, tt.pageNum)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
@@ -209,7 +209,7 @@ func TestVideoSearch(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockVideoDb) {
-				m.On("GetVideoByKeyWord", "test", int64(1), int64(10)).Return([]entity.VideoEntity{
+				m.On("GetVideoByKeyWord", mock.Anything, "test", int64(1), int64(10)).Return([]entity.VideoEntity{
 					{ID: "1", Title: "test video"},
 				}, nil)
 			},
@@ -222,7 +222,7 @@ func TestVideoSearch(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockVideoDb) {
-				m.On("GetVideoByKeyWord", "test", int64(1), int64(10)).Return([]entity.VideoEntity{}, errors.New("db error"))
+				m.On("GetVideoByKeyWord", mock.Anything, "test", int64(1), int64(10)).Return([]entity.VideoEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.VideoDBSelectError,
 			wantErr:  true,
@@ -233,7 +233,7 @@ func TestVideoSearch(t *testing.T) {
 			mockDb := new(MockVideoDb)
 			tt.mockSetup(mockDb)
 			videoRepo := NewVideoRepo(mockDb, nil)
-			code, _, err := videoRepo.VideoSearch(tt.keyword, tt.pageNum, tt.pageSize)
+			code, _, err := videoRepo.VideoSearch(context.Background(), tt.keyword, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
@@ -284,7 +284,7 @@ func TestVideoPopular(t *testing.T) {
 					{Score: 100, Member: "video1"},
 				}, nil)
 				mr.On("VideoInfoGet", mock.Anything, "video1").Return(nil, errors.New("cache miss"))
-				md.On("GetVideoByVideoId", "video1").Return(entity.VideoEntity{ID: "video1", Title: "title1"}, nil)
+				md.On("GetVideoByVideoId", mock.Anything, "video1").Return(entity.VideoEntity{ID: "video1", Title: "title1"}, nil)
 				mr.On("VideoInfoSet", mock.Anything, "video1", mock.Anything).Return(nil)
 			},
 			wantCode: consts.Success,
@@ -299,7 +299,7 @@ func TestVideoPopular(t *testing.T) {
 					{Score: 100, Member: "video1"},
 				}, nil)
 				mr.On("VideoInfoGet", mock.Anything, "video1").Return(nil, errors.New("cache miss"))
-				md.On("GetVideoByVideoId", "video1").Return(entity.VideoEntity{}, errors.New("db error"))
+				md.On("GetVideoByVideoId", mock.Anything, "video1").Return(entity.VideoEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.VideoDBSelectError,
 			wantErr:  true,
@@ -330,7 +330,7 @@ func TestVideoStream(t *testing.T) {
 		{
 			name: "Success_stream",
 			mockSetup: func(m *MockVideoDb) {
-				m.On("GetVideoStream").Return([]entity.VideoEntity{
+				m.On("GetVideoStream", mock.Anything).Return([]entity.VideoEntity{
 					{ID: "1", Title: "stream video 1"},
 					{ID: "2", Title: "stream video 2"},
 				}, nil)
@@ -341,7 +341,7 @@ func TestVideoStream(t *testing.T) {
 		{
 			name: "Fail_db_error",
 			mockSetup: func(m *MockVideoDb) {
-				m.On("GetVideoStream").Return([]entity.VideoEntity{}, errors.New("db error"))
+				m.On("GetVideoStream", mock.Anything).Return([]entity.VideoEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.VideoDBSelectError,
 			wantErr:  true,
@@ -352,7 +352,7 @@ func TestVideoStream(t *testing.T) {
 			mockDb := new(MockVideoDb)
 			tt.mockSetup(mockDb)
 			videoRepo := NewVideoRepo(mockDb, nil)
-			code, _, err := videoRepo.VideoStream()
+			code, _, err := videoRepo.VideoStream(context.Background())
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
