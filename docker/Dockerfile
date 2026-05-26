@@ -25,7 +25,7 @@ ARG SERVICE
 ENV TZ=Asia/Shanghai \
     SERVICE=${SERVICE}
 
-RUN apk --no-cache add ca-certificates tzdata bash
+RUN apk --no-cache add ca-certificates tzdata
 
 WORKDIR /app
 
