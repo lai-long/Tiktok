@@ -22,12 +22,12 @@ type UserRedis interface {
 }
 
 type UserDatabase interface {
-	CreateUser(user entity.UserEntity) error
-	GetUserByUsername(username string) (entity.UserEntity, error)
-	GetUserByUserId(userId string) (entity.UserEntity, error)
-	UpdateUserAvatar(url string, userId interface{}) error
-	CheckMfaBind(userId string) (int, error)
-	GetMfaSecret(userId string) (string, error)
+	CreateUser(ctx context.Context, user entity.UserEntity) error
+	GetUserByUsername(ctx context.Context, username string) (entity.UserEntity, error)
+	GetUserByUserId(ctx context.Context, userId string) (entity.UserEntity, error)
+	UpdateUserAvatar(ctx context.Context, url string, userId interface{}) error
+	CheckMfaBind(ctx context.Context, userId string) (int, error)
+	GetMfaSecret(ctx context.Context, userId string) (string, error)
 }
 type UserRepo struct {
 	userDb UserDatabase
@@ -48,8 +48,8 @@ func toUserInfo(e entity.UserEntity) *user.UserInfo {
 	}
 }
 
-func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
-	_, err := s.userDb.GetUserByUsername(username)
+func (s *UserRepo) IsUsernameExists(ctx context.Context, username string) (bool, error) {
+	_, err := s.userDb.GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -59,10 +59,10 @@ func (s *UserRepo) IsUsernameExists(username string) (bool, error) {
 	return true, nil
 }
 
-func (s *UserRepo) Register(userName string, password string) (int32, error) {
+func (s *UserRepo) Register(ctx context.Context, userName string, password string) (int32, error) {
 	var userEntity entity.UserEntity
 	var err error
-	exists, err := s.IsUsernameExists(userName)
+	exists, err := s.IsUsernameExists(ctx, userName)
 	if err != nil {
 		return consts.UserDBSelectError, errors.Wrap(err, "IsUsernameExists error")
 	}
@@ -75,14 +75,14 @@ func (s *UserRepo) Register(userName string, password string) (int32, error) {
 	if err != nil {
 		return consts.UserHashError, errors.Wrap(err, "utils.HashPassword error")
 	}
-	if err = s.userDb.CreateUser(userEntity); err != nil {
+	if err = s.userDb.CreateUser(ctx, userEntity); err != nil {
 		return consts.UserDBInsertError, errors.Wrap(err, "CreateUser error")
 	}
 	return consts.Success, nil
 }
 
-func (s *UserRepo) Login(userName, password, mfaCode string, ctx context.Context) (int32, *user.UserInfo, string, string, error) {
-	userEntity, err := s.userDb.GetUserByUsername(userName)
+func (s *UserRepo) Login(ctx context.Context, userName, password, mfaCode string) (int32, *user.UserInfo, string, string, error) {
+	userEntity, err := s.userDb.GetUserByUsername(ctx, userName)
 	if errors.Is(err, sql.ErrNoRows) {
 		return consts.UserNotExists, &user.UserInfo{}, "", "", nil
 	}
@@ -117,7 +117,7 @@ func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo,
 	if err == nil && userEntity != nil {
 		return toUserInfo(*userEntity), consts.Success, nil
 	}
-	userEntity2, err := s.userDb.GetUserByUserId(userId)
+	userEntity2, err := s.userDb.GetUserByUserId(ctx, userId)
 	if err != nil {
 		return &user.UserInfo{}, consts.UserDBSelectError, errors.Wrap(err, "->UserInfo GetUserByUserId error")
 	}
@@ -129,15 +129,15 @@ func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo,
 	return userInfo, consts.Success, nil
 }
 
-func (s *UserRepo) UserAvatar(url string, userID string) (int32, *user.UserInfo, error) {
-	err := s.userDb.UpdateUserAvatar(url, userID)
+func (s *UserRepo) UserAvatar(ctx context.Context, url string, userID string) (int32, *user.UserInfo, error) {
+	err := s.userDb.UpdateUserAvatar(ctx, url, userID)
 	if err != nil {
 		return consts.UserDBUpdateError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 更新头像错误")
 	}
-	if err := s.redis.DelCachedUserInfo(context.Background(), userID); err != nil {
+	if err := s.redis.DelCachedUserInfo(ctx, userID); err != nil {
 		return consts.UserRedisDelError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 删除缓存错误")
 	}
-	userEntity, err := s.userDb.GetUserByUserId(userID)
+	userEntity, err := s.userDb.GetUserByUserId(ctx, userID)
 	if err != nil {
 		return consts.UserDBSelectError, &user.UserInfo{}, errors.Wrap(err, "->userinfo get user by userid failed")
 	}
@@ -150,7 +150,7 @@ func (s *UserRepo) RefreshToken(ctx context.Context, refreshToken string) (int32
 	if err != nil {
 		return consts.UserRedisGetError, "", "", errors.Wrap(err, "->RefreshToken GetUserIDByRefreshToken error")
 	}
-	userEntity, err := s.userDb.GetUserByUserId(userId)
+	userEntity, err := s.userDb.GetUserByUserId(ctx, userId)
 	if err != nil {
 		return consts.UserDBSelectError, "", "", errors.Wrap(err, "->RefreshToken GetUserByUserId error")
 	}
@@ -171,7 +171,7 @@ func (s *UserRepo) RefreshToken(ctx context.Context, refreshToken string) (int32
 }
 
 func (s *UserRepo) mfaConfirm(ctx context.Context, userID string, mfaCode string) (int32, error) {
-	isBind, err := s.userDb.CheckMfaBind(userID)
+	isBind, err := s.userDb.CheckMfaBind(ctx, userID)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->check mfa bind error")
 	}
@@ -179,7 +179,7 @@ func (s *UserRepo) mfaConfirm(ctx context.Context, userID string, mfaCode string
 		if mfaCode == "" {
 			return consts.MfaReqValidError, nil
 		}
-		mfaSecret, err := s.userDb.GetMfaSecret(userID)
+		mfaSecret, err := s.userDb.GetMfaSecret(ctx, userID)
 		if err != nil {
 			return consts.MfaDBSelectError, errors.Wrap(err, "->mfa confirm mfa secret error")
 		}

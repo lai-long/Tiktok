@@ -16,28 +16,28 @@ type MockSocialDb struct {
 	mock.Mock
 }
 
-func (m *MockSocialDb) CreateFollowing(userId string, toUserId string) error {
-	args := m.Called(userId, toUserId)
+func (m *MockSocialDb) CreateFollowing(ctx context.Context, userId string, toUserId string) error {
+	args := m.Called(ctx, userId, toUserId)
 	return args.Error(0)
 }
 
-func (m *MockSocialDb) DeleteFollowing(userId string, toUserId string) error {
-	args := m.Called(userId, toUserId)
+func (m *MockSocialDb) DeleteFollowing(ctx context.Context, userId string, toUserId string) error {
+	args := m.Called(ctx, userId, toUserId)
 	return args.Error(0)
 }
 
-func (m *MockSocialDb) FollowingList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error) {
-	args := m.Called(userId, pageNum, pageSize)
+func (m *MockSocialDb) FollowingList(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error) {
+	args := m.Called(ctx, userId, pageNum, pageSize)
 	return args.Get(0).([]entity.UserEntity), args.Error(1)
 }
 
-func (m *MockSocialDb) FollowerList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error) {
-	args := m.Called(userId, pageNum, pageSize)
+func (m *MockSocialDb) FollowerList(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error) {
+	args := m.Called(ctx, userId, pageNum, pageSize)
 	return args.Get(0).([]entity.UserEntity), args.Error(1)
 }
 
-func (m *MockSocialDb) FriendList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, bool) {
-	args := m.Called(userId, pageNum, pageSize)
+func (m *MockSocialDb) FriendList(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, bool) {
+	args := m.Called(ctx, userId, pageNum, pageSize)
 	return args.Get(0).([]entity.UserEntity), args.Bool(1)
 }
 
@@ -57,7 +57,7 @@ func TestRelationAction(t *testing.T) {
 			actionType: "0",
 			userId:     "userID",
 			mockSetup: func(m *MockSocialDb) {
-				m.On("CreateFollowing", "userID", "toUserID").Return(nil)
+				m.On("CreateFollowing", mock.Anything, "userID", "toUserID").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -68,7 +68,7 @@ func TestRelationAction(t *testing.T) {
 			actionType: "0",
 			userId:     "userID",
 			mockSetup: func(m *MockSocialDb) {
-				m.On("CreateFollowing", "userID", "toUserID").Return(errors.New("db error"))
+				m.On("CreateFollowing", mock.Anything, "userID", "toUserID").Return(errors.New("db error"))
 			},
 			wantCode: consts.SocialDBInsertError,
 			wantErr:  true,
@@ -79,7 +79,7 @@ func TestRelationAction(t *testing.T) {
 			actionType: "1",
 			userId:     "userID",
 			mockSetup: func(m *MockSocialDb) {
-				m.On("DeleteFollowing", "userID", "toUserID").Return(nil)
+				m.On("DeleteFollowing", mock.Anything, "userID", "toUserID").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -90,7 +90,7 @@ func TestRelationAction(t *testing.T) {
 			actionType: "1",
 			userId:     "userID",
 			mockSetup: func(m *MockSocialDb) {
-				m.On("DeleteFollowing", "userID", "toUserID").Return(errors.New("db error"))
+				m.On("DeleteFollowing", mock.Anything, "userID", "toUserID").Return(errors.New("db error"))
 			},
 			wantCode: consts.SocialDBDeleteError,
 			wantErr:  true,
@@ -135,7 +135,7 @@ func TestFollowingList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockSocialDb) {
-				m.On("FollowingList", "userID", int64(1), int64(10)).Return([]entity.UserEntity{
+				m.On("FollowingList", mock.Anything, "userID", int64(1), int64(10)).Return([]entity.UserEntity{
 					{ID: "1", Username: "user1", Created_at: time.Now(), Updated_at: time.Now()},
 					{ID: "2", Username: "user2", Created_at: time.Now(), Updated_at: time.Now()},
 				}, nil)
@@ -149,7 +149,7 @@ func TestFollowingList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockSocialDb) {
-				m.On("FollowingList", "userID", int64(1), int64(10)).Return([]entity.UserEntity{}, errors.New("db error"))
+				m.On("FollowingList", mock.Anything, "userID", int64(1), int64(10)).Return([]entity.UserEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.SocialDBSelectError,
 			wantErr:  true,
@@ -160,7 +160,7 @@ func TestFollowingList(t *testing.T) {
 			mockDb := new(MockSocialDb)
 			tt.mockSetup(mockDb)
 			socialRepo := NewSocialRepo(mockDb)
-			code, _, err := socialRepo.FollowingList(tt.userId, tt.pageNum, tt.pageSize)
+			code, _, err := socialRepo.FollowingList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
@@ -184,7 +184,7 @@ func TestFollowerList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockSocialDb) {
-				m.On("FollowerList", "userID", int64(1), int64(10)).Return([]entity.UserEntity{
+				m.On("FollowerList", mock.Anything, "userID", int64(1), int64(10)).Return([]entity.UserEntity{
 					{ID: "1", Username: "follower1", Created_at: time.Now(), Updated_at: time.Now()},
 				}, nil)
 			},
@@ -197,7 +197,7 @@ func TestFollowerList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockSocialDb) {
-				m.On("FollowerList", "userID", int64(1), int64(10)).Return([]entity.UserEntity{}, errors.New("db error"))
+				m.On("FollowerList", mock.Anything, "userID", int64(1), int64(10)).Return([]entity.UserEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.SocialDBSelectError,
 			wantErr:  true,
@@ -208,7 +208,7 @@ func TestFollowerList(t *testing.T) {
 			mockDb := new(MockSocialDb)
 			tt.mockSetup(mockDb)
 			socialRepo := NewSocialRepo(mockDb)
-			code, _, err := socialRepo.FollowerList(tt.userId, tt.pageNum, tt.pageSize)
+			code, _, err := socialRepo.FollowerList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
@@ -232,7 +232,7 @@ func TestFriendList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockSocialDb) {
-				m.On("FriendList", "userID", int64(1), int64(10)).Return([]entity.UserEntity{
+				m.On("FriendList", mock.Anything, "userID", int64(1), int64(10)).Return([]entity.UserEntity{
 					{ID: "1", Username: "friend1", Created_at: time.Now(), Updated_at: time.Now()},
 				}, true)
 			},
@@ -245,7 +245,7 @@ func TestFriendList(t *testing.T) {
 			pageNum:  1,
 			pageSize: 10,
 			mockSetup: func(m *MockSocialDb) {
-				m.On("FriendList", "userID", int64(1), int64(10)).Return([]entity.UserEntity{}, false)
+				m.On("FriendList", mock.Anything, "userID", int64(1), int64(10)).Return([]entity.UserEntity{}, false)
 			},
 			wantCode: consts.SocialDBSelectError,
 			wantErr:  true,
@@ -256,7 +256,7 @@ func TestFriendList(t *testing.T) {
 			mockDb := new(MockSocialDb)
 			tt.mockSetup(mockDb)
 			socialRepo := NewSocialRepo(mockDb)
-			code, _, err := socialRepo.FriendList(tt.userId, tt.pageNum, tt.pageSize)
+			code, _, err := socialRepo.FriendList(context.Background(), tt.userId, tt.pageNum, tt.pageSize)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)

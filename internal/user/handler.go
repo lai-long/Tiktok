@@ -20,7 +20,7 @@ func NewUserService(service *service.UserRepo) *UserServiceImpl {
 // UserRegister implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterReq) (resp *user.RegisterResp, err error) {
 	resp = &user.RegisterResp{}
-	code, _ := s.service.Register(req.UserName, req.Password)
+	code, _ := s.service.Register(ctx, req.UserName, req.Password)
 	resp.Code = code
 	return resp, nil
 }
@@ -28,7 +28,7 @@ func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterRe
 // UserLogin implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserLogin(ctx context.Context, req *user.LoginReq) (resp *user.LoginResp, err error) {
 	resp = &user.LoginResp{}
-	code, userInfo, reToken, acToken, err := s.service.Login(req.UserName, req.Password, req.Code, ctx)
+	code, userInfo, reToken, acToken, err := s.service.Login(ctx, req.UserName, req.Password, req.Code)
 	if err != nil {
 		resp.Code = code
 	}
@@ -57,7 +57,7 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 // UserAvatar implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarReq) (resp *user.UserAvatarResp, err error) {
 	resp = &user.UserAvatarResp{}
-	code, userInfo, err := s.service.UserAvatar(req.AvatarURL, req.UserID)
+	code, userInfo, err := s.service.UserAvatar(ctx, req.AvatarURL, req.UserID)
 	if err != nil {
 		logger.Error("UserAvatar failed", zap.Error(err), zap.String("user_id", req.UserID))
 		resp.Code = code

@@ -2,6 +2,7 @@ package service
 
 import (
 	"Tiktok/pkg/consts"
+	"context"
 	"errors"
 	"testing"
 
@@ -13,23 +14,23 @@ type MockMfaDb struct {
 	mock.Mock
 }
 
-func (m *MockMfaDb) SaveMfaSecret(mfa string, userId string) error {
-	args := m.Called(mfa, userId)
+func (m *MockMfaDb) SaveMfaSecret(ctx context.Context, mfa string, userId string) error {
+	args := m.Called(ctx, mfa, userId)
 	return args.Error(0)
 }
 
-func (m *MockMfaDb) GetMfaSecret(userId string) (string, error) {
-	args := m.Called(userId)
+func (m *MockMfaDb) GetMfaSecret(ctx context.Context, userId string) (string, error) {
+	args := m.Called(ctx, userId)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockMfaDb) MfaBindUpdate(userId string) error {
-	args := m.Called(userId)
+func (m *MockMfaDb) MfaBindUpdate(ctx context.Context, userId string) error {
+	args := m.Called(ctx, userId)
 	return args.Error(0)
 }
 
-func (m *MockMfaDb) CheckMfaBind(userId string) (int, error) {
-	args := m.Called(userId)
+func (m *MockMfaDb) CheckMfaBind(ctx context.Context, userId string) (int, error) {
+	args := m.Called(ctx, userId)
 	return args.Int(0), args.Error(1)
 }
 
@@ -47,7 +48,7 @@ func TestGenerateMfa(t *testing.T) {
 			username: "testuser",
 			userId:   "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("SaveMfaSecret", mock.Anything, "userID").Return(nil)
+				m.On("SaveMfaSecret", mock.Anything, mock.Anything, "userID").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -57,7 +58,7 @@ func TestGenerateMfa(t *testing.T) {
 			username: "testuser",
 			userId:   "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("SaveMfaSecret", mock.Anything, "userID").Return(errors.New("save error"))
+				m.On("SaveMfaSecret", mock.Anything, mock.Anything, "userID").Return(errors.New("save error"))
 			},
 			wantCode: consts.UserDBUpdateError,
 			wantErr:  true,
@@ -68,7 +69,7 @@ func TestGenerateMfa(t *testing.T) {
 			mockDb := new(MockMfaDb)
 			tt.mockSetup(mockDb)
 			mfaRepo := NewMfaRepo(mockDb)
-			_, _, code, err := mfaRepo.GenerateMfa(tt.username, tt.userId)
+			_, _, code, err := mfaRepo.GenerateMfa(context.Background(), tt.username, tt.userId)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
@@ -90,7 +91,7 @@ func TestMfaBindByCode(t *testing.T) {
 			code:   "123456",
 			userId: "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("GetMfaSecret", "userID").Return("", errors.New("db error"))
+				m.On("GetMfaSecret", mock.Anything, "userID").Return("", errors.New("db error"))
 			},
 			wantCode: consts.MfaDBSelectError,
 			wantErr:  true,
@@ -100,7 +101,7 @@ func TestMfaBindByCode(t *testing.T) {
 			code:   "000000",
 			userId: "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("GetMfaSecret", "userID").Return("VALID_SECRET_HERE", nil)
+				m.On("GetMfaSecret", mock.Anything, "userID").Return("VALID_SECRET_HERE", nil)
 			},
 			wantCode: consts.MfaCodeFalse,
 			wantErr:  false,
@@ -111,7 +112,7 @@ func TestMfaBindByCode(t *testing.T) {
 			mockDb := new(MockMfaDb)
 			tt.mockSetup(mockDb)
 			mfaRepo := NewMfaRepo(mockDb)
-			code, err := mfaRepo.MfaBindByCode(tt.code, tt.userId)
+			code, err := mfaRepo.MfaBindByCode(context.Background(), tt.code, tt.userId)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)
@@ -133,7 +134,7 @@ func TestMfaBindBySecret(t *testing.T) {
 			secret: "some_secret",
 			userId: "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("GetMfaSecret", "userID").Return("", errors.New("db error"))
+				m.On("GetMfaSecret", mock.Anything, "userID").Return("", errors.New("db error"))
 			},
 			wantCode: consts.MfaDBSelectError,
 			wantErr:  true,
@@ -143,7 +144,7 @@ func TestMfaBindBySecret(t *testing.T) {
 			secret: "wrong_secret",
 			userId: "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("GetMfaSecret", "userID").Return("correct_secret", nil)
+				m.On("GetMfaSecret", mock.Anything, "userID").Return("correct_secret", nil)
 			},
 			wantCode: consts.MfaCodeFalse,
 			wantErr:  false,
@@ -153,8 +154,8 @@ func TestMfaBindBySecret(t *testing.T) {
 			secret: "correct_secret",
 			userId: "userID",
 			mockSetup: func(m *MockMfaDb) {
-				m.On("GetMfaSecret", "userID").Return("correct_secret", nil)
-				m.On("MfaBindUpdate", "userID").Return(errors.New("update error"))
+				m.On("GetMfaSecret", mock.Anything, "userID").Return("correct_secret", nil)
+				m.On("MfaBindUpdate", mock.Anything, "userID").Return(errors.New("update error"))
 			},
 			wantCode: consts.UserDBUpdateError,
 			wantErr:  true,
@@ -165,7 +166,7 @@ func TestMfaBindBySecret(t *testing.T) {
 			mockDb := new(MockMfaDb)
 			tt.mockSetup(mockDb)
 			mfaRepo := NewMfaRepo(mockDb)
-			code, err := mfaRepo.MfaBindBySecret(tt.secret, tt.userId)
+			code, err := mfaRepo.MfaBindBySecret(context.Background(), tt.secret, tt.userId)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockDb.AssertExpectations(t)

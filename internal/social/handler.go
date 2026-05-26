@@ -25,7 +25,7 @@ func (s *SocialServiceImpl) RelationAction(ctx context.Context, req *social.Rela
 
 func (s *SocialServiceImpl) FollowingList(ctx context.Context, req *social.FollowingListReq) (resp *social.FollowingListResp, err error) {
 	resp = &social.FollowingListResp{}
-	code, userInfos, _ := s.socialService.FollowingList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, _ := s.socialService.FollowingList(ctx, req.UserId, req.PageNum, req.PageSize)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	resp.Data = &social.SocialData{
@@ -37,7 +37,7 @@ func (s *SocialServiceImpl) FollowingList(ctx context.Context, req *social.Follo
 
 func (s *SocialServiceImpl) FollowerList(ctx context.Context, req *social.FollowerListReq) (resp *social.FollowerListResp, err error) {
 	resp = &social.FollowerListResp{}
-	code, userInfos, _ := s.socialService.FollowerList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, _ := s.socialService.FollowerList(ctx, req.UserId, req.PageNum, req.PageSize)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	resp.Data = &social.SocialData{
@@ -49,7 +49,7 @@ func (s *SocialServiceImpl) FollowerList(ctx context.Context, req *social.Follow
 
 func (s *SocialServiceImpl) FriendList(ctx context.Context, req *social.FriendListReq) (resp *social.FriendListResp, err error) {
 	resp = &social.FriendListResp{}
-	code, userInfos, _ := s.socialService.FriendList(req.UserId, req.PageNum, req.PageSize)
+	code, userInfos, _ := s.socialService.FriendList(ctx, req.UserId, req.PageNum, req.PageSize)
 	resp.Code = code
 	resp.Msg = consts.GetErrorCodeMsg(code)
 	resp.Data = &social.SocialData{
