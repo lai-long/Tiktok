@@ -250,7 +250,8 @@ func TestUserAvatar(t *testing.T) {
 			setMock: func(m *MockUser) {
 				m.On("UpdateUserAvatar", mock.Anything, "http://example.com/avatar.jpg", "userID").Return(nil)
 				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
-				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "user", Avatar_url: "http://example.com/avatar.jpg"}, nil)
+				userEntity := entity.UserEntity{ID: "userID", Username: "user", Avatar_url: "http://example.com/avatar.jpg"}
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(userEntity, nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,

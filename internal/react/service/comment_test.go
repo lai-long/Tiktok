@@ -43,7 +43,7 @@ func (m *MockCommentRepo) CommentCommentCountDown(ctx context.Context, commentId
 	args := m.Called(ctx, commentId)
 	return args.Error(0)
 }
-func (m *MockCommentRepo) CreateComment(ctx context.Context, commentId string, targetId string, userId string, content string, targetType string) error {
+func (m *MockCommentRepo) CreateComment(ctx context.Context, commentId, targetId, userId, content, targetType string) error {
 	args := m.Called(ctx, commentId, targetId, userId, content, targetType)
 	return args.Error(0)
 }
