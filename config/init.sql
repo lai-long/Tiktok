@@ -68,9 +68,10 @@ CREATE TABLE comments
 );
 CREATE TABLE message
 (
-    session_id VARCHAR(128),
-    content TEXT,
+    session_id VARCHAR(128) NOT NULL,
+    content    TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL
+    deleted_at DATETIME NULL,
+    INDEX idx_message_session_id (session_id)
 );
