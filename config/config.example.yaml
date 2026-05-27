@@ -15,6 +15,7 @@ redis:
 
 api:
   base_url: "your_base_url"
+  model: "your_model_name"
 
 filepath:
   video_path: "./videos/"

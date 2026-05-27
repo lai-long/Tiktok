@@ -19,7 +19,7 @@ func (a *MyAccount) GetKeysForProvider(ctx context.Context, provider schemas.Mod
 	return []schemas.Key{
 		{
 			Value:  *schemas.NewEnvVar(config.Cfg.API.APIKey),
-			Models: schemas.WhiteList{"MiniMax-M2.7"},
+			Models: schemas.WhiteList{config.Cfg.API.Model},
 			Weight: 1.0,
 		},
 	}, nil
@@ -106,7 +106,7 @@ func (c *ChatClient) Chat(prompt string) (content string, err error) {
 	bifrostContext := schemas.NewBifrostContext(c.ctx, schemas.NoDeadline)
 	req := &schemas.BifrostChatRequest{
 		Provider: schemas.OpenAI,
-		Model:    "MiniMax-M2.7",
+		Model:    config.Cfg.API.Model,
 		Input:    c.message,
 	}
 	resp, bifrostErr := c.client.ChatCompletionRequest(bifrostContext, req)
