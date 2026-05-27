@@ -13,3 +13,4 @@ a/
 .env
 script/
 .idea/
+logs
