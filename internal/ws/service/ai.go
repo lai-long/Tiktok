@@ -2,12 +2,13 @@ package service
 
 import (
 	"Tiktok/internal/config"
+	"Tiktok/pkg/logger"
 	"context"
-	"log"
 	"time"
 
 	bifrost "github.com/maximhq/bifrost/core"
 	"github.com/maximhq/bifrost/core/schemas"
+	"go.uber.org/zap"
 )
 
 type MyAccount struct{}
@@ -114,14 +115,14 @@ func (c *ChatClient) Chat(prompt string) (content string, err error) {
 		return "", bifrostErr.Error.Error
 	}
 	if len(resp.Choices) == 0 {
-		log.Println("choices is nil or empty")
+		logger.Warn("ai response choices is nil or empty")
 		return "", nil
 	}
 	if resp.Choices[0].Message.Content != nil && resp.Choices[0].Message.Content.ContentStr != nil {
 		content = *resp.Choices[0].Message.Content.ContentStr
-		log.Println("ai resp content:", content)
+		logger.Debug("ai response content", zap.String("content", content))
 	} else {
-		log.Println("short of ai resp content:")
+		logger.Warn("ai response content is nil")
 	}
 	return content, nil
 }
@@ -138,11 +139,11 @@ type Agent struct {
 func NewAgent(ctx context.Context) *Agent {
 	llm, err := NewChatClient(ctx)
 	if err != nil {
-		log.Println("mcp NewChatClient fail", err)
+		logger.Error("mcp NewChatClient failed", zap.Error(err))
 		return nil
 	}
 	if llm == nil {
-		log.Println("mcp NewChatClient fail llm is nil")
+		logger.Error("mcp NewChatClient returned nil")
 		return nil
 	}
 	return &Agent{
@@ -153,12 +154,12 @@ func NewAgent(ctx context.Context) *Agent {
 
 func (a *Agent) StartAction(prompt string) string {
 	if a.chatCli == nil {
-		log.Println("start action err short of chat client")
+		logger.Error("startAction failed: chat client is nil")
 		return ""
 	}
 	resp, err := a.chatCli.Chat(prompt)
 	if err != nil {
-		log.Println("start action fail", err)
+		logger.Error("startAction failed", zap.Error(err))
 		return ""
 	}
 	return resp
@@ -166,7 +167,7 @@ func (a *Agent) StartAction(prompt string) string {
 
 func (a *Agent) StopAction() {
 	if a.chatCli == nil {
-		log.Println("stop action err short of chat client")
+		logger.Error("stopAction failed: chat client is nil")
 		return
 	}
 	a.chatCli.Close()

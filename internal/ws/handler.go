@@ -6,14 +6,15 @@ import (
 	"Tiktok/internal/ws/service"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/adaptor"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 type WebsocketServer struct {
@@ -39,11 +40,11 @@ func (m *WebsocketServer) WebSocketHandler(ctx context.Context, c *app.RequestCo
 		}})
 		return
 	}
-	log.Println("User connected:", userid)
+	logger.Info("user connected", logger.WithUserID(userid))
 	req := new(chat.WebsocketReq)
 	err := c.BindAndValidate(req)
 	if err != nil {
-		log.Println("BindAndValidate error:", err)
+		logger.Error("bindAndValidate error", zap.Error(err))
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
 			Code: 0,
 			Msg:  "Invalid request parameters",
@@ -57,7 +58,7 @@ func (m *WebsocketServer) WebSocketHandler(ctx context.Context, c *app.RequestCo
 			},
 		}).Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("WebSocket upgrade error:", err)
+			logger.Error("websocket upgrade error", zap.Error(err))
 			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
 			return
 		}
@@ -68,7 +69,7 @@ func (m *WebsocketServer) WebSocketHandler(ctx context.Context, c *app.RequestCo
 			Socket:  conn,
 			Send:    make(chan []byte, 128),
 		}
-		log.Println("WebSocket client:", client)
+		logger.Info("websocket client registered", zap.String("client_id", client.ID))
 		m.websocket.Manager.Register <- client
 		go m.websocket.Read(client)
 		go m.websocket.Write(client)

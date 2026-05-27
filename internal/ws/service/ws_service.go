@@ -5,16 +5,17 @@ import (
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -76,7 +77,7 @@ func (ws *WebsocketService) Read(c *Client) {
 		sendMsg := new(chat.SendMsg)
 		err := c.Socket.ReadJSON(sendMsg)
 		if err != nil {
-			log.Println("client ReadJSON err", err)
+			logger.Error("client ReadJSON error", zap.Error(err))
 			ws.Manager.Unregister <- c
 			_ = c.Socket.Close()
 			break
@@ -153,13 +154,13 @@ func (ws *WebsocketService) Heartbeat(c *Client) {
 		c.mu.Lock()
 		if time.Since(c.lastPong) > 40*time.Second {
 			c.mu.Unlock()
-			log.Printf("客户端 %s 心跳超时，断开连接", c.ID)
+			logger.Warn("heartbeat timeout, disconnecting", zap.String("client_id", c.ID))
 			return
 		}
 		c.mu.Unlock()
 
 		if err := c.Socket.WriteMessage(websocket.PingMessage, nil); err != nil {
-			log.Printf("发送 ping 给 %s 失败: %v", c.ID, err)
+			logger.Error("ping failed", zap.String("client_id", c.ID), zap.Error(err))
 			return
 		}
 	}
@@ -190,7 +191,7 @@ func (ws *WebsocketService) Start() {
 }
 
 func (ws *WebsocketService) startRegister(client *Client) {
-	log.Println("建立websocket连接", client.ID)
+	logger.Info("websocket connected", zap.String("client_id", client.ID))
 	if client.GroupId != "" {
 		ws.Manager.mu.Lock()
 		ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId], client)
@@ -201,7 +202,7 @@ func (ws *WebsocketService) startRegister(client *Client) {
 }
 
 func (ws *WebsocketService) startUnregister(client *Client) {
-	log.Println("断开websocket连接", client.ID)
+	logger.Info("websocket disconnected", zap.String("client_id", client.ID))
 	if client.GroupId != "" {
 		ws.Manager.mu.Lock()
 		for i, v := range ws.Manager.Groups[client.GroupId] {
@@ -245,17 +246,17 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 		ws.sendReplyMsg(broadcast.Clients, broadcast.Clients.ID, consts.WsClientOnline, consts.GetErrorCodeMsg(consts.WsClientOnline))
 		err := ws.mysql.InsertMsg(id, string(message))
 		if err != nil {
-			log.Println("Insert message error:", err)
+			logger.Error("insert message error", zap.Error(err))
 		}
 	} else {
 		ws.sendReplyMsg(broadcast.Clients, broadcast.Clients.ID, consts.WsClientNotOnline, consts.GetErrorCodeMsg(consts.WsClientNotOnline))
 		err := ws.mysql.InsertMsg(id, string(message))
 		if err != nil {
-			log.Println("Insert message error:", err)
+			logger.Error("insert message error", zap.Error(err))
 		}
 		err = ws.redis.SaveOfflineMsg(broadcast.Clients.SendID, string(message))
 		if err != nil {
-			log.Println("Save offline message error:", err)
+			logger.Error("save offline message error", zap.Error(err))
 		}
 	}
 }
@@ -263,7 +264,7 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 func (ws *WebsocketService) startBroadcastOneOffline(broadcast *Broadcast) {
 	message, err := ws.redis.FetchOfflineMsg(broadcast.Clients.SendID)
 	if err != nil {
-		log.Println("Fetch offline message error:", err)
+		logger.Error("fetch offline message error", zap.Error(err))
 		ws.sendReplyMsg(broadcast.Clients, "系统", consts.WsGetOfflineError, consts.GetErrorCodeMsg(consts.WsGetOfflineError))
 		return
 	}
@@ -294,7 +295,7 @@ func (ws *WebsocketService) startBroadcastGroupOnline(groupBroadcast *GroupBroad
 }
 
 func (ws *WebsocketService) startBroadcastOneError(broadcast *Broadcast) {
-	log.Println("请求类型不存在")
+	logger.Error("unknown broadcast type")
 	ws.sendReplyMsg(broadcast.Clients, "system", consts.WsReqValidError, consts.GetErrorCodeMsg(consts.WsReqValidError))
 }
 

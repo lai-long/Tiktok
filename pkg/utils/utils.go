@@ -5,8 +5,8 @@ import (
 	"Tiktok/internal/config"
 	user "Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/logger"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -17,6 +17,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,14 +28,10 @@ func CreateID(uid, toUID string) string {
 
 // GetID 将websocket的clientID拆成两个用户id
 func GetID(id string) (string, string) {
-	log.Println(id)
 	parts := strings.Split(id, "->")
-	log.Println("begin")
 	if len(parts) == 2 {
-		log.Println("part[0]", parts[0], "part[1]", parts[1])
 		return parts[0], parts[1]
 	}
-	log.Println("false")
 	return "", ""
 }
 
@@ -122,7 +119,7 @@ func CheckAiKeyWord(message string) (bool, string) {
 func SaveUploadFile(dataFile multipart.File, dir string, filename string) (int32, error) {
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
-		log.Println(dir)
+		logger.Error("saveUploadFile mkdir error", zap.String("dir", dir), zap.Error(err))
 		return consts.IOOsError, errors.Wrap(err, "saveUploadFile os mkdir错误")
 	}
 	file, err := os.Create(dir + filename)
@@ -130,9 +127,8 @@ func SaveUploadFile(dataFile multipart.File, dir string, filename string) (int32
 		return consts.IOOsError, errors.Wrap(err, "saveUploadFile creat failed")
 	}
 	defer func() {
-		err := file.Close()
-		if err != nil {
-			log.Println("saveUploadFile close err", err)
+		if err := file.Close(); err != nil {
+			logger.Error("saveUploadFile close error", zap.Error(err))
 		}
 	}()
 	_, err = io.Copy(file, dataFile)
