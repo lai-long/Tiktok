@@ -19,7 +19,7 @@
 | 日志 | Zap + Lumberjack |
 | WebSocket | Gorilla WebSocket |
 | 配置管理 | Viper (热更新) |
-
+| 容器化 | Docker + docker-compose |
 
 
 ## 服务列表
@@ -68,10 +68,10 @@ Go 1.26+, MySQL, Redis, etcd
 
 ```bash
 # 数据库初始化
-mysql -u root -p < pkg/config/init.sql
+mysql -u root -p < config/init.sql
 
 # 配置（支持环境变量覆盖）
-cp pkg/config/config.example.yaml pkg/config/config.yaml
+cp config/config.example.yaml config/config.yaml
 
 # 构建所有服务
 ./build.sh
@@ -99,6 +99,36 @@ go run ./cmd/ws/     # :8881
 | `OPENAI_API_KEY` | MiniMax API Key |
 | `QINIU_ACCESS_KEY` | 七牛云 Access |
 | `QINIU_SECRET_KEY` | 七牛云 Secret |
+| `ETCD_ADDR` | etcd 地址 (默认 127.0.0.1:2379) |
+| `CONFIG_PATH` | 配置文件目录 |
+| `SENTINEL_PATH` | Sentinel 规则文件目录 |
+| `ENV_PATH` | .env 文件路径 (默认 .env) |
+
+### Docker 部署
+
+```bash
+# 构建并启动所有服务
+cd docker && docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f api
+
+# 停止
+docker-compose down
+```
+
+### Makefile
+
+```bash
+make build       # 编译所有服务
+make docker-up   # docker-compose 启动
+make docker-down # 停止容器
+make test        # 运行测试
+make lint        # 代码检查
+```
 
 ### 测试
 
@@ -131,7 +161,14 @@ go test -race -count=1 -coverprofile=coverage.out ./...
 │   ├── entity/           # 数据库实体
 │   ├── logger/           # Zap 日志
 │   └── utils/            # JWT、bcrypt、七牛云上传
+├── docker/               # Docker 部署
+│   ├── Dockerfile        # 多阶段构建 (SERVICE arg)
+│   ├── docker-compose.yml # 全服务编排
+│   ├── config/            # Docker 环境配置文件
+│   ├── env/               # 基础设施环境变量
+│   └── script/
 ├── mcp_service/          # MCP 工具服务 (天气查询等)
+├── Makefile              # 便捷命令
 └── build.sh
 ```
 
@@ -141,7 +178,7 @@ go test -race -count=1 -coverprofile=coverage.out ./...
 
 ## Sentinel 限流熔断
 
-规则配置在 `pkg/config/sentinel.yaml`，支持流控（快速失败/排队等待）和熔断（慢调用/错误比例/错误计数）。
+规则配置在 `config/sentinel.yaml`，支持流控（快速失败/排队等待）和熔断（慢调用/错误比例/错误计数）。
 
 ## 配置热更新
 

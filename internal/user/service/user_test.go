@@ -1,7 +1,7 @@
 package service
 
 import (
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
 	"Tiktok/pkg/utils"
@@ -124,7 +124,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	_, err := config.Load([]string{"../../../pkg/config"})
+	_, err := config.Load([]string{"../../../config"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -293,7 +293,7 @@ func TestUserAvatar(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	_, err := config.Load([]string{"../../../pkg/config"})
+	_, err := config.Load([]string{"../../../config"})
 	if err != nil {
 		t.Fatal(err)
 	}

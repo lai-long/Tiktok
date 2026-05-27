@@ -2,9 +2,9 @@ package main
 
 import (
 	"Tiktok/biz/middleware"
+	"Tiktok/internal/config"
 	ws "Tiktok/internal/ws"
 	wsService "Tiktok/internal/ws/service"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"

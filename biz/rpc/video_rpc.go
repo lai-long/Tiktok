@@ -3,9 +3,9 @@ package rpc
 import (
 	"context"
 
+	"Tiktok/internal/config"
 	"Tiktok/kitex_gen/video"
 	"Tiktok/kitex_gen/video/videoservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"

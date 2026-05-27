@@ -4,9 +4,9 @@ import (
 	"context"
 
 	model "Tiktok/biz/model/user"
+	"Tiktok/internal/config"
 	"Tiktok/kitex_gen/user"
 	"Tiktok/kitex_gen/user/userservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"

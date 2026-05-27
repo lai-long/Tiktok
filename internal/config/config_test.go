@@ -5,7 +5,7 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	cfg, err := Load([]string{"./"})
+	cfg, err := Load([]string{"../../config"})
 	if err != nil {
 		t.Fatal(err)
 		return

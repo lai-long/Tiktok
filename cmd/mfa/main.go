@@ -1,11 +1,11 @@
 package main
 
 import (
+	"Tiktok/internal/config"
 	handler "Tiktok/internal/mfa"
 	"Tiktok/internal/mfa/service"
 	"Tiktok/internal/middleware"
 	"Tiktok/kitex_gen/mfa/mfaservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"
 	"net"

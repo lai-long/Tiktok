@@ -3,7 +3,7 @@ package middleware
 import (
 	"Tiktok/biz/model/common"
 	"Tiktok/biz/model/user"
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"context"

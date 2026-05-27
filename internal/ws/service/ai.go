@@ -1,7 +1,7 @@
 package service
 
 import (
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"context"
 	"log"
 	"time"

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/react"
 	"Tiktok/internal/react/service"
 	"Tiktok/kitex_gen/react/commentservice"
 	"Tiktok/kitex_gen/react/likeservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"

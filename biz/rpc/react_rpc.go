@@ -1,10 +1,10 @@
 package rpc
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/kitex_gen/react"
 	"Tiktok/kitex_gen/react/commentservice"
 	"Tiktok/kitex_gen/react/likeservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"context"
