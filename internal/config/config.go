@@ -73,7 +73,6 @@ type QiNiuConfig struct {
 	Domain    string `mapstructure:"domain"`
 }
 
-// APIConfig a
 type APIConfig struct {
 	APIKey  string `mapstructure:"api_key"`
 	BaseURL string `mapstructure:"base_url"`
