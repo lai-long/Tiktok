@@ -41,8 +41,8 @@ func main() {
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
 	)
-	h.Use(middleware.LoggingMiddleware())
 	h.Use(middleware.AuthMiddleware)
+	h.Use(middleware.LoggingMiddleware())
 
 	router.GeneratedRegister(h)
 
