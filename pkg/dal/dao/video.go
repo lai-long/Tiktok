@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func (m *MySQLdb) CreatVideo(ctx context.Context, entity entity.VideoEntity) error {
+func (m *MySQLdb) CreateVideo(ctx context.Context, entity entity.VideoEntity) error {
 	sql := `INSERT INTO videos (title,description,id,user_id,video_url,cover_url,visit_count) VALUES(?,?,?,?,?,?,?)`
 	_, err := m.db.ExecContext(ctx, sql, entity.Title, entity.Description, entity.ID, entity.UserID, entity.VideoURL,
 		entity.CoverURL, entity.VisitCount)

@@ -20,7 +20,7 @@ type VideoRedis interface {
 	VideoInfoGet(ctx context.Context, VideoID string) (*entity.VideoEntity, error)
 }
 type VideoDatabase interface {
-	CreatVideo(ctx context.Context, entity entity.VideoEntity) error
+	CreateVideo(ctx context.Context, entity entity.VideoEntity) error
 	GetVideoByUserID(ctx context.Context, userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error)
 	GetVideoByKeyWord(ctx context.Context, keyword string, pageNum int64, pageSize int64) ([]entity.VideoEntity, error)
 	GetVideoByVideoId(ctx context.Context, videoId string) (entity.VideoEntity, error)
@@ -73,7 +73,7 @@ func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description 
 	if err != nil {
 		return consts.VideoRedisSetError, errors.Wrap(err, "->VideoPublish redis hot set err")
 	}
-	err = s.videoDb.CreatVideo(ctx, videoEntity)
+	err = s.videoDb.CreateVideo(ctx, videoEntity)
 	if err != nil {
 		return consts.VideoDBInsertError, errors.Wrap(err, "->VideoPublish create video err")
 	}

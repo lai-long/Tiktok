@@ -16,21 +16,21 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebsocketSever struct {
+type WebsocketServer struct {
 	db        *dao.MySQLdb
 	re        *cache.Redis
 	websocket *service.WebsocketService
 }
 
-func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis, ws *service.WebsocketService) *WebsocketSever {
-	return &WebsocketSever{
+func NewWebsocketServer(db *dao.MySQLdb, re *cache.Redis, ws *service.WebsocketService) *WebsocketServer {
+	return &WebsocketServer{
 		db:        db,
 		re:        re,
 		websocket: ws,
 	}
 }
 
-func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
+func (m *WebsocketServer) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
 	userid := utils.GetUserID(c)
 	if userid == "" {
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
