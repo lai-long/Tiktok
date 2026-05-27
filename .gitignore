@@ -38,7 +38,7 @@ dumped_hertz_remote_config.json
 /.env
 /a
 /mcp_service
-/pkg/config/config.yaml
+/config/config.yaml
 /api
 /user
 /video
