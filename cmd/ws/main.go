@@ -55,7 +55,7 @@ func main() {
 	mysqlDb := dao.NewMySQLdb(ddb)
 
 	wsSvc := wsService.NewWebsocketService(mysqlDb, re)
-	wsHandler := ws.NewWebsocketSever(mysqlDb, re, wsSvc)
+	wsHandler := ws.NewWebsocketServer(mysqlDb, re, wsSvc)
 
 	h := server.Default(
 		server.WithHostPorts(":8881"),

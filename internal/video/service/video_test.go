@@ -43,7 +43,7 @@ type MockVideoDb struct {
 	mock.Mock
 }
 
-func (m *MockVideoDb) CreatVideo(ctx context.Context, entity entity.VideoEntity) error {
+func (m *MockVideoDb) CreateVideo(ctx context.Context, entity entity.VideoEntity) error {
 	args := m.Called(ctx, entity)
 	return args.Error(0)
 }
@@ -94,7 +94,7 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
-				md.On("CreatVideo", mock.Anything, mock.Anything).Return(nil)
+				md.On("CreateVideo", mock.Anything, mock.Anything).Return(nil)
 				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			wantCode: consts.Success,
@@ -123,7 +123,7 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
-				md.On("CreatVideo", mock.Anything, mock.Anything).Return(errors.New("db error"))
+				md.On("CreateVideo", mock.Anything, mock.Anything).Return(errors.New("db error"))
 				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			wantCode: consts.VideoDBInsertError,
