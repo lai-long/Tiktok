@@ -2,11 +2,12 @@ package service
 
 import (
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/logger"
 	"context"
-	"log"
 	"time"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type LikeRedis interface {
@@ -16,17 +17,17 @@ type LikeRedis interface {
 }
 
 type LikeCommentDatabase interface {
-	CommentLikeCountUp(commentId string) error
-	CommentLikeCountDown(commentId string) error
+	CommentLikeCountUp(ctx context.Context, commentId string) error
+	CommentLikeCountDown(ctx context.Context, commentId string) error
 }
 type LikeVideoDatabase interface {
-	VideoLikeCountUp(videoId string) error
-	VideoLikeCountDown(videoId string) error
-	LikeVideoIds(userId string, pageNum int64, pageSize int64) ([]string, error)
+	VideoLikeCountUp(ctx context.Context, videoId string) error
+	VideoLikeCountDown(ctx context.Context, videoId string) error
+	LikeVideoIds(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]string, error)
 }
 type LikeDatabase interface {
-	LikeCreate(userId string, targetId string, targetType string) error
-	LikeDelete(userId, targetId, targetType string) error
+	LikeCreate(ctx context.Context, userId string, targetId string, targetType string) error
+	LikeDelete(ctx context.Context, userId string, targetId string, targetType string) error
 }
 type LikeRepo struct {
 	videoDb   LikeVideoDatabase
@@ -45,63 +46,63 @@ func NewLikeRepo(videoDb LikeVideoDatabase, commentDb LikeCommentDatabase, likeD
 }
 
 func (s *LikeRepo) LikeVideo(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
-	err := s.likeDb.LikeCreate(userId, targetId, targetType)
+	err := s.likeDb.LikeCreate(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
 	}
-	err = s.videoDb.VideoLikeCountUp(targetId)
+	err = s.videoDb.VideoLikeCountUp(ctx, targetId)
 	if err != nil {
-		log.Println("LikeAction VideoLikeCount Up error:", err)
+		logger.Error("likeAction VideoLikeCountUp error", zap.Error(err))
 	}
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		err := s.likeRedis.VideoLikeSAdd(ctx, userId, targetId)
+		err := s.likeRedis.VideoLikeSAdd(asyncCtx, userId, targetId)
 		if err != nil {
-			log.Println("LikeAction VideoLikeSAdd error:", err)
+			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err))
 		}
 	}()
 	return consts.Success, nil
 }
 
 func (s *LikeRepo) DislikeVideo(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
-	err := s.likeDb.LikeDelete(userId, targetId, targetType)
+	err := s.likeDb.LikeDelete(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
 	}
-	err = s.videoDb.VideoLikeCountDown(targetId)
+	err = s.videoDb.VideoLikeCountDown(ctx, targetId)
 	if err != nil {
 		return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction VideoLikeCount down error")
 	}
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		err = s.likeRedis.VideoDislikeSRem(ctx, userId, targetId)
+		err = s.likeRedis.VideoDislikeSRem(asyncCtx, userId, targetId)
 		if err != nil {
-			log.Println("LikeAction VideoDislikeSRem error:", err)
+			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err))
 		}
 	}()
 	return consts.Success, nil
 }
 
-func (s *LikeRepo) LikeComment(userId string, targetId string, targetType string) (int32, error) {
-	err := s.likeDb.LikeCreate(userId, targetId, targetType)
+func (s *LikeRepo) LikeComment(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
+	err := s.likeDb.LikeCreate(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
 	}
-	err = s.commentDb.CommentLikeCountUp(targetId)
+	err = s.commentDb.CommentLikeCountUp(ctx, targetId)
 	if err != nil {
 		return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount up error")
 	}
 	return consts.Success, nil
 }
 
-func (s *LikeRepo) DislikeComment(userId string, targetId string, targetType string) (int32, error) {
-	err := s.likeDb.LikeDelete(userId, targetId, targetType)
+func (s *LikeRepo) DislikeComment(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
+	err := s.likeDb.LikeDelete(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
 	}
-	err = s.commentDb.CommentLikeCountDown(targetId)
+	err = s.commentDb.CommentLikeCountDown(ctx, targetId)
 	if err != nil {
 		return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction CommentLikeCount down error")
 	}
@@ -124,10 +125,10 @@ func (s *LikeRepo) LikeAction(ctx context.Context, userId string, targetId strin
 	case consts.TargetComment:
 		switch action {
 		case consts.ActionLike:
-			code, err := s.LikeComment(userId, targetId, targetType)
+			code, err := s.LikeComment(ctx, userId, targetId, targetType)
 			return code, err
 		case consts.ActionDislike:
-			code, err := s.DislikeComment(userId, targetId, targetType)
+			code, err := s.DislikeComment(ctx, userId, targetId, targetType)
 			return code, err
 		default:
 			return consts.ReactReqValueError, errors.New("->LikeAction action type error")
@@ -151,17 +152,17 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 		result := results[start:end]
 		return consts.Success, result, int64(len(result)), nil
 	}
-	videoIds, err := s.videoDb.LikeVideoIds(userId, pageNum, pageSize)
+	videoIds, err := s.videoDb.LikeVideoIds(ctx, userId, pageNum, pageSize)
 	if err != nil {
 		return consts.ReactDBSelectError, nil, 0, errors.Wrap(err, "->LikeList select LikeVideo error")
 	}
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		for _, id := range videoIds {
-			err = s.likeRedis.VideoLikeSAdd(ctx, userId, id)
+			err = s.likeRedis.VideoLikeSAdd(asyncCtx, userId, id)
 			if err != nil {
-				log.Println("LikeAction LikeSAdd error:", err)
+				logger.Error("likeAction LikeSAdd error", zap.Error(err))
 			}
 		}
 	}()

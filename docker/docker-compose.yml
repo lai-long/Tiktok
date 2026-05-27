@@ -1,0 +1,395 @@
+networks:
+  tiktok:
+    driver: bridge
+services:
+  etcd:
+    image: "quay.io/coreos/etcd:v3.5.5"
+    container_name: tiktok-etcd
+    restart: always
+    env_file:
+      - ../.env
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd-data:/etcd-data
+    command:
+      - etcd
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://0.0.0.0:2379
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  mysql:
+    image: "mysql:9.0"
+    container_name: tiktok-mysql
+    restart: always
+    env_file:
+      - ../.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    networks:
+      - tiktok
+
+  redis:
+    image: "redis:bookworm"
+    container_name: tiktok-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  user:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: user
+    container_name: tiktok-user
+    restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  video:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: video
+    container_name: tiktok-video
+    restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  react:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: react
+    container_name: tiktok-react
+    restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  social:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: social
+    container_name: tiktok-social
+    restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  mfa:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: mfa
+    container_name: tiktok-mfa
+    restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: api
+    container_name: tiktok-api
+    restart: always
+    ports:
+      - "8888:8888"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      user:
+        condition: service_started
+      video:
+        condition: service_started
+      react:
+        condition: service_started
+      social:
+        condition: service_started
+      mfa:
+        condition: service_started
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  ws:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SERVICE: ws
+    container_name: tiktok-ws
+    restart: always
+    ports:
+      - "8881:8881"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      CONFIG_PATH: "/app/config"
+      SENTINEL_PATH: "/app/config"
+      MYSQL_HOST: "mysql"
+      REDIS_HOST: "redis"
+      ETCD_ADDR: "etcd:2379"
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:8.10.0"
+    container_name: tiktok-elasticsearch
+    restart: always
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms256m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    networks:
+      - tiktok
+
+  kibana:
+    image: "docker.elastic.co/kibana/kibana:8.10.4"
+    container_name: tiktok-kibana
+    restart: always
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    ports:
+      - "5601:5601"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+  filebeat:
+    image: "docker.elastic.co/beats/filebeat:8.10.0"
+    container_name: tiktok-filebeat
+    restart: always
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    user: root
+    volumes:
+      - ../config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ../logs:/app/logs:ro
+    command: ["sh", "-c", "chown root:root /usr/share/filebeat/filebeat.yml && chmod go-w /usr/share/filebeat/filebeat.yml && exec /usr/local/bin/docker-entrypoint -environment container"]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - tiktok
+
+volumes:
+  etcd-data:
+  mysql-data:
+  redis-data:
+  elasticsearch-data:

@@ -6,18 +6,17 @@ import (
 	"Tiktok/biz/middleware"
 	router "Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/logger"
 	"os"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
 func main() {
-	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		logger.Error("load env error", zap.Error(err))
+	if err := config.LoadEnv(); err != nil {
+		logger.Fatal("加载.env错误", zap.Error(err))
 	}
 	cfgPath := os.Getenv("CONFIG_PATH")
 	logger.Info("loading configuration", zap.String("config_path", cfgPath))
@@ -42,8 +41,8 @@ func main() {
 		server.WithHostPorts(":8888"),
 		server.WithMaxRequestBodySize(10*1024*1024),
 	)
-	h.Use(middleware.LoggingMiddleware())
 	h.Use(middleware.AuthMiddleware)
+	h.Use(middleware.LoggingMiddleware())
 
 	router.GeneratedRegister(h)
 

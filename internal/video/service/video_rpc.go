@@ -20,12 +20,12 @@ type VideoRedis interface {
 	VideoInfoGet(ctx context.Context, VideoID string) (*entity.VideoEntity, error)
 }
 type VideoDatabase interface {
-	CreatVideo(entity entity.VideoEntity) error
-	GetVideoByUserID(userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error)
-	GetVideoByKeyWord(keyword string, pageNum int64, pageSize int64) ([]entity.VideoEntity, error)
-	GetVideoByVideoId(videoId string) (entity.VideoEntity, error)
-	GetVideoStream() ([]entity.VideoEntity, error)
-	GetVideoByIds(ids []string) ([]entity.VideoEntity, error)
+	CreateVideo(ctx context.Context, entity entity.VideoEntity) error
+	GetVideoByUserID(ctx context.Context, userId string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error)
+	GetVideoByKeyWord(ctx context.Context, keyword string, pageNum int64, pageSize int64) ([]entity.VideoEntity, error)
+	GetVideoByVideoId(ctx context.Context, videoId string) (entity.VideoEntity, error)
+	GetVideoStream(ctx context.Context) ([]entity.VideoEntity, error)
+	GetVideoByIds(ctx context.Context, ids []string) ([]entity.VideoEntity, error)
 }
 type VideoRepo struct {
 	videoDb    VideoDatabase
@@ -73,26 +73,26 @@ func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description 
 	if err != nil {
 		return consts.VideoRedisSetError, errors.Wrap(err, "->VideoPublish redis hot set err")
 	}
-	err = s.videoDb.CreatVideo(videoEntity)
+	err = s.videoDb.CreateVideo(ctx, videoEntity)
 	if err != nil {
 		return consts.VideoDBInsertError, errors.Wrap(err, "->VideoPublish create video err")
 	}
 	go func() {
-		_ = s.VideoRedis.VideoInfoSet(ctx, videoEntity.ID, &videoEntity)
+		_ = s.VideoRedis.VideoInfoSet(context.Background(), videoEntity.ID, &videoEntity)
 	}()
 	return consts.Success, nil
 }
 
-func (s *VideoRepo) VideoList(userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error) {
-	videoList, err := s.videoDb.GetVideoByUserID(userId, pageSize, pageNum)
+func (s *VideoRepo) VideoList(ctx context.Context, userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error) {
+	videoList, err := s.videoDb.GetVideoByUserID(ctx, userId, pageSize, pageNum)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoList GetVideo err")
 	}
 	return consts.Success, toVideoInfoList(videoList), nil
 }
 
-func (s *VideoRepo) VideoSearch(keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
-	videoEntity, err := s.videoDb.GetVideoByKeyWord(keyword, pageNum, pageSize)
+func (s *VideoRepo) VideoSearch(ctx context.Context, keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+	videoEntity, err := s.videoDb.GetVideoByKeyWord(ctx, keyword, pageNum, pageSize)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoSearch GetVideo Error")
 	}
@@ -110,7 +110,7 @@ func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize in
 		if err == nil {
 			videoEntity[i] = *videoEntityTemp
 		} else {
-			videoEntity[i], err = s.videoDb.GetVideoByVideoId(z[i].Member.(string))
+			videoEntity[i], err = s.videoDb.GetVideoByVideoId(ctx, z[i].Member.(string))
 			if err != nil {
 				return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video popular select video")
 			}
@@ -120,16 +120,16 @@ func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize in
 	return consts.Success, toVideoInfoList(videoEntity), nil
 }
 
-func (s *VideoRepo) VideoStream() (int32, []*video.VideoInfo, error) {
-	videoEntity, err := s.videoDb.GetVideoStream()
+func (s *VideoRepo) VideoStream(ctx context.Context) (int32, []*video.VideoInfo, error) {
+	videoEntity, err := s.videoDb.GetVideoStream(ctx)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video stream select video error")
 	}
 	return consts.Success, toVideoInfoList(videoEntity), nil
 }
 
-func (s *VideoRepo) BatchGetVideo(ids []string) (int32, []*video.VideoInfo, error) {
-	videos, err := s.videoDb.GetVideoByIds(ids)
+func (s *VideoRepo) BatchGetVideo(ctx context.Context, ids []string) (int32, []*video.VideoInfo, error) {
+	videos, err := s.videoDb.GetVideoByIds(ctx, ids)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->BatchGetVideo GetVideoByIds err")
 	}

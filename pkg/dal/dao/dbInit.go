@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/logger"
 	"fmt"
 	"go.uber.org/zap"

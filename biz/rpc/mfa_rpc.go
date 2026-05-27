@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/kitex_gen/mfa"
 	"Tiktok/kitex_gen/mfa/mfaservice"
 	"Tiktok/pkg/consts"
@@ -13,7 +14,7 @@ import (
 )
 
 func InitMfaRpc() {
-	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	r, err := etcd.NewEtcdResolver([]string{config.Cfg.EtcdAddr})
 	if err != nil {
 		logger.Error("etcd resolver error", zap.Error(err))
 	}

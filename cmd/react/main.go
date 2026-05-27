@@ -1,12 +1,12 @@
 package main
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/react"
 	"Tiktok/internal/react/service"
 	"Tiktok/kitex_gen/react/commentservice"
 	"Tiktok/kitex_gen/react/likeservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"
@@ -15,14 +15,13 @@ import (
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
-	"github.com/joho/godotenv"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
 )
 
 func main() {
-	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		logger.Error("load env error", zap.Error(err))
+	if err := config.LoadEnv(); err != nil {
+		logger.Fatal("加载.env错误", zap.Error(err))
 	}
 	cfgPath := os.Getenv("CONFIG_PATH")
 	logger.Info("loading configuration", zap.String("config_path", cfgPath))
@@ -41,7 +40,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("加载sentinel rules错误", zap.Error(err))
 	}
-	r, err := etcd.NewEtcdRegistry([]string{"127.0.0.1:2379"})
+	r, err := etcd.NewEtcdRegistry([]string{config.Cfg.EtcdAddr})
 	if err != nil {
 		logger.Fatal("etcd registry init error", zap.Error(err))
 	}

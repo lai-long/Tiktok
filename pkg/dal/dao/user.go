@@ -2,35 +2,31 @@ package dao
 
 import (
 	"Tiktok/pkg/entity"
-	"Tiktok/pkg/logger"
-	"go.uber.org/zap"
+	"context"
 )
 
-func (m *MySQLdb) CreateUser(user entity.UserEntity) error {
+func (m *MySQLdb) CreateUser(ctx context.Context, user entity.UserEntity) error {
 	sql := `INSERT INTO users (username,  password, id) VALUES (?, ? ,?)`
-	_, err := m.db.Exec(sql, user.Username, user.Password, user.ID)
+	_, err := m.db.ExecContext(ctx, sql, user.Username, user.Password, user.ID)
 	return err
 }
 
-func (m *MySQLdb) GetUserByUsername(username string) (entity.UserEntity, error) {
+func (m *MySQLdb) GetUserByUsername(ctx context.Context, username string) (entity.UserEntity, error) {
 	var user entity.UserEntity
 	sql := `SELECT * FROM users WHERE username = ?`
-	err := m.db.Get(&user, sql, username)
+	err := m.db.GetContext(ctx, &user, sql, username)
 	return user, err
 }
 
-func (m *MySQLdb) GetUserByUserId(userID string) (entity.UserEntity, error) {
+func (m *MySQLdb) GetUserByUserId(ctx context.Context, userID string) (entity.UserEntity, error) {
 	var user entity.UserEntity
 	sql := `SELECT * FROM users WHERE id = ?`
-	err := m.db.Get(&user, sql, userID)
-	if err != nil {
-		logger.Error("GetUserByUserId error", zap.Error(err))
-	}
+	err := m.db.GetContext(ctx, &user, sql, userID)
 	return user, err
 }
 
-func (m *MySQLdb) UpdateUserAvatar(url string, userID interface{}) error {
+func (m *MySQLdb) UpdateUserAvatar(ctx context.Context, url string, userID interface{}) error {
 	sql := `UPDATE users SET avatar_url=? WHERE id=?`
-	_, err := m.db.Exec(sql, url, userID)
+	_, err := m.db.ExecContext(ctx, sql, url, userID)
 	return err
 }

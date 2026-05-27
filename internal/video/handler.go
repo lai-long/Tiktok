@@ -22,7 +22,7 @@ func (s *VideoServiceImpl) VideoPublish(ctx context.Context, req *video.VideoPub
 }
 
 func (s *VideoServiceImpl) VideoList(ctx context.Context, req *video.VideoListReq) (resp *video.VideoListResp, err error) {
-	code, info, _ := s.videoService.VideoList(req.UserId, req.PageSize, req.PageNum)
+	code, info, _ := s.videoService.VideoList(ctx, req.UserId, req.PageSize, req.PageNum)
 	resp = &video.VideoListResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -34,7 +34,7 @@ func (s *VideoServiceImpl) VideoList(ctx context.Context, req *video.VideoListRe
 }
 
 func (s *VideoServiceImpl) VideoSearch(ctx context.Context, req *video.VideoSearchReq) (resp *video.VideoSearchResp, err error) {
-	code, infos, _ := s.videoService.VideoSearch(req.KeyWord, req.PageNum, req.PageSize)
+	code, infos, _ := s.videoService.VideoSearch(ctx, req.KeyWord, req.PageNum, req.PageSize)
 	resp = &video.VideoSearchResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -58,7 +58,7 @@ func (s *VideoServiceImpl) VideoPopular(ctx context.Context, req *video.VideoHot
 }
 
 func (s *VideoServiceImpl) VideoStream(ctx context.Context, req *video.VideoStreamReq) (resp *video.VideoStreamResp, err error) {
-	code, infos, _ := s.videoService.VideoStream()
+	code, infos, _ := s.videoService.VideoStream(ctx)
 	resp = &video.VideoStreamResp{
 		Code: code,
 		Data: &video.VideoData{
@@ -70,7 +70,7 @@ func (s *VideoServiceImpl) VideoStream(ctx context.Context, req *video.VideoStre
 }
 
 func (s *VideoServiceImpl) BatchGetVideo(ctx context.Context, req *video.BatchGetVideoReq) (resp *video.BatchGetVideoResp, err error) {
-	code, infos, _ := s.videoService.BatchGetVideo(req.Ids)
+	code, infos, _ := s.videoService.BatchGetVideo(ctx, req.Ids)
 	resp = &video.BatchGetVideoResp{
 		Code: code,
 		Data: &video.VideoData{

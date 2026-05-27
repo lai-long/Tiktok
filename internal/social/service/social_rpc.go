@@ -10,11 +10,11 @@ import (
 )
 
 type SocialDatabase interface {
-	CreateFollowing(userId string, toUserId string) error
-	DeleteFollowing(userId string, toUserId string) error
-	FollowingList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
-	FollowerList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
-	FriendList(userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, bool)
+	CreateFollowing(ctx context.Context, userId string, toUserId string) error
+	DeleteFollowing(ctx context.Context, userId string, toUserId string) error
+	FollowingList(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
+	FollowerList(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, error)
+	FriendList(ctx context.Context, userId string, pageNum int64, pageSize int64) ([]entity.UserEntity, bool)
 }
 type SocialRepo struct {
 	socialDb SocialDatabase
@@ -25,14 +25,14 @@ func NewSocialRepo(socialDb SocialDatabase) *SocialRepo {
 }
 func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, actionType string, userId string) (int32, error) {
 	if actionType == consts.ActionFollow {
-		err := s.socialDb.CreateFollowing(userId, toUserId)
+		err := s.socialDb.CreateFollowing(ctx, userId, toUserId)
 		if err != nil {
 			return consts.SocialDBInsertError, errors.Wrap(err, "->RelationAction CreateFollowing err")
 		}
 		return consts.Success, nil
 	}
 	if actionType == consts.ActionUnfollow {
-		err := s.socialDb.DeleteFollowing(userId, toUserId)
+		err := s.socialDb.DeleteFollowing(ctx, userId, toUserId)
 		if err != nil {
 			return consts.SocialDBDeleteError, errors.Wrap(err, "->RelationACtion DeleteFollowing err")
 		}
@@ -41,24 +41,24 @@ func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, action
 	return consts.SocialReqValueError, nil
 }
 
-func (s *SocialRepo) FollowingList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	entities, err := s.socialDb.FollowingList(userId, pageNum, pageSize)
+func (s *SocialRepo) FollowingList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
+	entities, err := s.socialDb.FollowingList(ctx, userId, pageNum, pageSize)
 	if err != nil {
 		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowingList Get Following List err")
 	}
 	return consts.Success, toUserInfoList(entities), nil
 }
 
-func (s *SocialRepo) FollowerList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	entities, err := s.socialDb.FollowerList(userId, pageNum, pageSize)
+func (s *SocialRepo) FollowerList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
+	entities, err := s.socialDb.FollowerList(ctx, userId, pageNum, pageSize)
 	if err != nil {
 		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowerList Get List err")
 	}
 	return consts.Success, toUserInfoList(entities), nil
 }
 
-func (s *SocialRepo) FriendList(userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
-	entityFriend, ok := s.socialDb.FriendList(userId, pageNum, pageSize)
+func (s *SocialRepo) FriendList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
+	entityFriend, ok := s.socialDb.FriendList(ctx, userId, pageNum, pageSize)
 	if !ok {
 		return consts.SocialDBSelectError, nil, errors.New("->FriendList Get List err")
 	}

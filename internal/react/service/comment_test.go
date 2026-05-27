@@ -3,6 +3,7 @@ package service
 import (
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
+	"context"
 	"errors"
 	"testing"
 
@@ -14,36 +15,36 @@ type MockCommentRepo struct {
 	mock.Mock
 }
 
-func (m *MockCommentRepo) GetComments(videoId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
-	args := m.Called(videoId, pageNum, pageSize)
+func (m *MockCommentRepo) GetComments(ctx context.Context, videoId string, pageNum int64, pageSize int64) ([]entity.CommentEntity, error) {
+	args := m.Called(ctx, videoId, pageNum, pageSize)
 	return args.Get(0).([]entity.CommentEntity), args.Error(1)
 }
-func (m *MockCommentRepo) CommentDelete(commentId string) error {
-	args := m.Called(commentId)
+func (m *MockCommentRepo) CommentDelete(ctx context.Context, commentId string) error {
+	args := m.Called(ctx, commentId)
 	return args.Error(0)
 }
-func (m *MockCommentRepo) GetCommentById(commentId string) (entity.CommentEntity, error) {
-	args := m.Called(commentId)
+func (m *MockCommentRepo) GetCommentById(ctx context.Context, commentId string) (entity.CommentEntity, error) {
+	args := m.Called(ctx, commentId)
 	return args.Get(0).(entity.CommentEntity), args.Error(1)
 }
-func (m *MockCommentRepo) VideoCommentCountUp(videoId string) error {
-	args := m.Called(videoId)
+func (m *MockCommentRepo) VideoCommentCountUp(ctx context.Context, videoId string) error {
+	args := m.Called(ctx, videoId)
 	return args.Error(0)
 }
-func (m *MockCommentRepo) CommentCommentCountUp(commentId string) error {
-	args := m.Called(commentId)
+func (m *MockCommentRepo) CommentCommentCountUp(ctx context.Context, commentId string) error {
+	args := m.Called(ctx, commentId)
 	return args.Error(0)
 }
-func (m *MockCommentRepo) VideoCommentCountDown(videoId string) error {
-	args := m.Called(videoId)
+func (m *MockCommentRepo) VideoCommentCountDown(ctx context.Context, videoId string) error {
+	args := m.Called(ctx, videoId)
 	return args.Error(0)
 }
-func (m *MockCommentRepo) CommentCommentCountDown(commentId string) error {
-	args := m.Called(commentId)
+func (m *MockCommentRepo) CommentCommentCountDown(ctx context.Context, commentId string) error {
+	args := m.Called(ctx, commentId)
 	return args.Error(0)
 }
-func (m *MockCommentRepo) CreateComment(commentId string, targetId string, userId string, content string, targetType string) error {
-	args := m.Called(commentId, targetId, userId, content, targetType)
+func (m *MockCommentRepo) CreateComment(ctx context.Context, commentId, targetId, userId, content, targetType string) error {
+	args := m.Called(ctx, commentId, targetId, userId, content, targetType)
 	return args.Error(0)
 }
 
@@ -64,7 +65,7 @@ func TestCommentList(t *testing.T) {
 			pageNum:  2,
 			pageSize: 10,
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("GetComments", "123", int64(2), int64(10)).Return([]entity.CommentEntity{{}}, nil)
+				m.On("GetComments", mock.Anything, "123", int64(2), int64(10)).Return([]entity.CommentEntity{{}}, nil)
 			},
 			wantCode: consts.Success,
 			wantLen:  1,
@@ -76,7 +77,7 @@ func TestCommentList(t *testing.T) {
 			pageNum:  2,
 			pageSize: 10,
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("GetComments", "123", int64(2), int64(10)).Return([]entity.CommentEntity{}, errors.New("fail"))
+				m.On("GetComments", mock.Anything, "123", int64(2), int64(10)).Return([]entity.CommentEntity{}, errors.New("fail"))
 			},
 			wantCode: consts.ReactDBSelectError,
 			wantLen:  0,
@@ -88,7 +89,7 @@ func TestCommentList(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
 			svc := NewCommentService(mockComment)
-			code, comments, err := svc.CommentList(tt.targetId, tt.pageSize, tt.pageNum)
+			code, comments, err := svc.CommentList(context.Background(), tt.targetId, tt.pageSize, tt.pageNum)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantLen, len(comments))
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -115,8 +116,8 @@ func TestCommentPublish(t *testing.T) {
 			content:    "testing",
 			targetType: "1",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("CreateComment", mock.Anything, "123", "1212", "testing", "1").Return(nil)
-				m.On("VideoCommentCountUp", "123").Return(nil)
+				m.On("CreateComment", mock.Anything, mock.Anything, "123", "1212", "testing", "1").Return(nil)
+				m.On("VideoCommentCountUp", mock.Anything, "123").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -128,7 +129,7 @@ func TestCommentPublish(t *testing.T) {
 			content:    "testing",
 			targetType: "1",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("CreateComment", mock.Anything, "123", "1212", "testing", "1").Return(errors.New("fail"))
+				m.On("CreateComment", mock.Anything, mock.Anything, "123", "1212", "testing", "1").Return(errors.New("fail"))
 			},
 			wantCode: consts.ReactDBInsertError,
 			wantErr:  true,
@@ -140,8 +141,8 @@ func TestCommentPublish(t *testing.T) {
 			content:    "testing",
 			targetType: "1",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("CreateComment", mock.Anything, "123", "1212", "testing", "1").Return(nil)
-				m.On("VideoCommentCountUp", "123").Return(errors.New("fail"))
+				m.On("CreateComment", mock.Anything, mock.Anything, "123", "1212", "testing", "1").Return(nil)
+				m.On("VideoCommentCountUp", mock.Anything, "123").Return(errors.New("fail"))
 			},
 			wantCode: consts.ReactDBUpdateError,
 			wantErr:  true,
@@ -153,8 +154,8 @@ func TestCommentPublish(t *testing.T) {
 			content:    "testing",
 			targetType: "2",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("CreateComment", mock.Anything, "123", "1212", "testing", "2").Return(nil)
-				m.On("CommentCommentCountUp", "123").Return(nil)
+				m.On("CreateComment", mock.Anything, mock.Anything, "123", "1212", "testing", "2").Return(nil)
+				m.On("CommentCommentCountUp", mock.Anything, "123").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -166,8 +167,8 @@ func TestCommentPublish(t *testing.T) {
 			content:    "testing",
 			targetType: "2",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("CreateComment", mock.Anything, "123", "1212", "testing", "2").Return(nil)
-				m.On("CommentCommentCountUp", "123").Return(errors.New("fail"))
+				m.On("CreateComment", mock.Anything, mock.Anything, "123", "1212", "testing", "2").Return(nil)
+				m.On("CommentCommentCountUp", mock.Anything, "123").Return(errors.New("fail"))
 			},
 			wantCode: consts.ReactDBUpdateError,
 			wantErr:  true,
@@ -178,7 +179,7 @@ func TestCommentPublish(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
 			svc := NewCommentService(mockComment)
-			code, err := svc.CommentPublish(tt.targetId, tt.userId, tt.content, tt.targetType)
+			code, err := svc.CommentPublish(context.Background(), tt.targetId, tt.userId, tt.content, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockComment.AssertExpectations(t)
@@ -204,9 +205,9 @@ func TestCommentDelete(t *testing.T) {
 			userId:     "1212",
 			targetType: "1",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("GetCommentById", "123").Return(entity.CommentEntity{UserID: "1212"}, nil)
-				m.On("CommentDelete", "123").Return(nil)
-				m.On("VideoCommentCountDown", "1234").Return(nil)
+				m.On("GetCommentById", mock.Anything, "123").Return(entity.CommentEntity{UserID: "1212"}, nil)
+				m.On("CommentDelete", mock.Anything, "123").Return(nil)
+				m.On("VideoCommentCountDown", mock.Anything, "1234").Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -218,8 +219,8 @@ func TestCommentDelete(t *testing.T) {
 			userId:     "1212",
 			targetType: "1",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("GetCommentById", "123").Return(entity.CommentEntity{UserID: "1212"}, nil)
-				m.On("CommentDelete", "123").Return(errors.New("fail"))
+				m.On("GetCommentById", mock.Anything, "123").Return(entity.CommentEntity{UserID: "1212"}, nil)
+				m.On("CommentDelete", mock.Anything, "123").Return(errors.New("fail"))
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBDeleteError,
@@ -231,9 +232,9 @@ func TestCommentDelete(t *testing.T) {
 			userId:     "1212",
 			targetType: "1",
 			mockSetup: func(m *MockCommentRepo) {
-				m.On("GetCommentById", "123").Return(entity.CommentEntity{UserID: "1212"}, nil)
-				m.On("CommentDelete", "123").Return(nil)
-				m.On("VideoCommentCountDown", "1234").Return(errors.New("fail"))
+				m.On("GetCommentById", mock.Anything, "123").Return(entity.CommentEntity{UserID: "1212"}, nil)
+				m.On("CommentDelete", mock.Anything, "123").Return(nil)
+				m.On("VideoCommentCountDown", mock.Anything, "1234").Return(errors.New("fail"))
 			},
 			wantErr:  true,
 			wantCode: consts.ReactDBUpdateError,
@@ -244,7 +245,7 @@ func TestCommentDelete(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
 			svc := NewCommentService(mockComment)
-			code, err := svc.CommentDelete(tt.commentId, tt.targetId, tt.userId, tt.targetType)
+			code, err := svc.CommentDelete(context.Background(), tt.commentId, tt.targetId, tt.userId, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockComment.AssertExpectations(t)

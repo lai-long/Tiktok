@@ -2,16 +2,17 @@ package service
 
 import (
 	"Tiktok/pkg/consts"
+	"context"
 
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 )
 
 type MfaDatabase interface {
-	SaveMfaSecret(mfa string, userId string) error
-	GetMfaSecret(userId string) (string, error)
-	MfaBindUpdate(userId string) error
-	CheckMfaBind(userId string) (int, error)
+	SaveMfaSecret(ctx context.Context, mfa string, userId string) error
+	GetMfaSecret(ctx context.Context, userId string) (string, error)
+	MfaBindUpdate(ctx context.Context, userId string) error
+	CheckMfaBind(ctx context.Context, userId string) (int, error)
 }
 
 type MfaRepo struct {
@@ -22,7 +23,7 @@ func NewMfaRepo(mfaDb MfaDatabase) *MfaRepo {
 	return &MfaRepo{mfaDb: mfaDb}
 }
 
-func (s *MfaRepo) GenerateMfa(username string, userId string) (string, string, int32, error) {
+func (s *MfaRepo) GenerateMfa(ctx context.Context, username string, userId string) (string, string, int32, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
@@ -31,15 +32,15 @@ func (s *MfaRepo) GenerateMfa(username string, userId string) (string, string, i
 		return "", "", consts.MfaGenerateError, errors.Wrap(err, "->generate mfa totp.GenerateMfa error")
 	}
 	secret := key.Secret()
-	err = s.mfaDb.SaveMfaSecret(secret, userId)
+	err = s.mfaDb.SaveMfaSecret(ctx, secret, userId)
 	if err != nil {
 		return "", "", consts.UserDBUpdateError, errors.Wrap(err, "->generate mfa save MFA error")
 	}
 	return key.URL(), secret, consts.Success, nil
 }
 
-func (s *MfaRepo) MfaBindByCode(code string, userId string) (int32, error) {
-	secret, err := s.mfaDb.GetMfaSecret(userId)
+func (s *MfaRepo) MfaBindByCode(ctx context.Context, code string, userId string) (int32, error) {
+	secret, err := s.mfaDb.GetMfaSecret(ctx, userId)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
 	}
@@ -47,30 +48,30 @@ func (s *MfaRepo) MfaBindByCode(code string, userId string) (int32, error) {
 	if !valid {
 		return consts.MfaCodeFalse, nil
 	}
-	err = s.mfaDb.MfaBindUpdate(userId)
+	err = s.mfaDb.MfaBindUpdate(ctx, userId)
 	if err != nil {
 		return consts.UserDBUpdateError, errors.Wrap(err, "->mfa bind by code update MFA error")
 	}
 	return consts.Success, nil
 }
 
-func (s *MfaRepo) MfaBindBySecret(secret string, userId string) (int32, error) {
-	dbSecret, err := s.mfaDb.GetMfaSecret(userId)
+func (s *MfaRepo) MfaBindBySecret(ctx context.Context, secret string, userId string) (int32, error) {
+	dbSecret, err := s.mfaDb.GetMfaSecret(ctx, userId)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")
 	}
 	if dbSecret != secret {
 		return consts.MfaCodeFalse, nil
 	}
-	err = s.mfaDb.MfaBindUpdate(userId)
+	err = s.mfaDb.MfaBindUpdate(ctx, userId)
 	if err != nil {
 		return consts.UserDBUpdateError, errors.Wrap(err, "->mfa bind by secret update MFA error")
 	}
 	return consts.Success, nil
 }
 
-func (s *MfaRepo) MfaConfirm(mfaCode string, userID string) (int32, error) {
-	isBind, err := s.mfaDb.CheckMfaBind(userID)
+func (s *MfaRepo) MfaConfirm(ctx context.Context, mfaCode string, userID string) (int32, error) {
+	isBind, err := s.mfaDb.CheckMfaBind(ctx, userID)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->check mfa bind error")
 	}
@@ -78,7 +79,7 @@ func (s *MfaRepo) MfaConfirm(mfaCode string, userID string) (int32, error) {
 		if mfaCode == "" {
 			return consts.MfaReqValidError, nil
 		}
-		mfaSecret, err := s.mfaDb.GetMfaSecret(userID)
+		mfaSecret, err := s.mfaDb.GetMfaSecret(ctx, userID)
 		if err != nil {
 			return consts.MfaDBSelectError, errors.Wrap(err, "->mfa confirm mfa secret error")
 		}

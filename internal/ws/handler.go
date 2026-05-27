@@ -6,31 +6,32 @@ import (
 	"Tiktok/internal/ws/service"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/adaptor"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
-type WebsocketSever struct {
+type WebsocketServer struct {
 	db        *dao.MySQLdb
 	re        *cache.Redis
 	websocket *service.WebsocketService
 }
 
-func NewWebsocketSever(db *dao.MySQLdb, re *cache.Redis, ws *service.WebsocketService) *WebsocketSever {
-	return &WebsocketSever{
+func NewWebsocketServer(db *dao.MySQLdb, re *cache.Redis, ws *service.WebsocketService) *WebsocketServer {
+	return &WebsocketServer{
 		db:        db,
 		re:        re,
 		websocket: ws,
 	}
 }
 
-func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
+func (m *WebsocketServer) WebSocketHandler(ctx context.Context, c *app.RequestContext) {
 	userid := utils.GetUserID(c)
 	if userid == "" {
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
@@ -39,11 +40,11 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 		}})
 		return
 	}
-	log.Println("User connected:", userid)
+	logger.Info("user connected", logger.WithUserID(userid))
 	req := new(chat.WebsocketReq)
 	err := c.BindAndValidate(req)
 	if err != nil {
-		log.Println("BindAndValidate error:", err)
+		logger.Error("bindAndValidate error", zap.Error(err))
 		c.JSON(200, chat.WebsocketResp{Base: &common.Base{
 			Code: 0,
 			Msg:  "Invalid request parameters",
@@ -57,7 +58,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			},
 		}).Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("WebSocket upgrade error:", err)
+			logger.Error("websocket upgrade error", zap.Error(err))
 			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
 			return
 		}
@@ -68,7 +69,7 @@ func (m *WebsocketSever) WebSocketHandler(ctx context.Context, c *app.RequestCon
 			Socket:  conn,
 			Send:    make(chan []byte, 128),
 		}
-		log.Println("WebSocket client:", client)
+		logger.Info("websocket client registered", zap.String("client_id", client.ID))
 		m.websocket.Manager.Register <- client
 		go m.websocket.Read(client)
 		go m.websocket.Write(client)

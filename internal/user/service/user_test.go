@@ -1,7 +1,7 @@
 package service
 
 import (
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
 	"Tiktok/pkg/utils"
@@ -30,28 +30,28 @@ func (m *MockUser) UserTokenDelete(ctx context.Context, refreshToken string) err
 	args := m.Called(ctx, refreshToken)
 	return args.Error(0)
 }
-func (m *MockUser) CreateUser(user entity.UserEntity) error {
-	args := m.Called(user)
+func (m *MockUser) CreateUser(ctx context.Context, user entity.UserEntity) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
-func (m *MockUser) GetUserByUsername(username string) (entity.UserEntity, error) {
-	args := m.Called(username)
+func (m *MockUser) GetUserByUsername(ctx context.Context, username string) (entity.UserEntity, error) {
+	args := m.Called(ctx, username)
 	return args.Get(0).(entity.UserEntity), args.Error(1)
 }
-func (m *MockUser) GetUserByUserId(userId string) (entity.UserEntity, error) {
-	args := m.Called(userId)
+func (m *MockUser) GetUserByUserId(ctx context.Context, userId string) (entity.UserEntity, error) {
+	args := m.Called(ctx, userId)
 	return args.Get(0).(entity.UserEntity), args.Error(1)
 }
-func (m *MockUser) UpdateUserAvatar(url string, userId interface{}) error {
-	args := m.Called(url, userId)
+func (m *MockUser) UpdateUserAvatar(ctx context.Context, url string, userId interface{}) error {
+	args := m.Called(ctx, url, userId)
 	return args.Error(0)
 }
-func (m *MockUser) CheckMfaBind(userId string) (int, error) {
-	args := m.Called(userId)
+func (m *MockUser) CheckMfaBind(ctx context.Context, userId string) (int, error) {
+	args := m.Called(ctx, userId)
 	return args.Int(0), args.Error(1)
 }
-func (m *MockUser) GetMfaSecret(userId string) (string, error) {
-	args := m.Called(userId)
+func (m *MockUser) GetMfaSecret(ctx context.Context, userId string) (string, error) {
+	args := m.Called(ctx, userId)
 	return args.String(0), args.Error(1)
 }
 func (m *MockUser) GetCachedUserInfo(ctx context.Context, userId string) (*entity.UserEntity, error) {
@@ -84,8 +84,8 @@ func TestRegister(t *testing.T) {
 			userName: "username",
 			password: "password",
 			setMock: func(m *MockUser) {
-				m.On("GetUserByUsername", "username").Return(entity.UserEntity{}, sql.ErrNoRows)
-				m.On("CreateUser", mock.Anything).Return(nil)
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{}, sql.ErrNoRows)
+				m.On("CreateUser", mock.Anything, mock.Anything).Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -95,7 +95,7 @@ func TestRegister(t *testing.T) {
 			userName: "username",
 			password: "password",
 			setMock: func(m *MockUser) {
-				m.On("GetUserByUsername", "username").Return(entity.UserEntity{Username: "username"}, nil)
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{Username: "username"}, nil)
 			},
 			wantErr:  false,
 			wantCode: consts.UserNameExists,
@@ -105,7 +105,7 @@ func TestRegister(t *testing.T) {
 			userName: "username",
 			password: "password",
 			setMock: func(m *MockUser) {
-				m.On("GetUserByUsername", "username").Return(entity.UserEntity{}, errors.New("some error"))
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{}, errors.New("some error"))
 			},
 			wantErr:  true,
 			wantCode: consts.UserDBSelectError,
@@ -116,7 +116,7 @@ func TestRegister(t *testing.T) {
 			mockUser := new(MockUser)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockUser)
-			code, err := user.Register(tt.userName, tt.password)
+			code, err := user.Register(context.Background(), tt.userName, tt.password)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantCode, code)
 		})
@@ -124,7 +124,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	_, err := config.Load([]string{"../../../pkg/config"})
+	_, err := config.Load([]string{"../../../config"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,8 +145,8 @@ func TestLogin(t *testing.T) {
 			password: "password",
 			ctx:      context.Background(),
 			setMock: func(m *MockUser) {
-				m.On("GetUserByUsername", "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
-				m.On("CheckMfaBind", "ID").Return(0, nil)
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+				m.On("CheckMfaBind", mock.Anything, "ID").Return(0, nil)
 				m.On("UserTokenSet", mock.Anything, mock.Anything, "ID").Return(nil)
 			},
 			wantErr:  false,
@@ -158,7 +158,7 @@ func TestLogin(t *testing.T) {
 			mockUser := new(MockUser)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockUser)
-			code, _, _, _, err := user.Login(tt.userName, tt.password, tt.mfaCode, tt.ctx)
+			code, _, _, _, err := user.Login(tt.ctx, tt.userName, tt.password, tt.mfaCode)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantCode, code)
 			mockUser.AssertExpectations(t)
@@ -191,7 +191,7 @@ func TestUserInfo(t *testing.T) {
 			userId: "userID",
 			setMock: func(m *MockUser) {
 				m.On("GetCachedUserInfo", mock.Anything, "userID").Return(nil, errors.New("cache miss"))
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "dbUser"}, nil)
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "dbUser"}, nil)
 				m.On("SetCachedUserInfo", mock.Anything, "userID", mock.Anything).Return(nil)
 			},
 			wantCode: consts.Success,
@@ -203,7 +203,7 @@ func TestUserInfo(t *testing.T) {
 			userId: "userID",
 			setMock: func(m *MockUser) {
 				m.On("GetCachedUserInfo", mock.Anything, "userID").Return(nil, errors.New("cache miss"))
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{}, errors.New("db error"))
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.UserDBSelectError,
 			wantErr:  true,
@@ -214,7 +214,7 @@ func TestUserInfo(t *testing.T) {
 			userId: "userID",
 			setMock: func(m *MockUser) {
 				m.On("GetCachedUserInfo", mock.Anything, "userID").Return(nil, errors.New("cache miss"))
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "dbUser"}, nil)
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "dbUser"}, nil)
 				m.On("SetCachedUserInfo", mock.Anything, "userID", mock.Anything).Return(errors.New("cache set error"))
 			},
 			wantCode: consts.UserDBSelectError,
@@ -248,9 +248,10 @@ func TestUserAvatar(t *testing.T) {
 			url:    "http://example.com/avatar.jpg",
 			userID: "userID",
 			setMock: func(m *MockUser) {
-				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(nil)
+				m.On("UpdateUserAvatar", mock.Anything, "http://example.com/avatar.jpg", "userID").Return(nil)
 				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "user", Avatar_url: "http://example.com/avatar.jpg"}, nil)
+				userEntity := entity.UserEntity{ID: "userID", Username: "user", Avatar_url: "http://example.com/avatar.jpg"}
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(userEntity, nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -260,7 +261,7 @@ func TestUserAvatar(t *testing.T) {
 			url:    "http://example.com/avatar.jpg",
 			userID: "userID",
 			setMock: func(m *MockUser) {
-				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(errors.New("update error"))
+				m.On("UpdateUserAvatar", mock.Anything, "http://example.com/avatar.jpg", "userID").Return(errors.New("update error"))
 			},
 			wantCode: consts.UserDBUpdateError,
 			wantErr:  true,
@@ -270,9 +271,9 @@ func TestUserAvatar(t *testing.T) {
 			url:    "http://example.com/avatar.jpg",
 			userID: "userID",
 			setMock: func(m *MockUser) {
-				m.On("UpdateUserAvatar", "http://example.com/avatar.jpg", "userID").Return(nil)
+				m.On("UpdateUserAvatar", mock.Anything, "http://example.com/avatar.jpg", "userID").Return(nil)
 				m.On("DelCachedUserInfo", mock.Anything, "userID").Return(nil)
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{}, errors.New("get error"))
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{}, errors.New("get error"))
 			},
 			wantCode: consts.UserDBSelectError,
 			wantErr:  true,
@@ -283,7 +284,7 @@ func TestUserAvatar(t *testing.T) {
 			mockUser := new(MockUser)
 			tt.setMock(mockUser)
 			user := NewUserRepo(mockUser, mockUser)
-			code, _, err := user.UserAvatar(tt.url, tt.userID)
+			code, _, err := user.UserAvatar(context.Background(), tt.url, tt.userID)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
 			mockUser.AssertExpectations(t)
@@ -292,7 +293,7 @@ func TestUserAvatar(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	_, err := config.Load([]string{"../../../pkg/config"})
+	_, err := config.Load([]string{"../../../config"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -310,7 +311,7 @@ func TestRefreshToken(t *testing.T) {
 			refreshToken: "valid_refresh_token",
 			setMock: func(m *MockUser) {
 				m.On("UserGetByRefreshToken", mock.Anything, "valid_refresh_token").Return("userID", nil)
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
 				m.On("UserTokenDelete", mock.Anything, "valid_refresh_token").Return(nil)
 				m.On("UserTokenSet", mock.Anything, mock.Anything, "userID").Return(nil)
 			},
@@ -333,7 +334,7 @@ func TestRefreshToken(t *testing.T) {
 			refreshToken: "valid_token",
 			setMock: func(m *MockUser) {
 				m.On("UserGetByRefreshToken", mock.Anything, "valid_token").Return("userID", nil)
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{}, errors.New("db error"))
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{}, errors.New("db error"))
 			},
 			wantCode: consts.UserDBSelectError,
 			wantErr:  true,
@@ -344,7 +345,7 @@ func TestRefreshToken(t *testing.T) {
 			refreshToken: "valid_token",
 			setMock: func(m *MockUser) {
 				m.On("UserGetByRefreshToken", mock.Anything, "valid_token").Return("userID", nil)
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
 				m.On("UserTokenDelete", mock.Anything, "valid_token").Return(errors.New("delete error"))
 			},
 			wantCode: consts.UserRedisDelError,
@@ -356,7 +357,7 @@ func TestRefreshToken(t *testing.T) {
 			refreshToken: "valid_token",
 			setMock: func(m *MockUser) {
 				m.On("UserGetByRefreshToken", mock.Anything, "valid_token").Return("userID", nil)
-				m.On("GetUserByUserId", "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
+				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
 				m.On("UserTokenDelete", mock.Anything, "valid_token").Return(nil)
 				m.On("UserTokenSet", mock.Anything, mock.Anything, "userID").Return(errors.New("set error"))
 			},

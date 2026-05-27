@@ -2,22 +2,21 @@ package main
 
 import (
 	"Tiktok/biz/middleware"
+	"Tiktok/internal/config"
 	ws "Tiktok/internal/ws"
 	wsService "Tiktok/internal/ws/service"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"
 	"os"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
 func main() {
-	if err := godotenv.Load("/home/lai-long/Tiktok/.env"); err != nil {
-		logger.Error("load env error", zap.Error(err))
+	if err := config.LoadEnv(); err != nil {
+		logger.Fatal("加载.env错误", zap.Error(err))
 	}
 	cfgPath := os.Getenv("CONFIG_PATH")
 	logger.Info("loading configuration", zap.String("config_path", cfgPath))
@@ -56,7 +55,7 @@ func main() {
 	mysqlDb := dao.NewMySQLdb(ddb)
 
 	wsSvc := wsService.NewWebsocketService(mysqlDb, re)
-	wsHandler := ws.NewWebsocketSever(mysqlDb, re, wsSvc)
+	wsHandler := ws.NewWebsocketServer(mysqlDb, re, wsSvc)
 
 	h := server.Default(
 		server.WithHostPorts(":8881"),
