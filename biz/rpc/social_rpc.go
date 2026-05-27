@@ -2,9 +2,9 @@ package rpc
 
 import (
 	user "Tiktok/biz/model/user"
+	"Tiktok/internal/config"
 	"Tiktok/kitex_gen/social"
 	"Tiktok/kitex_gen/social/socialservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"context"

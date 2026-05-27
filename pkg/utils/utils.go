@@ -2,8 +2,8 @@
 package utils
 
 import (
+	"Tiktok/internal/config"
 	user "Tiktok/kitex_gen/user"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"io"
 	"log"

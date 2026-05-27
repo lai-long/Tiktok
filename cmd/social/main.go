@@ -1,11 +1,11 @@
 package main
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/social"
 	"Tiktok/internal/social/service"
 	socialservice "Tiktok/kitex_gen/social/socialservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"
 	"net"

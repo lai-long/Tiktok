@@ -1,11 +1,11 @@
 package main
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/internal/middleware"
 	handler "Tiktok/internal/user"
 	"Tiktok/internal/user/service"
 	userservice "Tiktok/kitex_gen/user/userservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/dal/cache"
 	"Tiktok/pkg/dal/dao"
 	"Tiktok/pkg/logger"

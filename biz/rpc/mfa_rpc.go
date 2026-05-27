@@ -1,9 +1,9 @@
 package rpc
 
 import (
+	"Tiktok/internal/config"
 	"Tiktok/kitex_gen/mfa"
 	"Tiktok/kitex_gen/mfa/mfaservice"
-	"Tiktok/pkg/config"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
 	"context"

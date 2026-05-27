@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 
 	"github.com/qiniu/go-sdk/v7/storagev2/credentials"
 	"github.com/qiniu/go-sdk/v7/storagev2/downloader"

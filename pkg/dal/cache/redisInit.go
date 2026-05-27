@@ -3,7 +3,7 @@
 package cache
 
 import (
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/logger"
 	"context"
 	"fmt"

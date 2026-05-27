@@ -6,7 +6,7 @@ import (
 	"Tiktok/biz/middleware"
 	router "Tiktok/biz/router"
 	Rpc "Tiktok/biz/rpc"
-	"Tiktok/pkg/config"
+	"Tiktok/internal/config"
 	"Tiktok/pkg/logger"
 	"os"
 
