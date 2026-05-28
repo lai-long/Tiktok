@@ -32,8 +32,8 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 	userId := utils.GetUserID(c)
 	if req.TargetType == "" {
 		c.JSON(200, react.LikeActionResp{Base: &common.Base{
-			Code: 0,
-			Msg:  "likeActionReq.TargetType err is null",
+			Code: consts.ReactReqValueError,
+			Msg:  consts.GetErrorCodeMsg(consts.ReactReqValueError),
 		}})
 		return
 	}
