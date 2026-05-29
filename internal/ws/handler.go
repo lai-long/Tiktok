@@ -68,6 +68,7 @@ func (m *WebsocketServer) WebSocketHandler(ctx context.Context, c *app.RequestCo
 			GroupId: req.GroupId,
 			Socket:  conn,
 			Send:    make(chan []byte, 128),
+			Ctx:     ctx,
 		}
 		logger.Info("websocket client registered", zap.String("client_id", client.ID))
 		m.websocket.Manager.Register <- client

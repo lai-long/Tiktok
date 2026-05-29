@@ -8,6 +8,7 @@ import (
 	"Tiktok/pkg/utils"
 	"context"
 	"math/rand"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
@@ -78,7 +79,9 @@ func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description 
 		return consts.VideoDBInsertError, errors.Wrap(err, "->VideoPublish create video err")
 	}
 	go func() {
-		_ = s.VideoRedis.VideoInfoSet(context.Background(), videoEntity.ID, &videoEntity)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		_ = s.VideoRedis.VideoInfoSet(ctx, videoEntity.ID, &videoEntity)
 	}()
 	return consts.Success, nil
 }

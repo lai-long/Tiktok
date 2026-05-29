@@ -55,9 +55,9 @@ func (s *LikeRepo) LikeVideo(ctx context.Context, userId string, targetId string
 		logger.Error("likeAction VideoLikeCountUp error", zap.Error(err))
 	}
 	go func() {
-		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		err := s.likeRedis.VideoLikeSAdd(asyncCtx, userId, targetId)
+		err := s.likeRedis.VideoLikeSAdd(ctx, userId, targetId)
 		if err != nil {
 			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err))
 		}
@@ -75,9 +75,9 @@ func (s *LikeRepo) DislikeVideo(ctx context.Context, userId string, targetId str
 		return consts.ReactDBUpdateError, errors.Wrap(err, "->LikeAction VideoLikeCount down error")
 	}
 	go func() {
-		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		err = s.likeRedis.VideoDislikeSRem(asyncCtx, userId, targetId)
+		err = s.likeRedis.VideoDislikeSRem(ctx, userId, targetId)
 		if err != nil {
 			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err))
 		}
@@ -157,10 +157,10 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 		return consts.ReactDBSelectError, nil, 0, errors.Wrap(err, "->LikeList select LikeVideo error")
 	}
 	go func() {
-		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		for _, id := range videoIds {
-			err = s.likeRedis.VideoLikeSAdd(asyncCtx, userId, id)
+			err = s.likeRedis.VideoLikeSAdd(ctx, userId, id)
 			if err != nil {
 				logger.Error("likeAction LikeSAdd error", zap.Error(err))
 			}
