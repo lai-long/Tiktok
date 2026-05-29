@@ -94,8 +94,10 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
-				md.On("CreateVideo", mock.Anything, mock.Anything).Return(nil)
-				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				md.On("CreateVideo", mock.Anything, mock.MatchedBy(func(e entity.VideoEntity) bool {
+					return e.UserID != ""
+				})).Return(nil)
+				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -109,7 +111,6 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(errors.New("redis error"))
-				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			wantCode: consts.VideoRedisSetError,
 			wantErr:  true,
@@ -123,11 +124,46 @@ func TestVideoPublish(t *testing.T) {
 			userID:      "userID",
 			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
 				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
-				md.On("CreateVideo", mock.Anything, mock.Anything).Return(errors.New("db error"))
-				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				md.On("CreateVideo", mock.Anything, mock.MatchedBy(func(e entity.VideoEntity) bool {
+					return e.UserID != ""
+				})).Return(errors.New("db error"))
 			},
 			wantCode: consts.VideoDBInsertError,
 			wantErr:  true,
+		},
+		{
+			name:        "Success_empty_url",
+			title:       "title",
+			description: "description",
+			url:         "",
+			coverURL:    "",
+			userID:      "userID",
+			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
+				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
+				md.On("CreateVideo", mock.Anything, mock.MatchedBy(func(e entity.VideoEntity) bool {
+					return e.UserID != ""
+				})).Return(nil)
+				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+			},
+			wantCode: consts.Success,
+			wantErr:  false,
+		},
+		{
+			name:        "Success_empty_title",
+			title:       "",
+			description: "description",
+			url:         "http://example.com/video.mp4",
+			coverURL:    "",
+			userID:      "userID",
+			mockSetup: func(mr *MockVideoRedis, md *MockVideoDb) {
+				mr.On("VideoHotSet", mock.Anything, "videoHot", mock.Anything, mock.Anything).Return(nil)
+				md.On("CreateVideo", mock.Anything, mock.MatchedBy(func(e entity.VideoEntity) bool {
+					return e.UserID != ""
+				})).Return(nil)
+				mr.On("VideoInfoSet", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+			},
+			wantCode: consts.Success,
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {
@@ -139,6 +175,7 @@ func TestVideoPublish(t *testing.T) {
 			code, err := videoRepo.VideoPublish(context.Background(), tt.title, tt.description, tt.url, tt.coverURL, tt.userID)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
+			mockRedis.AssertExpectations(t)
 			mockDb.AssertExpectations(t)
 		})
 	}

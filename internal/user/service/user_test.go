@@ -9,7 +9,9 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -85,7 +87,9 @@ func TestRegister(t *testing.T) {
 			password: "password",
 			setMock: func(m *MockUser) {
 				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{}, sql.ErrNoRows)
-				m.On("CreateUser", mock.Anything, mock.Anything).Return(nil)
+				m.On("CreateUser", mock.Anything, mock.MatchedBy(func(u entity.UserEntity) bool {
+					return u.Username != "" && u.Password != ""
+				})).Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
@@ -147,10 +151,110 @@ func TestLogin(t *testing.T) {
 			setMock: func(m *MockUser) {
 				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
 				m.On("CheckMfaBind", mock.Anything, "ID").Return(0, nil)
-				m.On("UserTokenSet", mock.Anything, mock.Anything, "ID").Return(nil)
+				m.On("UserTokenSet", mock.Anything, mock.MatchedBy(func(token string) bool { return token != "" }), "ID").Return(nil)
 			},
 			wantErr:  false,
 			wantCode: consts.Success,
+		},
+		{
+			name:     "Fail_user_not_found",
+			userName: "nobody",
+			password: "password",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "nobody").Return(entity.UserEntity{}, sql.ErrNoRows)
+			},
+			wantErr:  false,
+			wantCode: consts.UserNotExists,
+		},
+		{
+			name:     "Fail_db_error",
+			userName: "username",
+			password: "password",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{}, errors.New("db error"))
+			},
+			wantErr:  true,
+			wantCode: consts.UserDBSelectError,
+		},
+		{
+			name:     "Fail_wrong_password",
+			userName: "username",
+			password: "wrong_password",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+			},
+			wantErr:  true,
+			wantCode: consts.UserPasswordError,
+		},
+		{
+			name:     "Fail_mfa_required",
+			userName: "username",
+			password: "password",
+			mfaCode:  "",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+				m.On("CheckMfaBind", mock.Anything, "ID").Return(1, nil)
+			},
+			wantErr:  false,
+			wantCode: consts.MfaReqValidError,
+		},
+		{
+			name:     "Fail_mfa_db_error",
+			userName: "username",
+			password: "password",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+				m.On("CheckMfaBind", mock.Anything, "ID").Return(0, errors.New("mfa db error"))
+			},
+			wantErr:  true,
+			wantCode: consts.MfaDBSelectError,
+		},
+		{
+			name:     "Fail_mfa_invalid_code",
+			userName: "username",
+			password: "password",
+			mfaCode:  "000000",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+				m.On("CheckMfaBind", mock.Anything, "ID").Return(1, nil)
+				m.On("GetMfaSecret", mock.Anything, "ID").Return("JBSWY3DPEHPK3PXP", nil)
+			},
+			wantErr:  false,
+			wantCode: consts.MfaCodeFalse,
+		},
+		{
+			name:     "Success_login_with_mfa",
+			userName: "username",
+			password: "password",
+			mfaCode:  func() string { code, _ := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now()); return code }(),
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+				m.On("CheckMfaBind", mock.Anything, "ID").Return(1, nil)
+				m.On("GetMfaSecret", mock.Anything, "ID").Return("JBSWY3DPEHPK3PXP", nil)
+				m.On("UserTokenSet", mock.Anything, mock.MatchedBy(func(token string) bool { return token != "" }), "ID").Return(nil)
+			},
+			wantErr:  false,
+			wantCode: consts.Success,
+		},
+		{
+			name:     "Fail_token_set_error",
+			userName: "username",
+			password: "password",
+			ctx:      context.Background(),
+			setMock: func(m *MockUser) {
+				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
+				m.On("CheckMfaBind", mock.Anything, "ID").Return(0, nil)
+				m.On("UserTokenSet", mock.Anything, mock.MatchedBy(func(token string) bool { return token != "" }), "ID").Return(errors.New("redis set error"))
+			},
+			wantErr:  true,
+			wantCode: consts.UserRedisSetError,
 		},
 	}
 	for _, tt := range tests {
@@ -192,7 +296,9 @@ func TestUserInfo(t *testing.T) {
 			setMock: func(m *MockUser) {
 				m.On("GetCachedUserInfo", mock.Anything, "userID").Return(nil, errors.New("cache miss"))
 				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "dbUser"}, nil)
-				m.On("SetCachedUserInfo", mock.Anything, "userID", mock.Anything).Return(nil)
+				m.On("SetCachedUserInfo", mock.Anything, "userID", mock.MatchedBy(func(info *entity.UserEntity) bool {
+					return info != nil && info.ID != ""
+				})).Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -215,7 +321,9 @@ func TestUserInfo(t *testing.T) {
 			setMock: func(m *MockUser) {
 				m.On("GetCachedUserInfo", mock.Anything, "userID").Return(nil, errors.New("cache miss"))
 				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "dbUser"}, nil)
-				m.On("SetCachedUserInfo", mock.Anything, "userID", mock.Anything).Return(errors.New("cache set error"))
+				m.On("SetCachedUserInfo", mock.Anything, "userID", mock.MatchedBy(func(info *entity.UserEntity) bool {
+					return info != nil && info.ID != ""
+				})).Return(errors.New("cache set error"))
 			},
 			wantCode: consts.UserDBSelectError,
 			wantErr:  true,
@@ -313,7 +421,7 @@ func TestRefreshToken(t *testing.T) {
 				m.On("UserGetByRefreshToken", mock.Anything, "valid_refresh_token").Return("userID", nil)
 				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
 				m.On("UserTokenDelete", mock.Anything, "valid_refresh_token").Return(nil)
-				m.On("UserTokenSet", mock.Anything, mock.Anything, "userID").Return(nil)
+				m.On("UserTokenSet", mock.Anything, mock.MatchedBy(func(token string) bool { return token != "" }), "userID").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -359,7 +467,7 @@ func TestRefreshToken(t *testing.T) {
 				m.On("UserGetByRefreshToken", mock.Anything, "valid_token").Return("userID", nil)
 				m.On("GetUserByUserId", mock.Anything, "userID").Return(entity.UserEntity{ID: "userID", Username: "user"}, nil)
 				m.On("UserTokenDelete", mock.Anything, "valid_token").Return(nil)
-				m.On("UserTokenSet", mock.Anything, mock.Anything, "userID").Return(errors.New("set error"))
+				m.On("UserTokenSet", mock.Anything, mock.MatchedBy(func(token string) bool { return token != "" }), "userID").Return(errors.New("set error"))
 			},
 			wantCode: consts.UserRedisSetError,
 			wantErr:  true,

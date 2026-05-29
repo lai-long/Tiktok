@@ -26,10 +26,16 @@ func Init() {
 	InitSocialRpc()
 }
 
-// Test-only client setters — allow handler tests to inject mock RPC clients.
+// Test mock client
 func SetUserClient(c userservice.Client)       { userClient = c }
+func GetUserClient() userservice.Client        { return userClient }
 func SetVideoClient(c videoservice.Client)     { videoClient = c }
+func GetVideoClient() videoservice.Client      { return videoClient }
 func SetMfaClient(c mfaservice.Client)         { mfaClient = c }
+func GetMfaClient() mfaservice.Client          { return mfaClient }
 func SetCommentClient(c commentservice.Client) { commentClient = c }
+func GetCommentClient() commentservice.Client  { return commentClient }
 func SetLikeClient(c likeservice.Client)       { likeClient = c }
+func GetLikeClient() likeservice.Client        { return likeClient }
 func SetSocialClient(c socialservice.Client)   { socialClient = c }
+func GetSocialClient() socialservice.Client    { return socialClient }
