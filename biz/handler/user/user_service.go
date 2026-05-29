@@ -237,7 +237,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	qiniuKey, uploadErr := utils.UploadToQiNiu(file, objectName, data.Filename)
+	qiniuKey, uploadErr := utils.UploadToQiNiu(ctx, file, objectName, data.Filename)
 	if uploadErr != nil {
 		logger.Error("user avatar upload to qiniu failed",
 			logger.WithServiceName("api"),

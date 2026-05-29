@@ -85,10 +85,12 @@ func (ws *WebsocketService) Read(c *Client) {
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
 			go func(q string) {
+				ctx, cancel := context.WithTimeout(c.Ctx, 30*time.Second)
+				defer cancel()
 				c.agentMu.Lock()
 				defer c.agentMu.Unlock()
 				if c.agent == nil {
-					c.agent = NewAgent(context.Background())
+					c.agent = NewAgent(ctx)
 				}
 				if c.agent == nil {
 					ws.aiReplyToClient("", c)

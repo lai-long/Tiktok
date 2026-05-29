@@ -83,7 +83,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	ext := filepath.Ext(data.Filename)
 	objectName := "video/" + filename + ext
 
-	qiniuKey, uploadErr := utils.UploadToQiNiu(dataFile, objectName, data.Filename)
+	qiniuKey, uploadErr := utils.UploadToQiNiu(ctx, dataFile, objectName, data.Filename)
 	_ = dataFile.Close()
 	if uploadErr != nil {
 		logger.Error("video publish upload to qiniu failed",
@@ -108,7 +108,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 				_, _ = coverFile.Seek(0, 0)
 				coverExt := filepath.Ext(coverFileHeader.Filename)
 				coverName := utils.IDGenerate() + coverExt
-				coverKey, _ = utils.UploadToQiNiu(coverFile, "cover/"+coverName, coverFileHeader.Filename)
+				coverKey, _ = utils.UploadToQiNiu(ctx, coverFile, "cover/"+coverName, coverFileHeader.Filename)
 			}
 		}
 	}

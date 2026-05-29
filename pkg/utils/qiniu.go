@@ -17,7 +17,7 @@ import (
 
 const qiniuPrefix = "qiniu://"
 
-func UploadToQiNiu(reader io.Reader, objectName string, fileName string) (string, error) {
+func UploadToQiNiu(ctx context.Context, reader io.Reader, objectName string, fileName string) (string, error) {
 	creds := credentials.NewCredentials(config.Cfg.QiNiu.AccessKey, config.Cfg.QiNiu.SecretKey)
 
 	var opts http_client.Options
@@ -30,7 +30,7 @@ func UploadToQiNiu(reader io.Reader, objectName string, fileName string) (string
 		Options: opts,
 	})
 
-	err := upManager.UploadReader(context.Background(), reader, &uploader.ObjectOptions{
+	err := upManager.UploadReader(ctx, reader, &uploader.ObjectOptions{
 		BucketName: config.Cfg.QiNiu.Bucket,
 		ObjectName: &objectName,
 		FileName:   fileName,
