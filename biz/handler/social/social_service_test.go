@@ -37,7 +37,9 @@ type MockSocialClient struct {
 	mock.Mock
 }
 
-func (m *MockSocialClient) RelationAction(ctx context.Context, req *social2.RelationActionReq, callOptions ...callopt.Option) (*social2.RelationActionResp, error) {
+func (m *MockSocialClient) RelationAction(
+	ctx context.Context, req *social2.RelationActionReq, callOptions ...callopt.Option,
+) (*social2.RelationActionResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -45,7 +47,9 @@ func (m *MockSocialClient) RelationAction(ctx context.Context, req *social2.Rela
 	return args.Get(0).(*social2.RelationActionResp), args.Error(1)
 }
 
-func (m *MockSocialClient) FollowingList(ctx context.Context, req *social2.FollowingListReq, callOptions ...callopt.Option) (*social2.FollowingListResp, error) {
+func (m *MockSocialClient) FollowingList(
+	ctx context.Context, req *social2.FollowingListReq, callOptions ...callopt.Option,
+) (*social2.FollowingListResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -53,7 +57,9 @@ func (m *MockSocialClient) FollowingList(ctx context.Context, req *social2.Follo
 	return args.Get(0).(*social2.FollowingListResp), args.Error(1)
 }
 
-func (m *MockSocialClient) FollowerList(ctx context.Context, req *social2.FollowerListReq, callOptions ...callopt.Option) (*social2.FollowerListResp, error) {
+func (m *MockSocialClient) FollowerList(
+	ctx context.Context, req *social2.FollowerListReq, callOptions ...callopt.Option,
+) (*social2.FollowerListResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -61,7 +67,9 @@ func (m *MockSocialClient) FollowerList(ctx context.Context, req *social2.Follow
 	return args.Get(0).(*social2.FollowerListResp), args.Error(1)
 }
 
-func (m *MockSocialClient) FriendList(ctx context.Context, req *social2.FriendListReq, callOptions ...callopt.Option) (*social2.FriendListResp, error) {
+func (m *MockSocialClient) FriendList(
+	ctx context.Context, req *social2.FriendListReq, callOptions ...callopt.Option,
+) (*social2.FriendListResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

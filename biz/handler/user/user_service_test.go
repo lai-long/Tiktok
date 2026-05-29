@@ -69,7 +69,9 @@ func (m *MockUserClient) UserAvatar(ctx context.Context, req *user2.UserAvatarRe
 	return args.Get(0).(*user2.UserAvatarResp), args.Error(1)
 }
 
-func (m *MockUserClient) RefreshToken(ctx context.Context, req *user2.RefreshTokenReq, callOptions ...callopt.Option) (*user2.RefreshTokenResp, error) {
+func (m *MockUserClient) RefreshToken(
+	ctx context.Context, req *user2.RefreshTokenReq, callOptions ...callopt.Option,
+) (*user2.RefreshTokenResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

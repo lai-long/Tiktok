@@ -20,7 +20,9 @@ type MockCommentClient struct {
 	mock.Mock
 }
 
-func (m *MockCommentClient) CommentPublish(ctx context.Context, req *react2.CommentPublishReq, callOptions ...callopt.Option) (*react2.CommentPublishResp, error) {
+func (m *MockCommentClient) CommentPublish(
+	ctx context.Context, req *react2.CommentPublishReq, callOptions ...callopt.Option,
+) (*react2.CommentPublishResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -28,7 +30,9 @@ func (m *MockCommentClient) CommentPublish(ctx context.Context, req *react2.Comm
 	return args.Get(0).(*react2.CommentPublishResp), args.Error(1)
 }
 
-func (m *MockCommentClient) CommentList(ctx context.Context, req *react2.CommentListReq, callOptions ...callopt.Option) (*react2.CommentListResp, error) {
+func (m *MockCommentClient) CommentList(
+	ctx context.Context, req *react2.CommentListReq, callOptions ...callopt.Option,
+) (*react2.CommentListResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -36,7 +40,9 @@ func (m *MockCommentClient) CommentList(ctx context.Context, req *react2.Comment
 	return args.Get(0).(*react2.CommentListResp), args.Error(1)
 }
 
-func (m *MockCommentClient) CommentDelete(ctx context.Context, req *react2.CommentDeleteReq, callOptions ...callopt.Option) (*react2.CommentDeleteResp, error) {
+func (m *MockCommentClient) CommentDelete(
+	ctx context.Context, req *react2.CommentDeleteReq, callOptions ...callopt.Option,
+) (*react2.CommentDeleteResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -217,7 +223,12 @@ func TestCommentDelete(t *testing.T) {
 func TestCommentList_BindError(t *testing.T) {
 	mockClient := new(MockCommentClient)
 	Rpc.SetCommentClient(mockClient)
-	mockClient.On("CommentList", mock.Anything, mock.Anything).Return(&react2.CommentListResp{Code: consts.Success, Data: &react2.CommentData{Items: []*react2.CommentInfo{}, Total: 0}}, nil)
+	mockClient.On("CommentList", mock.Anything, mock.Anything).Return(
+		&react2.CommentListResp{
+			Code: consts.Success,
+			Data: &react2.CommentData{Items: []*react2.CommentInfo{}, Total: 0},
+		}, nil,
+	)
 
 	c := ut.CreateUtRequestContext("GET", "/comment/list", nil)
 

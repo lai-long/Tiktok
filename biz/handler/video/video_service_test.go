@@ -37,7 +37,9 @@ type MockVideoClient struct {
 	mock.Mock
 }
 
-func (m *MockVideoClient) VideoPublish(ctx context.Context, req *video2.VideoPublishReq, callOptions ...callopt.Option) (*video2.VideoPublishResp, error) {
+func (m *MockVideoClient) VideoPublish(
+	ctx context.Context, req *video2.VideoPublishReq, callOptions ...callopt.Option,
+) (*video2.VideoPublishResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -53,7 +55,9 @@ func (m *MockVideoClient) VideoList(ctx context.Context, req *video2.VideoListRe
 	return args.Get(0).(*video2.VideoListResp), args.Error(1)
 }
 
-func (m *MockVideoClient) VideoSearch(ctx context.Context, req *video2.VideoSearchReq, callOptions ...callopt.Option) (*video2.VideoSearchResp, error) {
+func (m *MockVideoClient) VideoSearch(
+	ctx context.Context, req *video2.VideoSearchReq, callOptions ...callopt.Option,
+) (*video2.VideoSearchResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -69,7 +73,9 @@ func (m *MockVideoClient) VideoPopular(ctx context.Context, req *video2.VideoHot
 	return args.Get(0).(*video2.VideoHotResp), args.Error(1)
 }
 
-func (m *MockVideoClient) VideoStream(ctx context.Context, req *video2.VideoStreamReq, callOptions ...callopt.Option) (*video2.VideoStreamResp, error) {
+func (m *MockVideoClient) VideoStream(
+	ctx context.Context, req *video2.VideoStreamReq, callOptions ...callopt.Option,
+) (*video2.VideoStreamResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -77,7 +83,9 @@ func (m *MockVideoClient) VideoStream(ctx context.Context, req *video2.VideoStre
 	return args.Get(0).(*video2.VideoStreamResp), args.Error(1)
 }
 
-func (m *MockVideoClient) BatchGetVideo(ctx context.Context, req *video2.BatchGetVideoReq, callOptions ...callopt.Option) (*video2.BatchGetVideoResp, error) {
+func (m *MockVideoClient) BatchGetVideo(
+	ctx context.Context, req *video2.BatchGetVideoReq, callOptions ...callopt.Option,
+) (*video2.BatchGetVideoResp, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -322,7 +330,12 @@ func TestVideoStream(t *testing.T) {
 func TestVideoList_BindError(t *testing.T) {
 	mockClient := new(MockVideoClient)
 	Rpc.SetVideoClient(mockClient)
-	mockClient.On("VideoList", mock.Anything, mock.Anything).Return(&video2.VideoListResp{Code: consts.Success, Data: &video2.VideoData{Items: []*video2.VideoInfo{}, Total: 0}}, nil)
+	mockClient.On("VideoList", mock.Anything, mock.Anything).Return(
+		&video2.VideoListResp{
+			Code: consts.Success,
+			Data: &video2.VideoData{Items: []*video2.VideoInfo{}, Total: 0},
+		}, nil,
+	)
 
 	c := ut.CreateUtRequestContext("GET", "/video/list", nil)
 	c.Set("userid", "123")
@@ -336,7 +349,12 @@ func TestVideoList_BindError(t *testing.T) {
 func TestVideoPopular_BindError(t *testing.T) {
 	mockClient := new(MockVideoClient)
 	Rpc.SetVideoClient(mockClient)
-	mockClient.On("VideoPopular", mock.Anything, mock.Anything).Return(&video2.VideoHotResp{Code: consts.Success, Data: &video2.VideoData{Items: []*video2.VideoInfo{}, Total: 0}}, nil)
+	mockClient.On("VideoPopular", mock.Anything, mock.Anything).Return(
+		&video2.VideoHotResp{
+			Code: consts.Success,
+			Data: &video2.VideoData{Items: []*video2.VideoInfo{}, Total: 0},
+		}, nil,
+	)
 
 	c := ut.CreateUtRequestContext("GET", "/video/popular", nil)
 
@@ -349,7 +367,12 @@ func TestVideoPopular_BindError(t *testing.T) {
 func TestVideoStream_BindError(t *testing.T) {
 	mockClient := new(MockVideoClient)
 	Rpc.SetVideoClient(mockClient)
-	mockClient.On("VideoStream", mock.Anything, mock.Anything).Return(&video2.VideoStreamResp{Code: consts.Success, Data: &video2.VideoData{Items: []*video2.VideoInfo{}, Total: 0}}, nil)
+	mockClient.On("VideoStream", mock.Anything, mock.Anything).Return(
+		&video2.VideoStreamResp{
+			Code: consts.Success,
+			Data: &video2.VideoData{Items: []*video2.VideoInfo{}, Total: 0},
+		}, nil,
+	)
 
 	c := ut.CreateUtRequestContext("GET", "/video/feed", nil)
 

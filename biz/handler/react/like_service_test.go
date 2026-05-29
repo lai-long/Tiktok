@@ -155,7 +155,12 @@ func TestLikeList(t *testing.T) {
 func TestLikeList_BindError(t *testing.T) {
 	mockClient := new(MockLikeClient)
 	Rpc.SetLikeClient(mockClient)
-	mockClient.On("LikeList", mock.Anything, mock.Anything).Return(&react2.LikeListResp{Code: consts.Success, Data: &react2.LikeVideoData{VideoIds: []string{}, Total: 0}}, nil)
+	mockClient.On("LikeList", mock.Anything, mock.Anything).Return(
+		&react2.LikeListResp{
+			Code: consts.Success,
+			Data: &react2.LikeVideoData{VideoIds: []string{}, Total: 0},
+		}, nil,
+	)
 
 	c := ut.CreateUtRequestContext("GET", "/like/list", nil)
 

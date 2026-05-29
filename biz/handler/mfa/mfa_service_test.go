@@ -161,7 +161,12 @@ func TestMfaBind(t *testing.T) {
 func TestMfaQrcode_BindError(t *testing.T) {
 	mockClient := new(MockMfaClient)
 	Rpc.SetMfaClient(mockClient)
-	mockClient.On("MfaQrcode", mock.Anything, mock.Anything).Return(&mfa2.MfaQrcodeResp{Code: consts.Success, Data: &mfa2.MfaData{Secret: "test", Qrcode: "test"}}, nil)
+	mockClient.On("MfaQrcode", mock.Anything, mock.Anything).Return(
+		&mfa2.MfaQrcodeResp{
+			Code: consts.Success,
+			Data: &mfa2.MfaData{Secret: "test", Qrcode: "test"},
+		}, nil,
+	)
 
 	c := ut.CreateUtRequestContext("GET", "/auth/mfa/qrcode", nil)
 	c.Set("userid", "123")
