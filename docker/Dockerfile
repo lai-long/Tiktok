@@ -5,7 +5,8 @@ ARG SERVICE
 ENV TZ=Asia/Shanghai \
     CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64
+    GOARCH=amd64 \
+    GOPROXY=https://goproxy.cn,direct
 
 RUN mkdir -p /app/output
 WORKDIR /app
