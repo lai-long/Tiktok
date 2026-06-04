@@ -97,14 +97,14 @@ func NewChatClient(ctx context.Context) (*ChatClient, error) {
 	return &ChatClient{ctx: ctx, message: message, client: client}, nil
 }
 
-func (c *ChatClient) Chat(prompt string) (content string, err error) {
+func (c *ChatClient) Chat(ctx context.Context, prompt string) (content string, err error) {
 	c.message = append(c.message, schemas.ChatMessage{
 		Role: schemas.ChatMessageRoleUser,
 		Content: &schemas.ChatMessageContent{
 			ContentStr: schemas.Ptr(prompt),
 		},
 	})
-	bifrostContext := schemas.NewBifrostContext(c.ctx, schemas.NoDeadline)
+	bifrostContext := schemas.NewBifrostContext(ctx, schemas.NoDeadline)
 	req := &schemas.BifrostChatRequest{
 		Provider: schemas.OpenAI,
 		Model:    config.Cfg.API.Model,
@@ -133,7 +133,6 @@ func (c *ChatClient) Close() {
 
 type Agent struct {
 	chatCli *ChatClient
-	ctx     context.Context
 }
 
 func NewAgent(ctx context.Context) *Agent {
@@ -148,16 +147,15 @@ func NewAgent(ctx context.Context) *Agent {
 	}
 	return &Agent{
 		chatCli: llm,
-		ctx:     ctx,
 	}
 }
 
-func (a *Agent) StartAction(prompt string) string {
+func (a *Agent) StartAction(ctx context.Context, prompt string) string {
 	if a.chatCli == nil {
 		logger.Error("startAction failed: chat client is nil")
 		return ""
 	}
-	resp, err := a.chatCli.Chat(prompt)
+	resp, err := a.chatCli.Chat(ctx, prompt)
 	if err != nil {
 		logger.Error("startAction failed", zap.Error(err))
 		return ""
