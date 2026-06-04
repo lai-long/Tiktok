@@ -64,8 +64,8 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		logger.WithServiceName("api"),
 		logger.WithUserID(userID),
 		logger.WithField("filename", data.Filename),
-		logger.WithField("action", "video_publish"))
-
+		logger.WithField("action", "video_publish"),
+	)
 	dataFile, err := data.Open()
 	if err != nil {
 		logger.Error("video publish file open failed",
@@ -82,7 +82,6 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	filename := utils.IDGenerate()
 	ext := filepath.Ext(data.Filename)
 	objectName := "video/" + filename + ext
-
 	qiniuKey, uploadErr := utils.UploadToQiNiu(ctx, dataFile, objectName, data.Filename)
 	_ = dataFile.Close()
 	if uploadErr != nil {
@@ -101,15 +100,22 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	var coverKey string
-	if coverFileHeader, coverErr := c.FormFile("cover"); coverErr == nil {
-		if coverFile, openErr := coverFileHeader.Open(); openErr == nil {
-			defer func() { _ = coverFile.Close() }()
-			if ok, _ := utils.IsImage(coverFile); ok {
-				_, _ = coverFile.Seek(0, 0)
-				coverExt := filepath.Ext(coverFileHeader.Filename)
-				coverName := utils.IDGenerate() + coverExt
-				coverKey, _ = utils.UploadToQiNiu(ctx, coverFile, "cover/"+coverName, coverFileHeader.Filename)
+	coverFileHeader, coverErr := c.FormFile("cover")
+	if coverErr == nil {
+		coverFile, openErr := coverFileHeader.Open()
+		if openErr != nil {
+			logger.Error("cover file open failed", zap.Error(openErr))
+		} else if ok, _ := utils.IsImage(coverFile); ok {
+			_, _ = coverFile.Seek(0, 0)
+			coverExt := filepath.Ext(coverFileHeader.Filename)
+			coverName := utils.IDGenerate() + coverExt
+			key, uploadErr := utils.UploadToQiNiu(ctx, coverFile, "cover/"+coverName, coverFileHeader.Filename)
+			if uploadErr != nil {
+				logger.Error("cover upload to qiniu failed", zap.Error(uploadErr))
+			} else {
+				coverKey = key
 			}
+			_ = coverFile.Close()
 		}
 	}
 
