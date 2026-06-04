@@ -63,15 +63,9 @@ func InitLogger(level string, serviceName string, logPath ...string) error {
 	}
 	fileEncoder := zapcore.NewJSONEncoder(fileEncoderConfig)
 
-	cores := make([]zapcore.Core, 0, 2)
-	cores = append(cores, zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapLevel))
-
-	path := ""
-	if len(logPath) > 0 {
+	path := "./logs"
+	if len(logPath) > 0 && logPath[0] != "" {
 		path = logPath[0]
-	}
-	if path == "" {
-		path = "./logs"
 	}
 	logFile := filepath.Join(path, serviceName+".log")
 	lumberjackWriter := &lumberjack.Logger{
@@ -82,9 +76,11 @@ func InitLogger(level string, serviceName string, logPath ...string) error {
 		LocalTime:  true,
 		Compress:   true,
 	}
-	cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(lumberjackWriter), zapLevel))
 
-	core := zapcore.NewTee(cores...)
+	core := zapcore.NewTee(
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapLevel),
+		zapcore.NewCore(fileEncoder, zapcore.AddSync(lumberjackWriter), zapLevel),
+	)
 	Logger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	return nil
