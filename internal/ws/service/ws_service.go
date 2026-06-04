@@ -82,6 +82,9 @@ func (ws *WebsocketService) Read(c *Client) {
 			_ = c.Socket.Close()
 			break
 		}
+		c.mu.Lock()
+		c.lastPong = time.Now()
+		c.mu.Unlock()
 		ok, question := utils.CheckAiKeyWord(sendMsg.Content)
 		if ok {
 			go func(q string) {
