@@ -103,6 +103,13 @@ type Config struct {
 var Cfg *Config
 var lock sync.RWMutex
 
+// GetCfg 获取配置
+func GetCfg() *Config {
+	lock.RLock()
+	defer lock.RUnlock()
+	return Cfg
+}
+
 // Load 加载配置
 func Load(confPath []string) (*Config, error) {
 	v := viper.New()

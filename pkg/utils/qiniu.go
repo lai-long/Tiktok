@@ -18,7 +18,7 @@ import (
 const qiniuPrefix = "qiniu://"
 
 func UploadToQiNiu(ctx context.Context, reader io.Reader, objectName string, fileName string) (string, error) {
-	creds := credentials.NewCredentials(config.Cfg.QiNiu.AccessKey, config.Cfg.QiNiu.SecretKey)
+	creds := credentials.NewCredentials(config.GetCfg().QiNiu.AccessKey, config.GetCfg().QiNiu.SecretKey)
 
 	var opts http_client.Options
 	opts.Credentials = creds
@@ -31,7 +31,7 @@ func UploadToQiNiu(ctx context.Context, reader io.Reader, objectName string, fil
 	})
 
 	err := upManager.UploadReader(ctx, reader, &uploader.ObjectOptions{
-		BucketName: config.Cfg.QiNiu.Bucket,
+		BucketName: config.GetCfg().QiNiu.Bucket,
 		ObjectName: &objectName,
 		FileName:   fileName,
 	}, nil)
@@ -48,10 +48,10 @@ func SignQiNiuURL(key string) string {
 	}
 	objectName := key[len(qiniuPrefix):]
 
-	creds := credentials.NewCredentials(config.Cfg.QiNiu.AccessKey, config.Cfg.QiNiu.SecretKey)
+	creds := credentials.NewCredentials(config.GetCfg().QiNiu.AccessKey, config.GetCfg().QiNiu.SecretKey)
 	signer := downloader.NewCredentialsSigner(creds)
 
-	rawURL := fmt.Sprintf("%s/%s", config.Cfg.QiNiu.Domain, objectName)
+	rawURL := fmt.Sprintf("%s/%s", config.GetCfg().QiNiu.Domain, objectName)
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return key

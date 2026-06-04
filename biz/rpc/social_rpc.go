@@ -15,7 +15,7 @@ import (
 )
 
 func InitSocialRpc() {
-	r, err := etcd.NewEtcdResolver([]string{config.Cfg.EtcdAddr})
+	r, err := etcd.NewEtcdResolver([]string{config.GetCfg().EtcdAddr})
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
