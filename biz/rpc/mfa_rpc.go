@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
 )
@@ -18,7 +19,7 @@ func InitMfaRpc() {
 	if err != nil {
 		logger.Error("etcd resolver error", zap.Error(err))
 	}
-	cli, err := mfaservice.NewClient("mfaService", client.WithResolver(r))
+	cli, err := mfaservice.NewClient("mfaService", client.WithResolver(r), client.WithMetaHandler(transmeta.MetainfoClientHandler))
 	if err != nil {
 		logger.Error("mfa service client error", zap.Error(err))
 	}

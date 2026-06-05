@@ -94,6 +94,10 @@ func WithUserID(userID string) zap.Field {
 	return zap.String("user_id", userID)
 }
 
+func WithRequestID(requestID string) zap.Field {
+	return zap.String("request_id", requestID)
+}
+
 func WithField(key string, value interface{}) zap.Field {
 	return zap.Any(key, value)
 }

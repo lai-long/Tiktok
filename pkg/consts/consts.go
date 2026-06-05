@@ -7,6 +7,9 @@ const (
 	UserIDKey   = "userid"
 	UsernameKey = "username"
 
+	// RequestIDKey 用于全链路请求追踪
+	RequestIDKey = "request_id"
+
 	// Action types (社交模块)
 	ActionFollow   = "0"
 	ActionUnfollow = "1"

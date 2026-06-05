@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
 )
@@ -19,7 +20,7 @@ func InitSocialRpc() {
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
-	cli, err := socialservice.NewClient("socialService", client.WithResolver(r))
+	cli, err := socialservice.NewClient("socialService", client.WithResolver(r), client.WithMetaHandler(transmeta.MetainfoClientHandler))
 	if err != nil {
 		logger.Fatal("social service client error", zap.Error(err))
 	}

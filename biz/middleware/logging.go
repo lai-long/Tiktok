@@ -6,7 +6,9 @@ import (
 
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 
+	"github.com/bytedance/gopkg/cloud/metainfo"
 	"github.com/cloudwego/hertz/pkg/app"
 	"go.uber.org/zap"
 )
@@ -17,6 +19,10 @@ func LoggingMiddleware() app.HandlerFunc {
 		path := string(c.Request.URI().Path())
 		method := string(c.Request.Method())
 		clientIP := c.ClientIP()
+
+		requestID := utils.IDGenerate()
+		c.Set(consts.RequestIDKey, requestID)
+		ctx = metainfo.WithValue(ctx, consts.RequestIDKey, requestID)
 
 		c.Next(ctx)
 
@@ -31,6 +37,7 @@ func LoggingMiddleware() app.HandlerFunc {
 
 		fields := []zap.Field{
 			logger.WithServiceName("api"),
+			logger.WithRequestID(requestID),
 			zap.String("method", method),
 			zap.String("path", path),
 			zap.String("client_ip", clientIP),

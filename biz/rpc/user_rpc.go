@@ -12,6 +12,7 @@ import (
 	"Tiktok/pkg/utils"
 
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
 )
@@ -21,7 +22,7 @@ func InitUserRpc() {
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
-	cli, err := userservice.NewClient("userService", client.WithResolver(r))
+	cli, err := userservice.NewClient("userService", client.WithResolver(r), client.WithMetaHandler(transmeta.MetainfoClientHandler))
 	if err != nil {
 		logger.Fatal("user service client error", zap.Error(err))
 	}

@@ -14,6 +14,7 @@ import (
 	"os"
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	"github.com/cloudwego/kitex/server"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
@@ -63,6 +64,7 @@ func main() {
 		server.WithServiceAddr(commentAddr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "commentService",
 		}),
@@ -71,6 +73,7 @@ func main() {
 		server.WithServiceAddr(likeAddr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "likeService",
 		}),

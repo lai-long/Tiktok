@@ -108,10 +108,10 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		} else if ok, _ := utils.IsImage(coverFile); ok {
 			_, _ = coverFile.Seek(0, 0)
 			coverExt := filepath.Ext(coverFileHeader.Filename)
-			coverName := utils.IDGenerate() + coverExt
-			key, uploadErr := utils.UploadToQiNiu(ctx, coverFile, "cover/"+coverName, coverFileHeader.Filename)
+			coverName := "cover/" + utils.IDGenerate() + coverExt
+			key, uploadErr := utils.UploadToQiNiu(ctx, coverFile, coverName, coverFileHeader.Filename)
 			if uploadErr != nil {
-				logger.Error("cover upload to qiniu failed", zap.Error(uploadErr))
+				logger.Error("cover upload  failed", zap.Error(uploadErr))
 			} else {
 				coverKey = key
 			}
