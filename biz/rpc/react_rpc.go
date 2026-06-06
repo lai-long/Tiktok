@@ -12,6 +12,7 @@ import (
 	model "Tiktok/biz/model/react"
 
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
 )
@@ -21,11 +22,11 @@ func InitReactRpc() {
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
-	commentCli, err := commentservice.NewClient("commentService", client.WithResolver(r))
+	commentCli, err := commentservice.NewClient("commentService", client.WithResolver(r), client.WithMetaHandler(transmeta.MetainfoClientHandler))
 	if err != nil {
 		logger.Fatal("comment service client error", zap.Error(err))
 	}
-	likeCli, err := likeservice.NewClient("likeService", client.WithResolver(r))
+	likeCli, err := likeservice.NewClient("likeService", client.WithResolver(r), client.WithMetaHandler(transmeta.MetainfoClientHandler))
 	if err != nil {
 		logger.Fatal("like service client error", zap.Error(err))
 	}

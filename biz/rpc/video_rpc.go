@@ -13,6 +13,7 @@ import (
 	model "Tiktok/biz/model/video"
 
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
 )
@@ -22,7 +23,7 @@ func InitVideoRpc() {
 	if err != nil {
 		logger.Fatal("etcd resolver error", zap.Error(err))
 	}
-	cli, err := videoservice.NewClient("videoService", client.WithResolver(r))
+	cli, err := videoservice.NewClient("videoService", client.WithResolver(r), client.WithMetaHandler(transmeta.MetainfoClientHandler))
 	if err != nil {
 		logger.Fatal("video service client error", zap.Error(err))
 	}

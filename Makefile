@@ -26,6 +26,11 @@ run-infra:
 	@docker compose -f docker/docker-compose.yml up -d etcd mysql redis
 	@echo "Infrastructure starting done."
 
+lint:
+	@echo "golangci-lint running"
+	@golangci-lint run
+	@echo "golangci-lint done"
+
 run:
 	@echo "Starting all services locally..."
 	@trap 'kill 0; exit' SIGINT; \

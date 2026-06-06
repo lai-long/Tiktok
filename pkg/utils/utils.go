@@ -6,6 +6,7 @@ import (
 	user "Tiktok/kitex_gen/user"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
+	"context"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bytedance/gopkg/cloud/metainfo"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
@@ -144,6 +146,14 @@ func GetUserID(c *app.RequestContext) string {
 		if uid, ok := userID.(string); ok {
 			return uid
 		}
+	}
+	return ""
+}
+
+// GetRequestID 从 context 中获取 request_id
+func GetRequestID(ctx context.Context) string {
+	if v, ok := metainfo.GetValue(ctx, consts.RequestIDKey); ok {
+		return v
 	}
 	return ""
 }

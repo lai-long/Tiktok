@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
+	"github.com/cloudwego/kitex/pkg/transmeta"
 	"github.com/cloudwego/kitex/server"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"go.uber.org/zap"
@@ -53,6 +54,7 @@ func main() {
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "socialService",
 		}),

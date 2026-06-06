@@ -3,6 +3,7 @@ package service
 import (
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
 	"time"
 
@@ -52,14 +53,14 @@ func (s *LikeRepo) LikeVideo(ctx context.Context, userId string, targetId string
 	}
 	err = s.videoDb.VideoLikeCountUp(ctx, targetId)
 	if err != nil {
-		logger.Error("likeAction VideoLikeCountUp error", zap.Error(err))
+		logger.Error("likeAction VideoLikeCountUp error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
 	}
 	go func() {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		err := s.likeRedis.VideoLikeSAdd(ctx, userId, targetId)
 		if err != nil {
-			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err))
+			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
 		}
 	}()
 	return consts.Success, nil
@@ -79,7 +80,7 @@ func (s *LikeRepo) DislikeVideo(ctx context.Context, userId string, targetId str
 		defer cancel()
 		err = s.likeRedis.VideoDislikeSRem(ctx, userId, targetId)
 		if err != nil {
-			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err))
+			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
 		}
 	}()
 	return consts.Success, nil
@@ -162,7 +163,7 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 		for _, id := range videoIds {
 			err = s.likeRedis.VideoLikeSAdd(ctx, userId, id)
 			if err != nil {
-				logger.Error("likeAction LikeSAdd error", zap.Error(err))
+				logger.Error("likeAction LikeSAdd error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
 			}
 		}
 	}()

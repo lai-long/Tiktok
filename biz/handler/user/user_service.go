@@ -7,7 +7,6 @@ import (
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
-	"path/filepath"
 
 	"Tiktok/biz/model/user"
 	Rpc "Tiktok/biz/rpc"
@@ -165,9 +164,9 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	file, err := data.Open()
+	qiniuKey, err := utils.UploadImageToQiNiu(ctx, data, "avatar/")
 	if err != nil {
-		logger.Error("user avatar upload file open failed",
+		logger.Error("user avatar upload failed",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("filename", data.Filename),
@@ -180,32 +179,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	defer func() {
-		err = file.Close()
-		if err != nil {
-			logger.Error("file close error",
-				logger.WithServiceName("api"),
-				logger.WithUserID(userID),
-				logger.WithField("action", "upload_avatar"),
-				zap.Error(err))
-		}
-	}()
-	ok, err := utils.IsImage(file)
-	if err != nil {
-		logger.Error("user avatar upload IsImage check failed",
-			logger.WithServiceName("api"),
-			logger.WithUserID(userID),
-			logger.WithField("filename", data.Filename),
-			logger.WithField("action", "upload_avatar"),
-			zap.Error(err))
-		resp := &user.UserAvatarResp{
-			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
-			Data: nil,
-		}
-		c.JSON(200, resp)
-		return
-	}
-	if !ok {
+	if qiniuKey == "" {
 		logger.Warn("user avatar upload invalid file type",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
@@ -213,40 +187,6 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithField("action", "upload_avatar"))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.ImageFalse, Msg: consts.GetErrorCodeMsg(consts.FileError)},
-			Data: nil,
-		}
-		c.JSON(200, resp)
-		return
-	}
-	filename := utils.IDGenerate()
-	ext := filepath.Ext(data.Filename)
-	objectName := "avatar/" + filename + ext
-
-	_, seekErr := file.Seek(0, 0)
-	if seekErr != nil {
-		logger.Error("user avatar upload file seek failed",
-			logger.WithServiceName("api"),
-			logger.WithUserID(userID),
-			logger.WithField("action", "upload_avatar"),
-			zap.Error(seekErr))
-		resp := &user.UserAvatarResp{
-			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
-			Data: nil,
-		}
-		c.JSON(200, resp)
-		return
-	}
-
-	qiniuKey, uploadErr := utils.UploadToQiNiu(ctx, file, objectName, data.Filename)
-	if uploadErr != nil {
-		logger.Error("user avatar upload to qiniu failed",
-			logger.WithServiceName("api"),
-			logger.WithUserID(userID),
-			logger.WithField("object_name", objectName),
-			logger.WithField("action", "upload_avatar"),
-			zap.Error(uploadErr))
-		resp := &user.UserAvatarResp{
-			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 			Data: nil,
 		}
 		c.JSON(200, resp)

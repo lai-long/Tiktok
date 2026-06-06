@@ -4,7 +4,9 @@ import (
 	"Tiktok/internal/user/service"
 	user "Tiktok/kitex_gen/user"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
+
 	"go.uber.org/zap"
 )
 
@@ -44,7 +46,7 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 	resp = &user.UserInfoResp{}
 	userInfo, code, err := s.service.UserInfo(ctx, req.UserId)
 	if err != nil {
-		logger.Error("UserInfo failed", zap.Error(err), zap.String("user_id", req.UserId))
+		logger.Error("UserInfo failed", zap.Error(err), logger.WithUserID(req.UserId), logger.WithRequestID(utils.GetRequestID(ctx)))
 		resp.Code = code
 		resp.Data = userInfo
 		return resp, nil
@@ -59,7 +61,7 @@ func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarRe
 	resp = &user.UserAvatarResp{}
 	code, userInfo, err := s.service.UserAvatar(ctx, req.AvatarURL, req.UserID)
 	if err != nil {
-		logger.Error("UserAvatar failed", zap.Error(err), zap.String("user_id", req.UserID))
+		logger.Error("UserAvatar failed", zap.Error(err), logger.WithUserID(req.UserID), logger.WithRequestID(utils.GetRequestID(ctx)))
 		resp.Code = code
 		resp.Data = userInfo
 		return resp, nil
@@ -74,7 +76,7 @@ func (s *UserServiceImpl) RefreshToken(ctx context.Context, req *user.RefreshTok
 	resp = &user.RefreshTokenResp{}
 	code, reToken, acToken, err := s.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
-		logger.Error("RefreshToken failed", zap.Error(err))
+		logger.Error("RefreshToken failed", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
 		resp.Code = code
 		resp.RefreshToken = reToken
 		resp.AccessToken = acToken
