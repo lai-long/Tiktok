@@ -4,6 +4,7 @@ import (
 	"Tiktok/pkg/logger"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/alibaba/sentinel-golang/core/circuitbreaker"
 	"github.com/alibaba/sentinel-golang/core/flow"
@@ -41,22 +42,32 @@ type McpClientConfig struct {
 
 // MySQLConfig Mysql配置
 type MySQLConfig struct {
-	Host      string `mapstructure:"host"`
-	Port      int    `mapstructure:"port"`
-	User      string `mapstructure:"user"`
-	Password  string `mapstructure:"password"`
-	Database  string `mapstructure:"database"`
-	Charset   string `mapstructure:"charset"`
-	ParseTime bool   `mapstructure:"parse_time"`
-	Loc       string `mapstructure:"loc"`
+	Host            string        `mapstructure:"host"`
+	Port            int           `mapstructure:"port"`
+	User            string        `mapstructure:"user"`
+	Password        string        `mapstructure:"password"`
+	Database        string        `mapstructure:"database"`
+	Charset         string        `mapstructure:"charset"`
+	ParseTime       bool          `mapstructure:"parse_time"`
+	Loc             string        `mapstructure:"loc"`
+	MaxOpenConns    int           `mapstructure:"max_open_conns"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
+	ConnMaxIdleTime time.Duration `mapstructure:"conn_max_idle_time"`
 }
 
 // RedisConfig Redis配置
 type RedisConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Password string `mapstructure:"password"`
-	Database int    `mapstructure:"database"`
+	Host            string        `mapstructure:"host"`
+	Port            int           `mapstructure:"port"`
+	Password        string        `mapstructure:"password"`
+	Database        int           `mapstructure:"database"`
+	PoolSize        int           `mapstructure:"pool_size"`
+	MinIdleConns    int           `mapstructure:"min_idle_conns"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+	PoolTimeout     time.Duration `mapstructure:"pool_timeout"`
+	ConnMaxIdleTime time.Duration `mapstructure:"conn_max_idle_time"`
+	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 }
 
 // JwtConfig JWT密钥
@@ -173,9 +184,19 @@ func Load(confPath []string) (*Config, error) {
 	v.SetDefault("mysql.port", 3306)
 	v.SetDefault("mysql.user", "test")
 	v.SetDefault("mysql.password", "123456")
-	v.SetDefault("re.host", "localhost")
-	v.SetDefault("re.port", 6379)
-	v.SetDefault("re.password", "123456")
+	v.SetDefault("mysql.max_open_conns", 25)
+	v.SetDefault("mysql.max_idle_conns", 10)
+	v.SetDefault("mysql.conn_max_lifetime", "30m")
+	v.SetDefault("mysql.conn_max_idle_time", "5m")
+	v.SetDefault("redis.host", "localhost")
+	v.SetDefault("redis.port", 6379)
+	v.SetDefault("redis.password", "123456")
+	v.SetDefault("redis.pool_size", 20)
+	v.SetDefault("redis.min_idle_conns", 5)
+	v.SetDefault("redis.max_idle_conns", 5)
+	v.SetDefault("redis.pool_timeout", "4s")
+	v.SetDefault("redis.conn_max_idle_time", "5m")
+	v.SetDefault("redis.conn_max_lifetime", "30m")
 
 	v.SetDefault("etcd_addr", "127.0.0.1:2379")
 

@@ -6,12 +6,24 @@ mysql:
   charset: "utf8"
   parse_time: true
   loc: "Local"
+  # 连接池配置(超出 DB 端 max_connections 时调小)
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: 30m
+  conn_max_idle_time: 5m
 
 redis:
   host: "localhost"
   port: "6379"
   password: "your_redis_password"
   db: 0
+  # 连接池配置
+  pool_size: 50
+  min_idle_conns: 10
+  max_idle_conns: 10
+  pool_timeout: 4s
+  conn_max_idle_time: 5m
+  conn_max_lifetime: 30m
 
 api:
   base_url: "your_base_url"
