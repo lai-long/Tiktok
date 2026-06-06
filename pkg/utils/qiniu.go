@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/url"
+	"path/filepath"
 	"time"
 
 	"Tiktok/internal/config"
@@ -40,6 +42,30 @@ func UploadToQiNiu(ctx context.Context, reader io.Reader, objectName string, fil
 	}
 
 	return qiniuPrefix + objectName, nil
+}
+
+// UploadImageToQiNiu 上传表单中的图片到七牛云。
+func UploadImageToQiNiu(ctx context.Context, fileHeader *multipart.FileHeader, prefix string) (string, error) {
+	if fileHeader == nil {
+		return "", nil
+	}
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = file.Close() }()
+
+	isImage, _ := IsImage(file)
+	if !isImage {
+		return "", nil
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return "", err
+	}
+
+	objectName := prefix + IDGenerate() + filepath.Ext(fileHeader.Filename)
+	return UploadToQiNiu(ctx, file, objectName, fileHeader.Filename)
 }
 
 func SignQiNiuURL(key string) string {
