@@ -15,7 +15,7 @@ import (
 )
 
 func InitMfaRpc() {
-	r, err := etcd.NewEtcdResolver([]string{config.Cfg.EtcdAddr})
+	r, err := etcd.NewEtcdResolver([]string{config.GetCfg().EtcdAddr})
 	if err != nil {
 		logger.Error("etcd resolver error", zap.Error(err))
 	}

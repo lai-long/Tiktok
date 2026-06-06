@@ -53,11 +53,11 @@ func CheckPasswordHash(hash, password string) error {
 func GenerateTokens(userDto *user.UserInfo) (string, string, error) {
 	refreshTime := 288 * time.Hour
 	accessTime := 24 * time.Hour
-	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, config.Cfg.Jwt.RefreshSecret)
+	refreshToken, err := GetToken(userDto.Username, userDto.ID, refreshTime, config.GetCfg().Jwt.RefreshSecret)
 	if err != nil {
 		return "生成refreshToken错误", "", err
 	}
-	accessToken, err := GetToken(userDto.Username, userDto.ID, accessTime, config.Cfg.Jwt.AccessSecret)
+	accessToken, err := GetToken(userDto.Username, userDto.ID, accessTime, config.GetCfg().Jwt.AccessSecret)
 	if err != nil {
 		return "生成accessToken错误", "", err
 	}

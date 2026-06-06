@@ -51,7 +51,7 @@ func main() {
 	mfaRepo := service.NewMfaRepo(mysqlDb)
 	mfaService := handler.NewMfaService(mfaRepo)
 
-	r, err := etcd.NewEtcdRegistry([]string{config.Cfg.EtcdAddr})
+	r, err := etcd.NewEtcdRegistry([]string{config.GetCfg().EtcdAddr})
 	if err != nil {
 		logger.Error("registry error", zap.Error(err))
 	}

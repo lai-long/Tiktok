@@ -51,7 +51,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return []byte(config.Cfg.Jwt.AccessSecret), nil
+		return []byte(config.GetCfg().Jwt.AccessSecret), nil
 	})
 	if err != nil {
 		logger.Error("JWT parse error", zap.Error(err))

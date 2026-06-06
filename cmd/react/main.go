@@ -41,7 +41,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("加载sentinel rules错误", zap.Error(err))
 	}
-	r, err := etcd.NewEtcdRegistry([]string{config.Cfg.EtcdAddr})
+	r, err := etcd.NewEtcdRegistry([]string{config.GetCfg().EtcdAddr})
 	if err != nil {
 		logger.Fatal("etcd registry init error", zap.Error(err))
 	}
