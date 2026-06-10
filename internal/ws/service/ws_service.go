@@ -123,13 +123,15 @@ func (ws *WebsocketService) Read(c *Client) {
 				PageSize: sendMsg.PageSize,
 			}
 		case consts.MsgTypeGroupMsg:
-			ws.Manager.mu.Lock()
+			members := ws.Manager.GetGroup(c.GroupId)
+			if len(members) == 0 {
+				break
+			}
 			ws.Manager.GroupBroadcast <- &GroupBroadcast{
-				Clients: ws.Manager.Groups[c.GroupId],
+				Clients: members,
 				Message: []byte(sendMsg.Content),
 				Type:    sendMsg.Type,
 			}
-			ws.Manager.mu.Unlock()
 		}
 	}
 }
@@ -198,31 +200,20 @@ func (ws *WebsocketService) Start() {
 func (ws *WebsocketService) startRegister(client *Client) {
 	logger.Info("websocket connected", zap.String("client_id", client.ID))
 	if client.GroupId != "" {
-		ws.Manager.mu.Lock()
-		ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId], client)
-		ws.Manager.mu.Unlock()
+		ws.Manager.AddToGroup(client.GroupId, client)
 	}
-	ws.Manager.Clients[client.ID] = client
+	ws.Manager.AddClient(client)
 	ws.sendReplyMsg(client, client.ID, consts.WsConnectSuccess, consts.GetErrorCodeMsg(consts.WsConnectSuccess))
 }
 
 func (ws *WebsocketService) startUnregister(client *Client) {
 	logger.Info("websocket disconnected", zap.String("client_id", client.ID))
 	if client.GroupId != "" {
-		ws.Manager.mu.Lock()
-		for i, v := range ws.Manager.Groups[client.GroupId] {
-			if v.ID == client.ID {
-				ws.Manager.Groups[client.GroupId] = append(ws.Manager.Groups[client.GroupId][:i],
-					ws.Manager.Groups[client.GroupId][i+1:]...)
-				break
-			}
-		}
-		ws.Manager.mu.Unlock()
+		ws.Manager.RemoveFromGroup(client.GroupId, client.ID)
 	}
-	if _, ok := ws.Manager.Clients[client.ID]; ok {
+	if ws.Manager.RemoveClient(client.ID) {
 		ws.sendReplyMsg(client, client.ID, consts.WsDisconnect, consts.GetErrorCodeMsg(consts.WsDisconnect))
 		close(client.Send)
-		delete(ws.Manager.Clients, client.ID)
 	}
 }
 
@@ -230,22 +221,18 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 	message := broadcast.Message
 	sendId := broadcast.Clients.SendID
 	flag := false
-	ws.Manager.mu.Lock()
-	for id, client := range ws.Manager.Clients {
-		if id != sendId {
-			continue
-		}
+	if client, ok := ws.Manager.GetClient(sendId); ok {
 		replyMSg := chat.ReplyMsg{From: client.ID, Code: consts.Success, Content: string(message)}
 		msg, _ := protojson.Marshal(&replyMSg)
 		select {
 		case client.Send <- msg:
 			flag = true
 		default:
-			close(client.Send)
-			delete(ws.Manager.Clients, client.ID)
+			if ws.Manager.RemoveClient(client.ID) {
+				close(client.Send)
+			}
 		}
 	}
-	ws.Manager.mu.Unlock()
 	id := broadcast.Clients.ID
 	if flag {
 		ws.sendReplyMsg(broadcast.Clients, broadcast.Clients.ID, consts.WsClientOnline, consts.GetErrorCodeMsg(consts.WsClientOnline))
@@ -323,14 +310,9 @@ func (ws *WebsocketService) sendReplyMsgAndSendID(c *Client, from string, code i
 	msg, _ := protojson.Marshal(&replyMSg)
 	c.Send <- msg
 	if c.SendID != "" {
-		ws.Manager.mu.Lock()
-		for id, client := range ws.Manager.Clients {
-			if id == c.SendID {
-				client.Send <- msg
-				break
-			}
+		if peer, ok := ws.Manager.GetClient(c.SendID); ok {
+			peer.Send <- msg
 		}
-		ws.Manager.mu.Unlock()
 	}
 }
 
