@@ -1,263 +1,263 @@
 flow:
   - resource: "UserRegister"
-    threshold: 50
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "UserLogin"
-    threshold: 100
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "UserInfo"
-    threshold: 200
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "UserAvatar"
     threshold: 20
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+    warmUpPeriodSec: 10
 
-  - resource: "RefreshToken"
-    threshold: 100
+  - resource: "UserLogin"
+    threshold: 30
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+    warmUpPeriodSec: 10
 
-  - resource: "VideoPublish"
-    threshold: 10
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "VideoList"
+  - resource: "UserInfo"
     threshold: 300
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+    warmUpPeriodSec: 5
 
-  - resource: "VideoSearch"
+  - resource: "UserAvatar"
+    threshold: 10
+    controlBehavior: 1
+    maxQueueingTimeMs: 1000
+
+  - resource: "RefreshToken"
+    threshold: 200
+    controlBehavior: 0
+
+  - resource: "VideoStream"
+    threshold: 150
+    controlBehavior: 0
+    warmUpPeriodSec: 15
+
+  - resource: "VideoPublish"
+    threshold: 5
+    controlBehavior: 0
+
+  - resource: "VideoList"
     threshold: 100
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+
+  - resource: "VideoSearch"
+    threshold: 50
+    controlBehavior: 0
+    warmUpPeriodSec: 5
 
   - resource: "VideoPopular"
     threshold: 200
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+    warmUpPeriodSec: 10
+
+  - resource: "BatchGetVideo"
+    threshold: 300
+    controlBehavior: 0
 
   - resource: "RelationAction"
     threshold: 50
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
 
   - resource: "FollowingList"
-    threshold: 200
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "FollowerList"
-    threshold: 200
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "FriendList"
-    threshold: 200
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
-
-  - resource: "LikeAction"
     threshold: 100
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+
+  - resource: "FollowerList"
+    threshold: 50
+    controlBehavior: 0
+
+  - resource: "FriendList"
+    threshold: 50
+    controlBehavior: 0
+
+  - resource: "LikeAction"
+    threshold: 150
+    controlBehavior: 0
 
   - resource: "LikeList"
-    threshold: 200
+    threshold: 150
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
 
   - resource: "CommentPublish"
     threshold: 50
-    controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+    controlBehavior: 1
+    maxQueueingTimeMs: 1000
 
   - resource: "CommentList"
-    threshold: 200
+    threshold: 100
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
 
   - resource: "CommentDelete"
     threshold: 50
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
 
   - resource: "MfaQrcode"
     threshold: 20
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
 
   - resource: "MfaBind"
     threshold: 20
     controlBehavior: 0
-    maxQueueingTimeMs: 0
-    warmUpPeriodSec: 0
+
+  - resource: "MfaConfirm"
+    threshold: 30
+    controlBehavior: 0
 
 
 circuitBreaker:
-
   - resource: "UserRegister"
-    threshold: 0.3
+    threshold: 0.5
+    strategy: errorRatio
+    retryTimeoutMs: 30000
+    minRequestAmount: 10
+    maxAllowedRtMs: 0
+
+  - resource: "VideoPublish"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 60000
+    minRequestAmount: 5
+    maxAllowedRtMs: 60000
+
+  - resource: "UserAvatar"
+    threshold: 0.5
+    strategy: slowRequestRatio
+    retryTimeoutMs: 60000
+    minRequestAmount: 5
+    maxAllowedRtMs: 8000
+
+  - resource: "RelationAction"
+    threshold: 0.5
+    strategy: errorRatio
+    retryTimeoutMs: 15000
+    minRequestAmount: 15
+    maxAllowedRtMs: 0
+
+  - resource: "LikeAction"
+    threshold: 0.5
     strategy: errorRatio
     retryTimeoutMs: 5000
+    minRequestAmount: 50
+    maxAllowedRtMs: 0
+
+  - resource: "CommentPublish"
+    threshold: 0.5
+    strategy: errorRatio
+    retryTimeoutMs: 15000
+    minRequestAmount: 15
+    maxAllowedRtMs: 0
+
+  - resource: "CommentDelete"
+    threshold: 0.5
+    strategy: errorRatio
+    retryTimeoutMs: 10000
+    minRequestAmount: 15
+    maxAllowedRtMs: 0
+
+  - resource: "MfaBind"
+    threshold: 0.5
+    strategy: errorRatio
+    retryTimeoutMs: 15000
+    minRequestAmount: 10
+    maxAllowedRtMs: 0
+
+  - resource: "MfaConfirm"
+    threshold: 0.5
+    strategy: errorRatio
+    retryTimeoutMs: 15000
     minRequestAmount: 10
     maxAllowedRtMs: 0
 
   - resource: "UserLogin"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
+    retryTimeoutMs: 15000
+    minRequestAmount: 10
+    maxAllowedRtMs: 500
 
   - resource: "UserInfo"
-    threshold: 0.5
-    strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
-
-  - resource: "UserAvatar"
-    threshold: 0.5
+    threshold: 0.3
     strategy: slowRequestRatio
     retryTimeoutMs: 5000
-    minRequestAmount: 3
-    maxAllowedRtMs: 3000
+    minRequestAmount: 60
+    maxAllowedRtMs: 200
 
   - resource: "RefreshToken"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 500
-
-  - resource: "VideoPublish"
-    threshold: 0.5
-    strategy: slowRequestRatio
     retryTimeoutMs: 5000
-    minRequestAmount: 3
-    maxAllowedRtMs: 5000
+    minRequestAmount: 50
+    maxAllowedRtMs: 200
+
+  - resource: "VideoStream"
+    threshold: 0.3
+    strategy: slowRequestRatio
+    retryTimeoutMs: 10000
+    minRequestAmount: 50
+    maxAllowedRtMs: 1000
 
   - resource: "VideoList"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
+    retryTimeoutMs: 15000
+    minRequestAmount: 30
+    maxAllowedRtMs: 800
 
   - resource: "VideoSearch"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
+    retryTimeoutMs: 20000
+    minRequestAmount: 15
     maxAllowedRtMs: 2000
 
   - resource: "VideoPopular"
+    threshold: 0.3
+    strategy: slowRequestRatio
+    retryTimeoutMs: 5000
+    minRequestAmount: 60
+    maxAllowedRtMs: 300
+
+  - resource: "BatchGetVideo"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 2000
-
-  - resource: "RelationAction"
-    threshold: 0.3
-    strategy: errorRatio
-    retryTimeoutMs: 5000
-    minRequestAmount: 5
-    maxAllowedRtMs: 0
+    retryTimeoutMs: 10000
+    minRequestAmount: 80
+    maxAllowedRtMs: 800
 
   - resource: "FollowingList"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
+    retryTimeoutMs: 10000
+    minRequestAmount: 30
+    maxAllowedRtMs: 500
 
   - resource: "FollowerList"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
+    retryTimeoutMs: 10000
+    minRequestAmount: 15
+    maxAllowedRtMs: 500
 
   - resource: "FriendList"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
-
-  - resource: "LikeAction"
-    threshold: 0.3
-    strategy: errorRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 0
+    retryTimeoutMs: 15000
+    minRequestAmount: 15
+    maxAllowedRtMs: 800
 
   - resource: "LikeList"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
-
-  - resource: "CommentPublish"
-    threshold: 0.3
-    strategy: errorRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 0
+    retryTimeoutMs: 5000
+    minRequestAmount: 50
+    maxAllowedRtMs: 500
 
   - resource: "CommentList"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 1000
-
-  - resource: "CommentDelete"
-    threshold: 0.3
-    strategy: errorRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 0
+    retryTimeoutMs: 10000
+    minRequestAmount: 30
+    maxAllowedRtMs: 500
 
   - resource: "MfaQrcode"
     threshold: 0.5
     strategy: slowRequestRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
+    retryTimeoutMs: 10000
+    minRequestAmount: 10
     maxAllowedRtMs: 1000
-
-  - resource: "MfaBind"
-    threshold: 0.3
-    strategy: errorRatio
-    retryTimeoutMs: 3000
-    minRequestAmount: 5
-    maxAllowedRtMs: 0
