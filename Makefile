@@ -1,9 +1,10 @@
-.PHONY: help docker-up docker-rebuild docker-down test fmt run run-infra
+.PHONY: help docker-up docker-rebuild docker-restart docker-down test fmt run run-infra
 
 help:
 	@echo "Available targets:"
 	@echo "  docker-up       - Start all services"
 	@echo "  docker-rebuild  - Rebuild images and start all services"
+	@echo "  docker-restart  - Restart business services (keep infrastructure running)"
 	@echo "  docker-down     - Stop all services"
 	@echo "  test            - Run all tests"
 	@echo "  run             - Run all services locally (requires infrastructure running)"
@@ -14,6 +15,11 @@ docker-up:
 
 docker-rebuild:
 	cd docker && docker compose up -d --build
+
+docker-restart:
+	@echo "Restarting business services: $(BIZ_SERVICES)..."
+	cd docker && docker compose restart $(BIZ_SERVICES)
+	@echo "Business services restarted."
 
 docker-down:
 	cd docker && docker compose down
