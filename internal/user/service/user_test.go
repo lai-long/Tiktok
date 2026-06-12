@@ -56,6 +56,14 @@ func (m *MockUser) GetMfaSecret(ctx context.Context, userId string) (string, err
 	args := m.Called(ctx, userId)
 	return args.String(0), args.Error(1)
 }
+func (m *MockUser) SaveMfaSecret(ctx context.Context, mfa string, userId string) error {
+	args := m.Called(ctx, mfa, userId)
+	return args.Error(0)
+}
+func (m *MockUser) MfaBindUpdate(ctx context.Context, userId string) error {
+	args := m.Called(ctx, userId)
+	return args.Error(0)
+}
 func (m *MockUser) GetCachedUserInfo(ctx context.Context, userId string) (*entity.UserEntity, error) {
 	args := m.Called(ctx, userId)
 	if args.Get(0) == nil {

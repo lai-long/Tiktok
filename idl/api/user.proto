@@ -3,7 +3,6 @@ package user;
 option go_package="user";
 import "api.proto";
 import "common.proto";
-import "user.proto";
 message UserInfo{
    string ID = 1[(api.go_tag)="json:\"id\""];
    string Username=2[(api.go_tag)="json:\"username\""];
@@ -63,6 +62,26 @@ message AuthReq{
 message AuthResp{
    common.Base Base=1[(api.body)="base"];
 }
+
+message MfaData{
+  string Secret=1[(api.go_tag)="json:\"secret\""];
+  string Qrcode=2[(api.go_tag)="json:\"qrcode\""];
+}
+
+message MfaQrcodeReq{}
+message MfaQrcodeResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+  MfaData Data=2[(api.go_tag)="json:\"data\""];
+}
+
+message MfaBindReq{
+  string Code=1[(api.body)="code"];
+  string Secret=2[(api.body)="secret"];
+}
+message MfaBindResp{
+  common.Base Base=1[(api.go_tag)="json:\"base\""];
+}
+
 service UserService{
    rpc UserRegister(RegisterReq) returns(RegisterResp){
       option(api.post) = "/user/register";
@@ -78,5 +97,11 @@ service UserService{
    }
    rpc RefreshToken(RefreshTokenReq)returns(RefreshTokenResp){
       option(api.post)="/user/refresh";
+   }
+   rpc MfaQrcode(MfaQrcodeReq) returns(MfaQrcodeResp){
+      option(api.get) = "/auth/mfa/qrcode";
+   }
+   rpc MfaBind(MfaBindReq)returns(MfaBindResp){
+      option(api.post) = "/auth/mfa/bind";
    }
 }

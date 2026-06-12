@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"Tiktok/kitex_gen/mfa/mfaservice"
 	"Tiktok/kitex_gen/react/commentservice"
 	"Tiktok/kitex_gen/react/likeservice"
 	"Tiktok/kitex_gen/social/socialservice"
@@ -11,7 +10,6 @@ import (
 
 var (
 	userClient    userservice.Client
-	mfaClient     mfaservice.Client
 	videoClient   videoservice.Client
 	commentClient commentservice.Client
 	likeClient    likeservice.Client
@@ -20,7 +18,6 @@ var (
 
 func Init() {
 	InitUserRpc()
-	InitMfaRpc()
 	InitVideoRpc()
 	InitReactRpc()
 	InitSocialRpc()
@@ -31,8 +28,6 @@ func SetUserClient(c userservice.Client)       { userClient = c }
 func GetUserClient() userservice.Client        { return userClient }
 func SetVideoClient(c videoservice.Client)     { videoClient = c }
 func GetVideoClient() videoservice.Client      { return videoClient }
-func SetMfaClient(c mfaservice.Client)         { mfaClient = c }
-func GetMfaClient() mfaservice.Client          { return mfaClient }
 func SetCommentClient(c commentservice.Client) { commentClient = c }
 func GetCommentClient() commentservice.Client  { return commentClient }
 func SetLikeClient(c likeservice.Client)       { likeClient = c }

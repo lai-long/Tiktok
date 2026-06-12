@@ -44,7 +44,6 @@ run:
 	go run ./cmd/video/  & \
 	go run ./cmd/react/  & \
 	go run ./cmd/social/ & \
-	go run ./cmd/mfa/    & \
 	sleep 2; \
 	go run ./cmd/api/    & \
 	go run ./cmd/ws/     & \

@@ -357,10 +357,188 @@ func (x *AuthResp) GetCode() int32 {
 	return 0
 }
 
+type MfaData struct {
+	Secret string `protobuf:"bytes,1,opt,name=Secret" json:"Secret,omitempty"`
+	Qrcode string `protobuf:"bytes,2,opt,name=Qrcode" json:"Qrcode,omitempty"`
+}
+
+func (x *MfaData) Reset() { *x = MfaData{} }
+
+func (x *MfaData) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaData) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaData) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
+}
+
+func (x *MfaData) GetQrcode() string {
+	if x != nil {
+		return x.Qrcode
+	}
+	return ""
+}
+
+type MfaQrcodeReq struct {
+	UserName string `protobuf:"bytes,1,opt,name=UserName" json:"UserName,omitempty"`
+	UserID   string `protobuf:"bytes,2,opt,name=UserID" json:"UserID,omitempty"`
+}
+
+func (x *MfaQrcodeReq) Reset() { *x = MfaQrcodeReq{} }
+
+func (x *MfaQrcodeReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaQrcodeReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaQrcodeReq) GetUserName() string {
+	if x != nil {
+		return x.UserName
+	}
+	return ""
+}
+
+func (x *MfaQrcodeReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+type MfaQrcodeResp struct {
+	Code int32    `protobuf:"varint,1,opt,name=Code" json:"Code,omitempty"`
+	Data *MfaData `protobuf:"bytes,2,opt,name=Data" json:"Data,omitempty"`
+}
+
+func (x *MfaQrcodeResp) Reset() { *x = MfaQrcodeResp{} }
+
+func (x *MfaQrcodeResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaQrcodeResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaQrcodeResp) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *MfaQrcodeResp) GetData() *MfaData {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+type MfaBindReq struct {
+	MfaCode string `protobuf:"bytes,1,opt,name=mfaCode" json:"mfaCode,omitempty"`
+	Secret  string `protobuf:"bytes,2,opt,name=Secret" json:"Secret,omitempty"`
+	UserID  string `protobuf:"bytes,3,opt,name=UserID" json:"UserID,omitempty"`
+	Type    string `protobuf:"bytes,4,opt,name=Type" json:"Type,omitempty"`
+}
+
+func (x *MfaBindReq) Reset() { *x = MfaBindReq{} }
+
+func (x *MfaBindReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaBindReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaBindReq) GetMfaCode() string {
+	if x != nil {
+		return x.MfaCode
+	}
+	return ""
+}
+
+func (x *MfaBindReq) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
+}
+
+func (x *MfaBindReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *MfaBindReq) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+type MfaBindResp struct {
+	Code int32 `protobuf:"varint,1,opt,name=Code" json:"Code,omitempty"`
+}
+
+func (x *MfaBindResp) Reset() { *x = MfaBindResp{} }
+
+func (x *MfaBindResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaBindResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaBindResp) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+type MfaConfirmReq struct {
+	UserID string `protobuf:"bytes,1,opt,name=userID" json:"userID,omitempty"`
+	QrCode string `protobuf:"bytes,2,opt,name=QrCode" json:"QrCode,omitempty"`
+}
+
+func (x *MfaConfirmReq) Reset() { *x = MfaConfirmReq{} }
+
+func (x *MfaConfirmReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaConfirmReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaConfirmReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *MfaConfirmReq) GetQrCode() string {
+	if x != nil {
+		return x.QrCode
+	}
+	return ""
+}
+
+type MfaConfirmResp struct {
+	Code int32 `protobuf:"varint,1,opt,name=Code" json:"Code,omitempty"`
+}
+
+func (x *MfaConfirmResp) Reset() { *x = MfaConfirmResp{} }
+
+func (x *MfaConfirmResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *MfaConfirmResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *MfaConfirmResp) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
 type UserService interface {
 	UserRegister(ctx context.Context, req *RegisterReq) (res *RegisterResp, err error)
 	UserLogin(ctx context.Context, req *LoginReq) (res *LoginResp, err error)
 	UserInfo(ctx context.Context, req *UserInfoReq) (res *UserInfoResp, err error)
 	UserAvatar(ctx context.Context, req *UserAvatarReq) (res *UserAvatarResp, err error)
 	RefreshToken(ctx context.Context, req *RefreshTokenReq) (res *RefreshTokenResp, err error)
+	MfaQrcode(ctx context.Context, req *MfaQrcodeReq) (res *MfaQrcodeResp, err error)
+	MfaBind(ctx context.Context, req *MfaBindReq) (res *MfaBindResp, err error)
+	MfaConfirm(ctx context.Context, req *MfaConfirmReq) (res *MfaConfirmResp, err error)
 }

@@ -19,6 +19,48 @@ func NewUserService(service *service.UserRepo) *UserServiceImpl {
 	return &UserServiceImpl{service: service}
 }
 
+// MfaQrcode implements the UserServiceImpl interface.
+func (s *UserServiceImpl) MfaQrcode(ctx context.Context, req *user.MfaQrcodeReq) (resp *user.MfaQrcodeResp, err error) {
+	qrCode, secret, code, _ := s.service.GenerateMfa(ctx, req.UserName, req.UserID)
+	resp = &user.MfaQrcodeResp{
+		Code: code,
+		Data: &user.MfaData{
+			Secret: secret,
+			Qrcode: qrCode,
+		},
+	}
+	return resp, nil
+}
+
+// MfaBind implements the UserServiceImpl interface.
+func (s *UserServiceImpl) MfaBind(ctx context.Context, req *user.MfaBindReq) (resp *user.MfaBindResp, err error) {
+	var code int32
+	switch req.Type {
+	case "secret":
+		code, _ = s.service.MfaBindBySecret(ctx, req.Secret, req.UserID)
+	case "qrcode":
+		code, _ = s.service.MfaBindByCode(ctx, req.MfaCode, req.UserID)
+	default:
+		code = 1
+	}
+	resp = &user.MfaBindResp{
+		Code: code,
+	}
+	return resp, nil
+}
+
+// MfaConfirm implements the UserServiceImpl interface.
+func (s *UserServiceImpl) MfaConfirm(ctx context.Context, req *user.MfaConfirmReq) (resp *user.MfaConfirmResp, err error) {
+	resp = &user.MfaConfirmResp{}
+	code, err := s.service.MfaConfirm(ctx, req.QrCode, req.UserID)
+	if err != nil {
+		resp.Code = code
+		return resp, err
+	}
+	resp.Code = code
+	return resp, nil
+}
+
 // UserRegister implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterReq) (resp *user.RegisterResp, err error) {
 	resp = &user.RegisterResp{}

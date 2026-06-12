@@ -62,10 +62,44 @@ message AuthResp{
     int32 Code =1;
 }
 
+message MfaData{
+    string Secret=1;
+    string Qrcode=2;
+}
+
+message MfaQrcodeReq{
+    string UserName=1;
+    string UserID=2;
+}
+message MfaQrcodeResp{
+    int32 Code=1;
+    MfaData Data=2;
+}
+
+message MfaBindReq{
+    string mfaCode=1;
+    string Secret=2;
+    string UserID=3;
+    string Type=4;
+}
+message MfaBindResp{
+    int32 Code=1;
+}
+message MfaConfirmReq{
+    string userID=1;
+    string QrCode=2;
+}
+message MfaConfirmResp{
+    int32 Code=1;
+}
+
 service UserService{
     rpc UserRegister(RegisterReq) returns(RegisterResp){}
     rpc UserLogin(LoginReq) returns(LoginResp){}
     rpc UserInfo(UserInfoReq)returns(UserInfoResp){}
     rpc UserAvatar(UserAvatarReq)returns(UserAvatarResp){}
     rpc RefreshToken(RefreshTokenReq)returns(RefreshTokenResp){}
+    rpc MfaQrcode(MfaQrcodeReq) returns(MfaQrcodeResp){}
+    rpc MfaBind(MfaBindReq)returns(MfaBindResp){}
+    rpc MfaConfirm(MfaConfirmReq)returns(MfaConfirmResp){}
 }

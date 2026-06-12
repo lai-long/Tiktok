@@ -45,3 +45,23 @@ func _useravatarMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _authMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _mfaMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _mfabindMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _mfaqrcodeMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

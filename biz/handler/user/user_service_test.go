@@ -79,6 +79,30 @@ func (m *MockUserClient) RefreshToken(
 	return args.Get(0).(*user2.RefreshTokenResp), args.Error(1)
 }
 
+func (m *MockUserClient) MfaQrcode(ctx context.Context, req *user2.MfaQrcodeReq, callOptions ...callopt.Option) (*user2.MfaQrcodeResp, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.MfaQrcodeResp), args.Error(1)
+}
+
+func (m *MockUserClient) MfaBind(ctx context.Context, req *user2.MfaBindReq, callOptions ...callopt.Option) (*user2.MfaBindResp, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.MfaBindResp), args.Error(1)
+}
+
+func (m *MockUserClient) MfaConfirm(ctx context.Context, req *user2.MfaConfirmReq, callOptions ...callopt.Option) (*user2.MfaConfirmResp, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*user2.MfaConfirmResp), args.Error(1)
+}
+
 func TestUserRegister(t *testing.T) {
 	tests := []struct {
 		name      string

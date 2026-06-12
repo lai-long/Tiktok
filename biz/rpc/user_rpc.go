@@ -68,3 +68,21 @@ func RefreshTokenRpc(ctx context.Context, req *user.RefreshTokenReq) (int32, str
 	}
 	return resp.Code, resp.RefreshToken, resp.AccessToken, nil
 }
+
+func MfaQrCodeRpc(ctx context.Context, req *user.MfaQrcodeReq) (int32, string, string, error) {
+	defer utils.TrackRPC(ctx, "user", "MfaQrcode")()
+	resp, err := userClient.MfaQrcode(ctx, req)
+	if err != nil || resp == nil || resp.Data == nil {
+		return consts.MfaCodeFalse, "", "", err
+	}
+	return resp.Code, resp.Data.Secret, resp.Data.Qrcode, nil
+}
+
+func MfaBindRpc(ctx context.Context, req *user.MfaBindReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "user", "MfaBind")()
+	resp, err := userClient.MfaBind(ctx, req)
+	if err != nil || resp == nil {
+		return consts.MfaCodeFalse, err
+	}
+	return resp.Code, nil
+}

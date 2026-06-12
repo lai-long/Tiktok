@@ -270,3 +270,101 @@ func RefreshToken(ctx context.Context, c *app.RequestContext) {
 	}
 	c.JSON(200, resp)
 }
+
+// MfaQrcode .
+// @router /auth/mfa/qrcode [GET]
+func MfaQrcode(ctx context.Context, c *app.RequestContext) {
+	userID, userName := utils.GetUserIDAndName(c)
+	code, secret, key, err := Rpc.MfaQrCodeRpc(ctx, &user2.MfaQrcodeReq{
+		UserName: userName,
+		UserID:   userID,
+	})
+	if err != nil {
+		logger.Error("mfa qrcode RPC failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("username", userName),
+			logger.WithField("action", "mfa_qrcode"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("mfa qrcode generated",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("username", userName),
+			logger.WithField("action", "mfa_qrcode"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
+	}
+	resp := &user.MfaQrcodeResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+		Data: &user.MfaData{Secret: secret, Qrcode: key},
+	}
+	c.JSON(200, resp)
+}
+
+// MfaBind .
+// @router /auth/mfa/bind [POST]
+func MfaBind(ctx context.Context, c *app.RequestContext) {
+	userID, _ := utils.GetUserIDAndName(c)
+	var req user.MfaBindReq
+	err := c.BindAndValidate(&req)
+	if err != nil {
+		logger.Warn("mfa bind binding failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
+		resp := &user.MfaBindResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
+		return
+	}
+	var ty string
+	switch {
+	case req.Secret != "":
+		ty = "secret"
+	case req.Code != "":
+		ty = "qrcode"
+	default:
+		logger.Warn("mfa bind invalid request",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
+		resp := &user.MfaBindResp{
+			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
+		}
+		c.JSON(200, resp)
+		return
+	}
+	code, err := Rpc.MfaBindRpc(ctx, &user2.MfaBindReq{
+		MfaCode: req.Code,
+		Secret:  req.Secret,
+		UserID:  userID,
+		Type:    ty,
+	})
+	if err != nil {
+		logger.Error("mfa bind RPC failed",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("mfa_type", ty),
+			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
+	}
+	if code == 0 {
+		logger.Info("mfa bind success",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userID),
+			logger.WithField("mfa_type", ty),
+			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
+	}
+	resp := &user.MfaBindResp{
+		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
+	}
+	c.JSON(200, resp)
+}

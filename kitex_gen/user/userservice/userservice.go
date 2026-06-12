@@ -50,6 +50,27 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"MfaQrcode": kitex.NewMethodInfo(
+		mfaQrcodeHandler,
+		newMfaQrcodeArgs,
+		newMfaQrcodeResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"MfaBind": kitex.NewMethodInfo(
+		mfaBindHandler,
+		newMfaBindArgs,
+		newMfaBindResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"MfaConfirm": kitex.NewMethodInfo(
+		mfaConfirmHandler,
+		newMfaConfirmArgs,
+		newMfaConfirmResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -671,6 +692,339 @@ func (p *RefreshTokenResult) GetResult() interface{} {
 	return p.Success
 }
 
+func mfaQrcodeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.MfaQrcodeReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.UserService).MfaQrcode(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *MfaQrcodeArgs:
+		success, err := handler.(user.UserService).MfaQrcode(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*MfaQrcodeResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newMfaQrcodeArgs() interface{} {
+	return &MfaQrcodeArgs{}
+}
+
+func newMfaQrcodeResult() interface{} {
+	return &MfaQrcodeResult{}
+}
+
+type MfaQrcodeArgs struct {
+	Req *user.MfaQrcodeReq
+}
+
+func (p *MfaQrcodeArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *MfaQrcodeArgs) Unmarshal(in []byte) error {
+	msg := new(user.MfaQrcodeReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var MfaQrcodeArgs_Req_DEFAULT *user.MfaQrcodeReq
+
+func (p *MfaQrcodeArgs) GetReq() *user.MfaQrcodeReq {
+	if !p.IsSetReq() {
+		return MfaQrcodeArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *MfaQrcodeArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *MfaQrcodeArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type MfaQrcodeResult struct {
+	Success *user.MfaQrcodeResp
+}
+
+var MfaQrcodeResult_Success_DEFAULT *user.MfaQrcodeResp
+
+func (p *MfaQrcodeResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *MfaQrcodeResult) Unmarshal(in []byte) error {
+	msg := new(user.MfaQrcodeResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *MfaQrcodeResult) GetSuccess() *user.MfaQrcodeResp {
+	if !p.IsSetSuccess() {
+		return MfaQrcodeResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *MfaQrcodeResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.MfaQrcodeResp)
+}
+
+func (p *MfaQrcodeResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *MfaQrcodeResult) GetResult() interface{} {
+	return p.Success
+}
+
+func mfaBindHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.MfaBindReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.UserService).MfaBind(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *MfaBindArgs:
+		success, err := handler.(user.UserService).MfaBind(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*MfaBindResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newMfaBindArgs() interface{} {
+	return &MfaBindArgs{}
+}
+
+func newMfaBindResult() interface{} {
+	return &MfaBindResult{}
+}
+
+type MfaBindArgs struct {
+	Req *user.MfaBindReq
+}
+
+func (p *MfaBindArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *MfaBindArgs) Unmarshal(in []byte) error {
+	msg := new(user.MfaBindReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var MfaBindArgs_Req_DEFAULT *user.MfaBindReq
+
+func (p *MfaBindArgs) GetReq() *user.MfaBindReq {
+	if !p.IsSetReq() {
+		return MfaBindArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *MfaBindArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *MfaBindArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type MfaBindResult struct {
+	Success *user.MfaBindResp
+}
+
+var MfaBindResult_Success_DEFAULT *user.MfaBindResp
+
+func (p *MfaBindResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *MfaBindResult) Unmarshal(in []byte) error {
+	msg := new(user.MfaBindResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *MfaBindResult) GetSuccess() *user.MfaBindResp {
+	if !p.IsSetSuccess() {
+		return MfaBindResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *MfaBindResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.MfaBindResp)
+}
+
+func (p *MfaBindResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *MfaBindResult) GetResult() interface{} {
+	return p.Success
+}
+
+func mfaConfirmHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.MfaConfirmReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.UserService).MfaConfirm(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *MfaConfirmArgs:
+		success, err := handler.(user.UserService).MfaConfirm(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*MfaConfirmResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newMfaConfirmArgs() interface{} {
+	return &MfaConfirmArgs{}
+}
+
+func newMfaConfirmResult() interface{} {
+	return &MfaConfirmResult{}
+}
+
+type MfaConfirmArgs struct {
+	Req *user.MfaConfirmReq
+}
+
+func (p *MfaConfirmArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *MfaConfirmArgs) Unmarshal(in []byte) error {
+	msg := new(user.MfaConfirmReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var MfaConfirmArgs_Req_DEFAULT *user.MfaConfirmReq
+
+func (p *MfaConfirmArgs) GetReq() *user.MfaConfirmReq {
+	if !p.IsSetReq() {
+		return MfaConfirmArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *MfaConfirmArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *MfaConfirmArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type MfaConfirmResult struct {
+	Success *user.MfaConfirmResp
+}
+
+var MfaConfirmResult_Success_DEFAULT *user.MfaConfirmResp
+
+func (p *MfaConfirmResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *MfaConfirmResult) Unmarshal(in []byte) error {
+	msg := new(user.MfaConfirmResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *MfaConfirmResult) GetSuccess() *user.MfaConfirmResp {
+	if !p.IsSetSuccess() {
+		return MfaConfirmResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *MfaConfirmResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.MfaConfirmResp)
+}
+
+func (p *MfaConfirmResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *MfaConfirmResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -726,6 +1080,36 @@ func (p *kClient) RefreshToken(ctx context.Context, Req *user.RefreshTokenReq) (
 	_args.Req = Req
 	var _result RefreshTokenResult
 	if err = p.c.Call(ctx, "RefreshToken", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) MfaQrcode(ctx context.Context, Req *user.MfaQrcodeReq) (r *user.MfaQrcodeResp, err error) {
+	var _args MfaQrcodeArgs
+	_args.Req = Req
+	var _result MfaQrcodeResult
+	if err = p.c.Call(ctx, "MfaQrcode", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) MfaBind(ctx context.Context, Req *user.MfaBindReq) (r *user.MfaBindResp, err error) {
+	var _args MfaBindArgs
+	_args.Req = Req
+	var _result MfaBindResult
+	if err = p.c.Call(ctx, "MfaBind", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) MfaConfirm(ctx context.Context, Req *user.MfaConfirmReq) (r *user.MfaConfirmResp, err error) {
+	var _args MfaConfirmArgs
+	_args.Req = Req
+	var _result MfaConfirmResult
+	if err = p.c.Call(ctx, "MfaConfirm", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

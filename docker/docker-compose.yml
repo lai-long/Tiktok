@@ -213,38 +213,6 @@ services:
     networks:
       - tiktok
 
-  mfa:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      args:
-        SERVICE: mfa
-    container_name: tiktok-mfa
-    restart: always
-    depends_on:
-      etcd:
-        condition: service_healthy
-      mysql:
-        condition: service_healthy
-    env_file:
-      - ../.env
-    environment:
-      CONFIG_PATH: "/app/config"
-      SENTINEL_PATH: "/app/config"
-      MYSQL_HOST: "mysql"
-      REDIS_HOST: "redis"
-      ETCD_ADDR: "etcd:2379"
-    volumes:
-      - ../config:/app/config
-      - ../logs:/app/logs
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.5'
-    networks:
-      - tiktok
-
   api:
     build:
       context: ..
@@ -265,8 +233,6 @@ services:
       react:
         condition: service_started
       social:
-        condition: service_started
-      mfa:
         condition: service_started
     env_file:
       - ../.env

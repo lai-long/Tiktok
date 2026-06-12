@@ -3,7 +3,6 @@
 package router
 
 import (
-	mfa "Tiktok/biz/router/mfa"
 	react "Tiktok/biz/router/react"
 	social "Tiktok/biz/router/social"
 	user "Tiktok/biz/router/user"
@@ -19,6 +18,5 @@ func GeneratedRegister(r *server.Hertz) {
 	video.Register(r)
 	social.Register(r)
 	react.Register(r)
-	mfa.Register(r)
 	user.Register(r)
 }

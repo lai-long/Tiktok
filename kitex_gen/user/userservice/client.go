@@ -16,6 +16,9 @@ type Client interface {
 	UserInfo(ctx context.Context, Req *user.UserInfoReq, callOptions ...callopt.Option) (r *user.UserInfoResp, err error)
 	UserAvatar(ctx context.Context, Req *user.UserAvatarReq, callOptions ...callopt.Option) (r *user.UserAvatarResp, err error)
 	RefreshToken(ctx context.Context, Req *user.RefreshTokenReq, callOptions ...callopt.Option) (r *user.RefreshTokenResp, err error)
+	MfaQrcode(ctx context.Context, Req *user.MfaQrcodeReq, callOptions ...callopt.Option) (r *user.MfaQrcodeResp, err error)
+	MfaBind(ctx context.Context, Req *user.MfaBindReq, callOptions ...callopt.Option) (r *user.MfaBindResp, err error)
+	MfaConfirm(ctx context.Context, Req *user.MfaConfirmReq, callOptions ...callopt.Option) (r *user.MfaConfirmResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -70,4 +73,19 @@ func (p *kUserServiceClient) UserAvatar(ctx context.Context, Req *user.UserAvata
 func (p *kUserServiceClient) RefreshToken(ctx context.Context, Req *user.RefreshTokenReq, callOptions ...callopt.Option) (r *user.RefreshTokenResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.RefreshToken(ctx, Req)
+}
+
+func (p *kUserServiceClient) MfaQrcode(ctx context.Context, Req *user.MfaQrcodeReq, callOptions ...callopt.Option) (r *user.MfaQrcodeResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MfaQrcode(ctx, Req)
+}
+
+func (p *kUserServiceClient) MfaBind(ctx context.Context, Req *user.MfaBindReq, callOptions ...callopt.Option) (r *user.MfaBindResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MfaBind(ctx, Req)
+}
+
+func (p *kUserServiceClient) MfaConfirm(ctx context.Context, Req *user.MfaConfirmReq, callOptions ...callopt.Option) (r *user.MfaConfirmResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MfaConfirm(ctx, Req)
 }
