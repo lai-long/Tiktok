@@ -37,7 +37,12 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 		UserID:     userId,
 	})
 	if err != nil {
-		logger.Error("CommentPublish error", zap.Error(err))
+		logger.Error("CommentPublish error",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userId),
+			logger.WithField("action", "comment_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
 	}
 	resp := &react.CommentPublishResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -63,7 +68,11 @@ func CommentList(ctx context.Context, c *app.RequestContext) {
 		PageNum:  req.PageNum,
 	})
 	if err != nil {
-		logger.Error("CommentList error", zap.Error(err))
+		logger.Error("CommentList error",
+			logger.WithServiceName("api"),
+			logger.WithField("action", "comment_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
 	}
 	resp := &react.CommentListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -92,7 +101,12 @@ func CommentDelete(ctx context.Context, c *app.RequestContext) {
 		UserID:     userId,
 	})
 	if err != nil {
-		logger.Error("CommentDelete error", zap.Error(err))
+		logger.Error("CommentDelete error",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userId),
+			logger.WithField("action", "comment_delete"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
 	}
 	resp := &react.CommentDeleteResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

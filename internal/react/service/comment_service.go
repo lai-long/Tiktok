@@ -44,6 +44,7 @@ func toCommentInfo(e entity.CommentEntity) *react.CommentInfo {
 }
 
 func (s *CommentRepo) CommentPublish(ctx context.Context, targetId, userId, content, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "CommentPublish")()
 	switch targetType {
 	case "1":
 		commentId := utils.IDGenerate()
@@ -72,6 +73,7 @@ func (s *CommentRepo) CommentPublish(ctx context.Context, targetId, userId, cont
 }
 
 func (s *CommentRepo) CommentList(ctx context.Context, targetId string, pageSize int64, pageNum int64) (int32, []*react.CommentInfo, error) {
+	defer utils.TrackTime(ctx, "CommentList")()
 	commentEntity, err := s.db.GetComments(ctx, targetId, pageNum, pageSize)
 	if err != nil {
 		return consts.ReactDBSelectError, nil, errors.Wrap(err, "->CommentList select comment err")
@@ -84,6 +86,7 @@ func (s *CommentRepo) CommentList(ctx context.Context, targetId string, pageSize
 }
 
 func (s *CommentRepo) CommentDelete(ctx context.Context, commentId string, targetId string, userId string, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "CommentDelete")()
 	comment, err := s.db.GetCommentById(ctx, commentId)
 	if err != nil {
 		return consts.ReactDBSelectError, errors.Wrap(err, "->CommentDelete select comment err")

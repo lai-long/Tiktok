@@ -7,6 +7,7 @@ import (
 	"Tiktok/kitex_gen/social/socialservice"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
 
 	"github.com/cloudwego/kitex/client"
@@ -28,6 +29,7 @@ func InitSocialRpc() {
 }
 
 func RelationActionRpc(ctx context.Context, req *social.RelationActionReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "social", "RelationAction")()
 	resp, err := socialClient.RelationAction(ctx, req)
 	if err != nil {
 		return consts.SocialReqValueError, err
@@ -36,6 +38,7 @@ func RelationActionRpc(ctx context.Context, req *social.RelationActionReq) (int3
 }
 
 func FollowingListRpc(ctx context.Context, req *social.FollowingListReq) (int32, *SocialData, error) {
+	defer utils.TrackRPC(ctx, "social", "FollowingList")()
 	resp, err := socialClient.FollowingList(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
@@ -44,6 +47,7 @@ func FollowingListRpc(ctx context.Context, req *social.FollowingListReq) (int32,
 }
 
 func FollowerListRpc(ctx context.Context, req *social.FollowerListReq) (int32, *SocialData, error) {
+	defer utils.TrackRPC(ctx, "social", "FollowerList")()
 	resp, err := socialClient.FollowerList(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err
@@ -52,6 +56,7 @@ func FollowerListRpc(ctx context.Context, req *social.FollowerListReq) (int32, *
 }
 
 func FriendListRpc(ctx context.Context, req *social.FriendListReq) (int32, *SocialData, error) {
+	defer utils.TrackRPC(ctx, "social", "FriendList")()
 	resp, err := socialClient.FriendList(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.SocialDBSelectError, nil, err

@@ -29,6 +29,7 @@ func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "mfa_qrcode"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError},
@@ -46,6 +47,7 @@ func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("username", userName),
 			logger.WithField("action", "mfa_qrcode"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if code == 0 {
@@ -53,7 +55,8 @@ func MfaQrcode(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("username", userName),
-			logger.WithField("action", "mfa_qrcode"))
+			logger.WithField("action", "mfa_qrcode"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := &mfa.MfaQrcodeResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -73,6 +76,7 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
@@ -90,7 +94,8 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 		logger.Warn("mfa bind invalid request",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
-			logger.WithField("action", "mfa_bind"))
+			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp := &mfa.MfaQrcodeResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
 		}
@@ -109,6 +114,7 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("mfa_type", ty),
 			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if code == 0 {
@@ -116,7 +122,8 @@ func MfaBind(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("mfa_type", ty),
-			logger.WithField("action", "mfa_bind"))
+			logger.WithField("action", "mfa_bind"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := &mfa.MfaQrcodeResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

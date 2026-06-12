@@ -44,7 +44,12 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		UserID:     userId,
 	})
 	if err != nil {
-		logger.Error("likeService.LikeAction error", zap.Error(err))
+		logger.Error("likeService.LikeAction error",
+			logger.WithServiceName("api"),
+			logger.WithUserID(userId),
+			logger.WithField("action", "like_action"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
 	}
 	resp := &react.LikeActionResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -70,7 +75,11 @@ func LikeList(ctx context.Context, c *app.RequestContext) {
 		PageSize: req.PageSize,
 	})
 	if err != nil {
-		logger.Error("likeService.LikeList error", zap.Error(err))
+		logger.Error("likeService.LikeList error",
+			logger.WithServiceName("api"),
+			logger.WithField("action", "like_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
+			zap.Error(err))
 	}
 	resp := &react.LikeListResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

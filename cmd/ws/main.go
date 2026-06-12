@@ -62,6 +62,7 @@ func main() {
 		server.WithMaxRequestBodySize(10*1024*1024),
 	)
 	h.Use(middleware.AuthMiddleware)
+	h.Use(middleware.LoggingMiddleware())
 
 	r := h.Group("/")
 	r.GET("/ws", wsHandler.WebSocketHandler)

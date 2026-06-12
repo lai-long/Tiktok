@@ -58,6 +58,7 @@ func main() {
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMiddleware(middleware.TracingMiddleware("user")),
 		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "userService",

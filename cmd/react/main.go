@@ -64,6 +64,7 @@ func main() {
 		server.WithServiceAddr(commentAddr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMiddleware(middleware.TracingMiddleware("comment")),
 		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "commentService",
@@ -73,6 +74,7 @@ func main() {
 		server.WithServiceAddr(likeAddr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMiddleware(middleware.TracingMiddleware("like")),
 		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "likeService",

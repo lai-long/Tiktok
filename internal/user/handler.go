@@ -46,7 +46,7 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 	resp = &user.UserInfoResp{}
 	userInfo, code, err := s.service.UserInfo(ctx, req.UserId)
 	if err != nil {
-		logger.Error("UserInfo failed", zap.Error(err), logger.WithUserID(req.UserId), logger.WithRequestID(utils.GetRequestID(ctx)))
+		logger.Error("UserInfo failed", zap.Error(err), logger.WithUserID(req.UserId), logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp.Code = code
 		resp.Data = userInfo
 		return resp, nil
@@ -61,7 +61,7 @@ func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarRe
 	resp = &user.UserAvatarResp{}
 	code, userInfo, err := s.service.UserAvatar(ctx, req.AvatarURL, req.UserID)
 	if err != nil {
-		logger.Error("UserAvatar failed", zap.Error(err), logger.WithUserID(req.UserID), logger.WithRequestID(utils.GetRequestID(ctx)))
+		logger.Error("UserAvatar failed", zap.Error(err), logger.WithUserID(req.UserID), logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp.Code = code
 		resp.Data = userInfo
 		return resp, nil
@@ -76,7 +76,7 @@ func (s *UserServiceImpl) RefreshToken(ctx context.Context, req *user.RefreshTok
 	resp = &user.RefreshTokenResp{}
 	code, reToken, acToken, err := s.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
-		logger.Error("RefreshToken failed", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
+		logger.Error("RefreshToken failed", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp.Code = code
 		resp.RefreshToken = reToken
 		resp.AccessToken = acToken

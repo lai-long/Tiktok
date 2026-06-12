@@ -4,6 +4,7 @@ import (
 	"Tiktok/kitex_gen/social"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
+	"Tiktok/pkg/utils"
 	"context"
 
 	"github.com/pkg/errors"
@@ -24,6 +25,7 @@ func NewSocialRepo(socialDb SocialDatabase) *SocialRepo {
 	return &SocialRepo{socialDb: socialDb}
 }
 func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, actionType string, userId string) (int32, error) {
+	defer utils.TrackTime(ctx, "RelationAction")()
 	if actionType == consts.ActionFollow {
 		err := s.socialDb.CreateFollowing(ctx, userId, toUserId)
 		if err != nil {
@@ -42,6 +44,7 @@ func (s *SocialRepo) RelationAction(ctx context.Context, toUserId string, action
 }
 
 func (s *SocialRepo) FollowingList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
+	defer utils.TrackTime(ctx, "FollowingList")()
 	entities, err := s.socialDb.FollowingList(ctx, userId, pageNum, pageSize)
 	if err != nil {
 		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowingList Get Following List err")
@@ -50,6 +53,7 @@ func (s *SocialRepo) FollowingList(ctx context.Context, userId string, pageNum i
 }
 
 func (s *SocialRepo) FollowerList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
+	defer utils.TrackTime(ctx, "FollowerList")()
 	entities, err := s.socialDb.FollowerList(ctx, userId, pageNum, pageSize)
 	if err != nil {
 		return consts.SocialDBSelectError, nil, errors.Wrap(err, "->FollowerList Get List err")
@@ -58,6 +62,7 @@ func (s *SocialRepo) FollowerList(ctx context.Context, userId string, pageNum in
 }
 
 func (s *SocialRepo) FriendList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []*social.UserInfo, error) {
+	defer utils.TrackTime(ctx, "FriendList")()
 	entityFriend, ok := s.socialDb.FriendList(ctx, userId, pageNum, pageSize)
 	if !ok {
 		return consts.SocialDBSelectError, nil, errors.New("->FriendList Get List err")

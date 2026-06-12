@@ -31,6 +31,7 @@ func InitVideoRpc() {
 }
 
 func VideoPublish(ctx context.Context, req *video.VideoPublishReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "video", "VideoPublish")()
 	resp, err := videoClient.VideoPublish(ctx, req)
 	if err != nil || resp == nil {
 		return consts.VideoReqValidError, err
@@ -38,6 +39,7 @@ func VideoPublish(ctx context.Context, req *video.VideoPublishReq) (int32, error
 	return resp.Code, nil
 }
 func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.VideoData, error) {
+	defer utils.TrackRPC(ctx, "video", "VideoList")()
 	resp, err := videoClient.VideoList(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
@@ -45,6 +47,7 @@ func VideoList(ctx context.Context, req *video.VideoListReq) (int32, *model.Vide
 	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 func VideoSearch(ctx context.Context, req *video.VideoSearchReq) (int32, *model.VideoData, error) {
+	defer utils.TrackRPC(ctx, "video", "VideoSearch")()
 	resp, err := videoClient.VideoSearch(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
@@ -52,6 +55,7 @@ func VideoSearch(ctx context.Context, req *video.VideoSearchReq) (int32, *model.
 	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 func VideoPopular(ctx context.Context, req *video.VideoHotReq) (int32, *model.VideoData, error) {
+	defer utils.TrackRPC(ctx, "video", "VideoPopular")()
 	resp, err := videoClient.VideoPopular(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
@@ -59,6 +63,7 @@ func VideoPopular(ctx context.Context, req *video.VideoHotReq) (int32, *model.Vi
 	return resp.Code, utils.ToVideoData(resp.Data), nil
 }
 func VideoStream(ctx context.Context, req *video.VideoStreamReq) (int32, *model.VideoData, error) {
+	defer utils.TrackRPC(ctx, "video", "VideoStream")()
 	resp, err := videoClient.VideoStream(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.VideoDBSelectError, nil, err
@@ -67,6 +72,7 @@ func VideoStream(ctx context.Context, req *video.VideoStreamReq) (int32, *model.
 }
 
 func BatchGetVideo(ctx context.Context, ids []string) (int32, []*model.VideoInfo, error) {
+	defer utils.TrackRPC(ctx, "video", "BatchGetVideo")()
 	resp, err := videoClient.BatchGetVideo(ctx, &video.BatchGetVideoReq{Ids: ids})
 	if err != nil || resp == nil {
 		return consts.VideoDBSelectError, nil, err

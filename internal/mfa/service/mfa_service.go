@@ -2,6 +2,7 @@ package service
 
 import (
 	"Tiktok/pkg/consts"
+	"Tiktok/pkg/utils"
 	"context"
 
 	"github.com/pkg/errors"
@@ -24,6 +25,7 @@ func NewMfaRepo(mfaDb MfaDatabase) *MfaRepo {
 }
 
 func (s *MfaRepo) GenerateMfa(ctx context.Context, username string, userId string) (string, string, int32, error) {
+	defer utils.TrackTime(ctx, "GenerateMfa")()
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Tk",
 		AccountName: username,
@@ -40,6 +42,7 @@ func (s *MfaRepo) GenerateMfa(ctx context.Context, username string, userId strin
 }
 
 func (s *MfaRepo) MfaBindByCode(ctx context.Context, code string, userId string) (int32, error) {
+	defer utils.TrackTime(ctx, "MfaBindByCode")()
 	secret, err := s.mfaDb.GetMfaSecret(ctx, userId)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->mfa bind by code get mfa secret error")
@@ -56,6 +59,7 @@ func (s *MfaRepo) MfaBindByCode(ctx context.Context, code string, userId string)
 }
 
 func (s *MfaRepo) MfaBindBySecret(ctx context.Context, secret string, userId string) (int32, error) {
+	defer utils.TrackTime(ctx, "MfaBindBySecret")()
 	dbSecret, err := s.mfaDb.GetMfaSecret(ctx, userId)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->mfa bind by secret get mfa secret error")
@@ -71,6 +75,7 @@ func (s *MfaRepo) MfaBindBySecret(ctx context.Context, secret string, userId str
 }
 
 func (s *MfaRepo) MfaConfirm(ctx context.Context, mfaCode string, userID string) (int32, error) {
+	defer utils.TrackTime(ctx, "MfaConfirm")()
 	isBind, err := s.mfaDb.CheckMfaBind(ctx, userID)
 	if err != nil {
 		return consts.MfaDBSelectError, errors.Wrap(err, "->check mfa bind error")

@@ -62,6 +62,7 @@ func toVideoInfoList(videos []entity.VideoEntity) []*video.VideoInfo {
 }
 
 func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description string, url string, coverURL string, userID string) (int32, error) {
+	defer utils.TrackTime(ctx, "VideoPublish")()
 	var videoEntity entity.VideoEntity
 	videoEntity.Title = title
 	videoEntity.Description = description
@@ -87,6 +88,7 @@ func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description 
 }
 
 func (s *VideoRepo) VideoList(ctx context.Context, userId string, pageSize int64, pageNum int64) (int32, []*video.VideoInfo, error) {
+	defer utils.TrackTime(ctx, "VideoList")()
 	videoList, err := s.videoDb.GetVideoByUserID(ctx, userId, pageSize, pageNum)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoList GetVideo err")
@@ -95,6 +97,7 @@ func (s *VideoRepo) VideoList(ctx context.Context, userId string, pageSize int64
 }
 
 func (s *VideoRepo) VideoSearch(ctx context.Context, keyword string, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+	defer utils.TrackTime(ctx, "VideoSearch")()
 	videoEntity, err := s.videoDb.GetVideoByKeyWord(ctx, keyword, pageNum, pageSize)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->VideoSearch GetVideo Error")
@@ -103,6 +106,7 @@ func (s *VideoRepo) VideoSearch(ctx context.Context, keyword string, pageNum int
 }
 
 func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize int64) (int32, []*video.VideoInfo, error) {
+	defer utils.TrackTime(ctx, "VideoPopular")()
 	z, err := s.VideoRedis.VideoHotGet(ctx, "videoHot", pageNum, pageSize)
 	if err != nil {
 		return consts.VideoRedisGetError, nil, errors.Wrap(err, "->VideoPopular GetVideoHot error")
@@ -124,6 +128,7 @@ func (s *VideoRepo) VideoPopular(ctx context.Context, pageNum int64, pageSize in
 }
 
 func (s *VideoRepo) VideoStream(ctx context.Context) (int32, []*video.VideoInfo, error) {
+	defer utils.TrackTime(ctx, "VideoStream")()
 	videoEntity, err := s.videoDb.GetVideoStream(ctx)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video stream select video error")
@@ -132,6 +137,7 @@ func (s *VideoRepo) VideoStream(ctx context.Context) (int32, []*video.VideoInfo,
 }
 
 func (s *VideoRepo) BatchGetVideo(ctx context.Context, ids []string) (int32, []*video.VideoInfo, error) {
+	defer utils.TrackTime(ctx, "BatchGetVideo")()
 	videos, err := s.videoDb.GetVideoByIds(ctx, ids)
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->BatchGetVideo GetVideoByIds err")

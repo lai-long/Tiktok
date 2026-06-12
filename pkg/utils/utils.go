@@ -150,12 +150,39 @@ func GetUserID(c *app.RequestContext) string {
 	return ""
 }
 
-// GetRequestID 从 context 中获取 request_id
-func GetRequestID(ctx context.Context) string {
-	if v, ok := metainfo.GetValue(ctx, consts.RequestIDKey); ok {
+// GetTraceID 从 context 中获取 trace_id
+func GetTraceID(ctx context.Context) string {
+	if v, ok := metainfo.GetValue(ctx, consts.TraceIDKey); ok {
 		return v
 	}
 	return ""
+}
+
+// TrackTime 返回一个 defer 闭包,记录 op_done 日志,包含 duration_ms 和 ctx 中的 trace_id
+func TrackTime(ctx context.Context, opName string) func() {
+	start := time.Now()
+	traceID := GetTraceID(ctx)
+	return func() {
+		logger.Info("op_done",
+			logger.WithTraceID(traceID),
+			zap.String("op", opName),
+			zap.Int64("duration_ms", time.Since(start).Milliseconds()),
+		)
+	}
+}
+
+// TrackRPC 返回一个 defer 闭包,记录 rpc_call 日志,包含 duration_ms、目标 service、method 和 trace_id
+func TrackRPC(ctx context.Context, serviceName, method string) func() {
+	start := time.Now()
+	traceID := GetTraceID(ctx)
+	return func() {
+		logger.Info("rpc_call",
+			logger.WithTraceID(traceID),
+			zap.String("service", serviceName),
+			zap.String("method", method),
+			zap.Int64("duration_ms", time.Since(start).Milliseconds()),
+		)
+	}
 }
 
 // GetUserIDAndName 从请求上下文中获取用户ID和用户名

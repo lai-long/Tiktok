@@ -29,6 +29,7 @@ func InitUserRpc() {
 	userClient = cli
 }
 func RegisterRpc(ctx context.Context, req *user.RegisterReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "user", "UserRegister")()
 	resp, err := userClient.UserRegister(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, err
@@ -36,6 +37,7 @@ func RegisterRpc(ctx context.Context, req *user.RegisterReq) (int32, error) {
 	return resp.Code, nil
 }
 func LoginRpc(ctx context.Context, req *user.LoginReq) (code int32, data *model.UserInfo, reToken string, acToken string, err error) {
+	defer utils.TrackRPC(ctx, "user", "UserLogin")()
 	resp, err := userClient.UserLogin(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, &model.UserInfo{}, "", "", err
@@ -43,6 +45,7 @@ func LoginRpc(ctx context.Context, req *user.LoginReq) (code int32, data *model.
 	return resp.Code, utils.ToBizUserInfo(resp.Data), resp.RefreshToken, resp.AccessToken, nil
 }
 func UserInfoRpc(ctx context.Context, req *user.UserInfoReq) (int32, *model.UserInfo, error) {
+	defer utils.TrackRPC(ctx, "user", "UserInfo")()
 	resp, err := userClient.UserInfo(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, &model.UserInfo{}, err
@@ -50,6 +53,7 @@ func UserInfoRpc(ctx context.Context, req *user.UserInfoReq) (int32, *model.User
 	return resp.Code, utils.ToBizUserInfo(resp.Data), nil
 }
 func UserAvatarRpc(ctx context.Context, req *user.UserAvatarReq) (int32, *model.UserInfo, error) {
+	defer utils.TrackRPC(ctx, "user", "UserAvatar")()
 	resp, err := userClient.UserAvatar(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, &model.UserInfo{}, err
@@ -57,6 +61,7 @@ func UserAvatarRpc(ctx context.Context, req *user.UserAvatarReq) (int32, *model.
 	return resp.Code, utils.ToBizUserInfo(resp.Data), nil
 }
 func RefreshTokenRpc(ctx context.Context, req *user.RefreshTokenReq) (int32, string, string, error) {
+	defer utils.TrackRPC(ctx, "user", "RefreshToken")()
 	resp, err := userClient.RefreshToken(ctx, req)
 	if err != nil || resp == nil {
 		return consts.UserReqValidError, "", "", err

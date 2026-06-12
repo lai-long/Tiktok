@@ -6,6 +6,7 @@ import (
 	"Tiktok/kitex_gen/mfa/mfaservice"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
 
 	"github.com/cloudwego/kitex/client"
@@ -27,6 +28,7 @@ func InitMfaRpc() {
 }
 
 func MfaQrCodeRpc(ctx context.Context, req *mfa.MfaQrcodeReq) (int32, string, string, error) {
+	defer utils.TrackRPC(ctx, "mfa", "MfaQrcode")()
 	resp, err := mfaClient.MfaQrcode(ctx, req)
 	if err != nil || resp == nil || resp.Data == nil {
 		return consts.MfaCodeFalse, "", "", err
@@ -34,6 +36,7 @@ func MfaQrCodeRpc(ctx context.Context, req *mfa.MfaQrcodeReq) (int32, string, st
 	return resp.Code, resp.Data.Secret, resp.Data.Qrcode, nil
 }
 func MfaBindRpc(ctx context.Context, req *mfa.MfaBindReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "mfa", "MfaBind")()
 	resp, err := mfaClient.MfaBind(ctx, req)
 	if err != nil || resp == nil {
 		return consts.MfaCodeFalse, err

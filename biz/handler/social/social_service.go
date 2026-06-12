@@ -27,6 +27,7 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "relation_action"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &social.RelationActionResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -47,6 +48,7 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 			logger.WithField("to_user_id", req.ToUserId),
 			logger.WithField("action_type", req.ActionType),
 			logger.WithField("action", "relation_action"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if code == 0 {
@@ -58,7 +60,8 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("to_user_id", req.ToUserId),
-			logger.WithField("action", actionStr))
+			logger.WithField("action", actionStr),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := &social.RelationActionResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -77,6 +80,7 @@ func FollowingList(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "following_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &social.FollowingListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -96,6 +100,7 @@ func FollowingList(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("target_user_id", req.UserId),
 			logger.WithField("action", "following_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if data == nil {
@@ -123,6 +128,7 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "follower_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &social.FollowerListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -142,6 +148,7 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("target_user_id", req.UserId),
 			logger.WithField("action", "follower_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if data == nil {
@@ -169,6 +176,7 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "friend_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &social.FriendListResp{
 			Base: &common.Base{Code: consts.SocialReqValidError, Msg: consts.GetErrorCodeMsg(consts.SocialReqValidError)},
@@ -187,6 +195,7 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "friend_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if data == nil {

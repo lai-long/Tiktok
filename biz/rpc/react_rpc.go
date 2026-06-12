@@ -7,6 +7,7 @@ import (
 	"Tiktok/kitex_gen/react/likeservice"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/logger"
+	"Tiktok/pkg/utils"
 	"context"
 
 	model "Tiktok/biz/model/react"
@@ -35,6 +36,7 @@ func InitReactRpc() {
 }
 
 func CommentPublish(ctx context.Context, req *react.CommentPublishReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "comment", "CommentPublish")()
 	resp, err := commentClient.CommentPublish(ctx, req)
 	if err != nil || resp == nil {
 		return consts.ReactError, err
@@ -43,6 +45,7 @@ func CommentPublish(ctx context.Context, req *react.CommentPublishReq) (int32, e
 }
 
 func CommentList(ctx context.Context, req *react.CommentListReq) (int32, *model.CommentData, error) {
+	defer utils.TrackRPC(ctx, "comment", "CommentList")()
 	resp, err := commentClient.CommentList(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.ReactDBSelectError, nil, err
@@ -70,6 +73,7 @@ func CommentList(ctx context.Context, req *react.CommentListReq) (int32, *model.
 }
 
 func CommentDelete(ctx context.Context, req *react.CommentDeleteReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "comment", "CommentDelete")()
 	resp, err := commentClient.CommentDelete(ctx, req)
 	if err != nil || resp == nil {
 		return consts.ReactError, err
@@ -78,6 +82,7 @@ func CommentDelete(ctx context.Context, req *react.CommentDeleteReq) (int32, err
 }
 
 func LikeAction(ctx context.Context, req *react.LikeActionReq) (int32, error) {
+	defer utils.TrackRPC(ctx, "like", "LikeAction")()
 	resp, err := likeClient.LikeAction(ctx, req)
 	if err != nil || resp == nil {
 		return consts.ReactError, err
@@ -86,6 +91,7 @@ func LikeAction(ctx context.Context, req *react.LikeActionReq) (int32, error) {
 }
 
 func LikeList(ctx context.Context, req *react.LikeListReq) (int32, *model.LikeVideoData, error) {
+	defer utils.TrackRPC(ctx, "like", "LikeList")()
 	resp, err := likeClient.LikeList(ctx, req)
 	if err != nil || resp.Data == nil {
 		return consts.ReactDBSelectError, nil, err

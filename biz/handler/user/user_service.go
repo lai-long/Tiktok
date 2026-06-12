@@ -32,6 +32,7 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithField("username", req.UserName),
 			logger.WithField("action", "register"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		return
 	}
@@ -44,6 +45,7 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithField("username", req.UserName),
 			logger.WithField("action", "register"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	resp := new(user.RegisterResp)
@@ -61,6 +63,7 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithField("username", req.UserName),
 			logger.WithField("action", "login"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &user.LoginResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
@@ -78,13 +81,15 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithField("username", req.UserName),
 			logger.WithField("action", "login"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if code == 0 {
 		logger.Info("user login success",
 			logger.WithServiceName("api"),
 			logger.WithField("username", req.UserName),
-			logger.WithField("action", "login"))
+			logger.WithField("action", "login"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := &user.LoginResp{
 		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -106,6 +111,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "get_user_info"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &user.UserInfoResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
@@ -120,6 +126,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("target_user_id", req.UserId),
 			logger.WithField("action", "get_user_info"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	resp := &user.UserInfoResp{
@@ -143,6 +150,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "upload_avatar"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
@@ -157,6 +165,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "upload_avatar"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
@@ -171,6 +180,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("filename", data.Filename),
 			logger.WithField("action", "upload_avatar"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
@@ -184,7 +194,8 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("filename", data.Filename),
-			logger.WithField("action", "upload_avatar"))
+			logger.WithField("action", "upload_avatar"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp := &user.UserAvatarResp{
 			Base: &common.Base{Code: consts.ImageFalse, Msg: consts.GetErrorCodeMsg(consts.FileError)},
 			Data: nil,
@@ -203,6 +214,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("avatar_url", qiniuKey),
 			logger.WithField("action", "upload_avatar"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if code == 0 {
@@ -210,7 +222,8 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("avatar_url", qiniuKey),
-			logger.WithField("action", "upload_avatar"))
+			logger.WithField("action", "upload_avatar"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := &user.UserAvatarResp{
 		Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -228,6 +241,7 @@ func RefreshToken(ctx context.Context, c *app.RequestContext) {
 		logger.Warn("refresh token binding failed",
 			logger.WithServiceName("api"),
 			logger.WithField("action", "refresh_token"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &user.RefreshTokenResp{
 			Base: &common.Base{Code: consts.UserReqValidError, Msg: consts.GetErrorCodeMsg(consts.UserReqValidError)},
@@ -240,12 +254,14 @@ func RefreshToken(ctx context.Context, c *app.RequestContext) {
 		logger.Error("refresh token failed",
 			logger.WithServiceName("api"),
 			logger.WithField("action", "refresh_token"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 	}
 	if code == 0 {
 		logger.Info("refresh token success",
 			logger.WithServiceName("api"),
-			logger.WithField("action", "refresh_token"))
+			logger.WithField("action", "refresh_token"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := &user.RefreshTokenResp{
 		Base:         &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

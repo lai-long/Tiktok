@@ -29,6 +29,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
@@ -42,6 +43,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
@@ -53,7 +55,8 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		logger.Warn("video publish user id not found",
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
-			logger.WithField("action", "video_publish"))
+			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
 		}
@@ -65,6 +68,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		logger.WithUserID(userID),
 		logger.WithField("filename", data.Filename),
 		logger.WithField("action", "video_publish"),
+		logger.WithTraceID(utils.GetTraceID(ctx)),
 	)
 	dataFile, err := data.Open()
 	if err != nil {
@@ -73,6 +77,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("filename", data.Filename),
 			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		c.JSON(200, &video.VideoPublishResp{
 			Base: &common.Base{Code: consts.FileError, Msg: consts.GetErrorCodeMsg(consts.FileError)},
@@ -90,6 +95,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("object_name", objectName),
 			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(uploadErr))
 		c.JSON(200, &video.VideoPublishResp{
 			Base: &common.Base{
@@ -119,6 +125,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("video_url", rpcReq.VideoURL),
 			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoPublishResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -132,7 +139,8 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("video_url", rpcReq.VideoURL),
 			logger.WithField("title", req.Title),
-			logger.WithField("action", "video_publish"))
+			logger.WithField("action", "video_publish"),
+			logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	resp := new(video.VideoPublishResp)
 	resp.Base = &common.Base{
@@ -153,6 +161,7 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
@@ -172,6 +181,7 @@ func VideoList(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("target_user_id", req.UserId),
 			logger.WithField("action", "video_list"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -197,6 +207,7 @@ func VideoSearch(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_search"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
@@ -216,6 +227,7 @@ func VideoSearch(ctx context.Context, c *app.RequestContext) {
 			logger.WithUserID(userID),
 			logger.WithField("keyword", req.KeyWord),
 			logger.WithField("action", "video_search"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -241,6 +253,7 @@ func VideoPopular(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_popular"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
@@ -258,6 +271,7 @@ func VideoPopular(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_popular"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},
@@ -283,6 +297,7 @@ func VideoStream(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_stream"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: consts.VideoReqValidError, Msg: consts.GetErrorCodeMsg(consts.VideoReqValidError)},
@@ -297,6 +312,7 @@ func VideoStream(ctx context.Context, c *app.RequestContext) {
 			logger.WithServiceName("api"),
 			logger.WithUserID(userID),
 			logger.WithField("action", "video_stream"),
+			logger.WithTraceID(utils.GetTraceID(ctx)),
 			zap.Error(err))
 		resp := &video.VideoListResp{
 			Base: &common.Base{Code: code, Msg: consts.GetErrorCodeMsg(code)},

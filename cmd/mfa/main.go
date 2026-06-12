@@ -64,6 +64,7 @@ func main() {
 		server.WithServiceAddr(addr),
 		server.WithRegistry(r),
 		server.WithMiddleware(middleware.SentinelMiddleware),
+		server.WithMiddleware(middleware.TracingMiddleware("mfa")),
 		server.WithMetaHandler(transmeta.MetainfoServerHandler),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
 			ServiceName: "mfaService",

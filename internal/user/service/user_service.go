@@ -60,6 +60,7 @@ func (s *UserRepo) IsUsernameExists(ctx context.Context, username string) (bool,
 }
 
 func (s *UserRepo) Register(ctx context.Context, userName string, password string) (int32, error) {
+	defer utils.TrackTime(ctx, "UserRegister")()
 	var userEntity entity.UserEntity
 	var err error
 	exists, err := s.IsUsernameExists(ctx, userName)
@@ -82,6 +83,7 @@ func (s *UserRepo) Register(ctx context.Context, userName string, password strin
 }
 
 func (s *UserRepo) Login(ctx context.Context, userName, password, mfaCode string) (int32, *user.UserInfo, string, string, error) {
+	defer utils.TrackTime(ctx, "UserLogin")()
 	userEntity, err := s.userDb.GetUserByUsername(ctx, userName)
 	if errors.Is(err, sql.ErrNoRows) {
 		return consts.UserNotExists, &user.UserInfo{}, "", "", nil
@@ -113,6 +115,7 @@ func (s *UserRepo) Login(ctx context.Context, userName, password, mfaCode string
 }
 
 func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo, int32, error) {
+	defer utils.TrackTime(ctx, "UserInfo")()
 	userEntity, err := s.redis.GetCachedUserInfo(ctx, userId)
 	if err == nil && userEntity != nil {
 		return toUserInfo(*userEntity), consts.Success, nil
@@ -130,6 +133,7 @@ func (s *UserRepo) UserInfo(ctx context.Context, userId string) (*user.UserInfo,
 }
 
 func (s *UserRepo) UserAvatar(ctx context.Context, url string, userID string) (int32, *user.UserInfo, error) {
+	defer utils.TrackTime(ctx, "UserAvatar")()
 	err := s.userDb.UpdateUserAvatar(ctx, url, userID)
 	if err != nil {
 		return consts.UserDBUpdateError, &user.UserInfo{}, errors.Wrap(err, "->userinfo 更新头像错误")
@@ -146,6 +150,7 @@ func (s *UserRepo) UserAvatar(ctx context.Context, url string, userID string) (i
 }
 
 func (s *UserRepo) RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error) {
+	defer utils.TrackTime(ctx, "RefreshToken")()
 	userId, err := s.redis.UserGetByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return consts.UserRedisGetError, "", "", errors.Wrap(err, "->RefreshToken GetUserIDByRefreshToken error")

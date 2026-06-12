@@ -47,26 +47,28 @@ func NewLikeRepo(videoDb LikeVideoDatabase, commentDb LikeCommentDatabase, likeD
 }
 
 func (s *LikeRepo) LikeVideo(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "LikeVideo")()
 	err := s.likeDb.LikeCreate(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
 	}
 	err = s.videoDb.VideoLikeCountUp(ctx, targetId)
 	if err != nil {
-		logger.Error("likeAction VideoLikeCountUp error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
+		logger.Error("likeAction VideoLikeCountUp error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 	}
 	go func() {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		err := s.likeRedis.VideoLikeSAdd(ctx, userId, targetId)
 		if err != nil {
-			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
+			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 		}
 	}()
 	return consts.Success, nil
 }
 
 func (s *LikeRepo) DislikeVideo(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "DislikeVideo")()
 	err := s.likeDb.LikeDelete(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
@@ -80,13 +82,14 @@ func (s *LikeRepo) DislikeVideo(ctx context.Context, userId string, targetId str
 		defer cancel()
 		err = s.likeRedis.VideoDislikeSRem(ctx, userId, targetId)
 		if err != nil {
-			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
+			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 		}
 	}()
 	return consts.Success, nil
 }
 
 func (s *LikeRepo) LikeComment(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "LikeComment")()
 	err := s.likeDb.LikeCreate(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBInsertError, errors.Wrap(err, "->LikeAction LikeCreate error")
@@ -99,6 +102,7 @@ func (s *LikeRepo) LikeComment(ctx context.Context, userId string, targetId stri
 }
 
 func (s *LikeRepo) DislikeComment(ctx context.Context, userId string, targetId string, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "DislikeComment")()
 	err := s.likeDb.LikeDelete(ctx, userId, targetId, targetType)
 	if err != nil {
 		return consts.ReactDBDeleteError, errors.Wrap(err, "->LikeAction LikeDelete error")
@@ -111,6 +115,7 @@ func (s *LikeRepo) DislikeComment(ctx context.Context, userId string, targetId s
 }
 
 func (s *LikeRepo) LikeAction(ctx context.Context, userId string, targetId string, action string, targetType string) (int32, error) {
+	defer utils.TrackTime(ctx, "LikeAction")()
 	switch targetType {
 	case consts.TargetVideo:
 		switch action {
@@ -140,6 +145,7 @@ func (s *LikeRepo) LikeAction(ctx context.Context, userId string, targetId strin
 }
 
 func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, pageSize int64) (int32, []string, int64, error) {
+	defer utils.TrackTime(ctx, "LikeList")()
 	results, err := s.likeRedis.VideoLikeGet(ctx, userId)
 	if err == nil && len(results) > 0 {
 		start := pageNum * pageSize
@@ -163,7 +169,7 @@ func (s *LikeRepo) LikeList(ctx context.Context, userId string, pageNum int64, p
 		for _, id := range videoIds {
 			err = s.likeRedis.VideoLikeSAdd(ctx, userId, id)
 			if err != nil {
-				logger.Error("likeAction LikeSAdd error", zap.Error(err), logger.WithRequestID(utils.GetRequestID(ctx)))
+				logger.Error("likeAction LikeSAdd error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 			}
 		}
 	}()

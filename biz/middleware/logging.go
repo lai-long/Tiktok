@@ -20,13 +20,25 @@ func LoggingMiddleware() app.HandlerFunc {
 		method := string(c.Request.Method())
 		clientIP := c.ClientIP()
 
-		requestID := utils.IDGenerate()
-		c.Set(consts.RequestIDKey, requestID)
-		ctx = metainfo.WithValue(ctx, consts.RequestIDKey, requestID)
+		traceID := utils.IDGenerate()
+		c.Set(consts.TraceIDKey, traceID)
+		ctx = metainfo.WithValue(ctx, consts.TraceIDKey, traceID)
 
 		c.Next(ctx)
 
 		latency := time.Since(start).Milliseconds()
+
+		if latency > 1000 {
+			logger.Warn("slow request detected",
+				logger.WithServiceName("api"),
+				logger.WithTraceID(traceID),
+				zap.String("method", method),
+				zap.String("path", path),
+				zap.String("client_ip", clientIP),
+				zap.Int64("latency_ms", latency),
+			)
+		}
+
 		status := c.Response.StatusCode()
 
 		userIDVal, _ := c.Get(consts.UserIDKey)
@@ -37,7 +49,7 @@ func LoggingMiddleware() app.HandlerFunc {
 
 		fields := []zap.Field{
 			logger.WithServiceName("api"),
-			logger.WithRequestID(requestID),
+			logger.WithTraceID(traceID),
 			zap.String("method", method),
 			zap.String("path", path),
 			zap.String("client_ip", clientIP),
