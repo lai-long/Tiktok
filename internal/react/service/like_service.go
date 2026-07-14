@@ -15,6 +15,8 @@ type LikeRedis interface {
 	VideoLikeSAdd(ctx context.Context, userId string, videoId string) error
 	VideoDislikeSRem(ctx context.Context, userId string, videoId string) error
 	VideoLikeGet(ctx context.Context, userId string) ([]string, error)
+	VideoHotIncrBy(ctx context.Context, key string, videoId string, delta float64) error
+	VideoInfoDelete(ctx context.Context, videoId string) error
 }
 
 type LikeCommentDatabase interface {
@@ -63,6 +65,14 @@ func (s *LikeRepo) LikeVideo(ctx context.Context, userId string, targetId string
 		if err != nil {
 			logger.Error("likeAction VideoLikeSAdd error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 		}
+		err = s.likeRedis.VideoHotIncrBy(ctx, "videoHot", targetId, consts.HotScoreWeightLike)
+		if err != nil {
+			logger.Error("likeAction VideoHotIncrBy error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+		err = s.likeRedis.VideoInfoDelete(ctx, targetId)
+		if err != nil {
+			logger.Error("likeAction VideoInfoDelete error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
 	}()
 	return consts.Success, nil
 }
@@ -83,6 +93,14 @@ func (s *LikeRepo) DislikeVideo(ctx context.Context, userId string, targetId str
 		err = s.likeRedis.VideoDislikeSRem(ctx, userId, targetId)
 		if err != nil {
 			logger.Error("likeAction VideoDislikeSRem error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+		err = s.likeRedis.VideoHotIncrBy(ctx, "videoHot", targetId, -consts.HotScoreWeightLike)
+		if err != nil {
+			logger.Error("likeAction VideoHotIncrBy error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+		err = s.likeRedis.VideoInfoDelete(ctx, targetId)
+		if err != nil {
+			logger.Error("likeAction VideoInfoDelete error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
 		}
 	}()
 	return consts.Success, nil

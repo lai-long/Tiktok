@@ -21,11 +21,22 @@ func (rdb *Redis) VideoHotSet(ctx context.Context, key string, member interface{
 	return nil
 }
 func (rdb *Redis) VideoHotGet(ctx context.Context, key string, pageNum int64, pageSize int64) ([]redis.Z, error) {
-	z, err := rdb.redis.ZRevRangeWithScores(ctx, key, pageSize*pageNum, pageSize+pageSize*pageNum).Result()
+	start, end := videoHotRange(pageNum, pageSize)
+	z, err := rdb.redis.ZRevRangeWithScores(ctx, key, start, end).Result()
 	if err != nil {
 		return nil, err
 	}
 	return z, nil
+}
+
+func videoHotRange(pageNum, pageSize int64) (int64, int64) {
+	start := pageNum * pageSize
+	end := start + pageSize - 1
+	return start, end
+}
+
+func (rdb *Redis) VideoHotIncrBy(ctx context.Context, key string, videoID string, delta float64) error {
+	return rdb.redis.ZIncrBy(ctx, key, delta, videoID).Err()
 }
 
 func (rdb *Redis) VideoInfoSet(ctx context.Context, videoID string, video *entity.VideoEntity) error {
@@ -53,4 +64,8 @@ func (rdb *Redis) VideoInfoGet(ctx context.Context, videoID string) (*entity.Vid
 		return nil, errors.Wrap(err, "json unmarshal")
 	}
 	return &videoEntity, nil
+}
+
+func (rdb *Redis) VideoInfoDelete(ctx context.Context, videoID string) error {
+	return rdb.redis.Del(ctx, "video:info:"+videoID).Err()
 }

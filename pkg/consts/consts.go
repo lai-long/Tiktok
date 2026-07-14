@@ -70,6 +70,13 @@ const (
 	VideoRedisGetError int32 = 202006 // 视频模块redis get错误
 )
 
+// 视频热度分权重
+const (
+	HotScoreWeightView    float64 = 1
+	HotScoreWeightLike    float64 = 5
+	HotScoreWeightComment float64 = 10
+)
+
 // 03 react模块
 const (
 	ReactReqValidError int32 = 103001 // 互动模块视频绑定错误

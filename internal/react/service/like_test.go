@@ -48,6 +48,12 @@ func (m *MockLike) VideoLikeGet(ctx context.Context, userId string) ([]string, e
 	args := m.Called(ctx, userId)
 	return args.Get(0).([]string), args.Error(1)
 }
+func (m *MockLike) VideoHotIncrBy(ctx context.Context, key string, videoId string, delta float64) error {
+	return nil
+}
+func (m *MockLike) VideoInfoDelete(ctx context.Context, videoId string) error {
+	return nil
+}
 
 type MockLike struct {
 	mock.Mock

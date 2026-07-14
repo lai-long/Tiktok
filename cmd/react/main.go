@@ -51,7 +51,7 @@ func main() {
 	rdb := cache.InitRedis()
 	redis := cache.NewRedis(rdb)
 
-	commentRepo := service.NewCommentService(mysqlDb)
+	commentRepo := service.NewCommentService(mysqlDb, redis)
 	commentServiceImpl := handler.NewCommentService(commentRepo)
 
 	likeRepo := service.NewLikeRepo(mysqlDb, mysqlDb, mysqlDb, redis)

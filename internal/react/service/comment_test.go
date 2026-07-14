@@ -11,6 +11,18 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type MockCommentRedis struct {
+	mock.Mock
+}
+
+func (m *MockCommentRedis) VideoHotIncrBy(ctx context.Context, key string, videoId string, delta float64) error {
+	return nil
+}
+
+func (m *MockCommentRedis) VideoInfoDelete(ctx context.Context, videoId string) error {
+	return nil
+}
+
 type MockCommentRepo struct {
 	mock.Mock
 }
@@ -88,7 +100,7 @@ func TestCommentList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
-			svc := NewCommentService(mockComment)
+			svc := NewCommentService(mockComment, new(MockCommentRedis))
 			code, comments, err := svc.CommentList(context.Background(), tt.targetId, tt.pageSize, tt.pageNum)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantLen, len(comments))
@@ -178,7 +190,7 @@ func TestCommentPublish(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
-			svc := NewCommentService(mockComment)
+			svc := NewCommentService(mockComment, new(MockCommentRedis))
 			code, err := svc.CommentPublish(context.Background(), tt.targetId, tt.userId, tt.content, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -244,7 +256,7 @@ func TestCommentDelete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockComment := new(MockCommentRepo)
 			tt.mockSetup(mockComment)
-			svc := NewCommentService(mockComment)
+			svc := NewCommentService(mockComment, new(MockCommentRedis))
 			code, err := svc.CommentDelete(context.Background(), tt.commentId, tt.targetId, tt.userId, tt.targetType)
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)

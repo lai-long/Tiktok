@@ -73,6 +73,19 @@ func (m *MockVideoDb) GetVideoByIds(ctx context.Context, ids []string) ([]entity
 	return args.Get(0).([]entity.VideoEntity), args.Error(1)
 }
 
+func (m *MockVideoRedis) VideoHotIncrBy(ctx context.Context, key string, videoID string, delta float64) error {
+	return nil
+}
+
+func (m *MockVideoRedis) VideoInfoDelete(ctx context.Context, videoID string) error {
+	return nil
+}
+
+func (m *MockVideoDb) VideoVisitCountUp(ctx context.Context, videoID string) error {
+	args := m.Called(ctx, videoID)
+	return args.Error(0)
+}
+
 func TestVideoPublish(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -371,6 +384,8 @@ func TestVideoStream(t *testing.T) {
 					{ID: "1", Title: "stream video 1"},
 					{ID: "2", Title: "stream video 2"},
 				}, nil)
+				m.On("VideoVisitCountUp", mock.Anything, "1").Return(nil)
+				m.On("VideoVisitCountUp", mock.Anything, "2").Return(nil)
 			},
 			wantCode: consts.Success,
 			wantErr:  false,
@@ -388,7 +403,7 @@ func TestVideoStream(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDb := new(MockVideoDb)
 			tt.mockSetup(mockDb)
-			videoRepo := NewVideoRepo(mockDb, nil)
+			videoRepo := NewVideoRepo(mockDb, new(MockVideoRedis))
 			code, _, err := videoRepo.VideoStream(context.Background())
 			assert.Equal(t, tt.wantCode, code)
 			assert.Equal(t, tt.wantErr, err != nil)

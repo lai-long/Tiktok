@@ -14,6 +14,12 @@ func (m *MySQLdb) CreateVideo(ctx context.Context, entity entity.VideoEntity) er
 	return err
 }
 
+func (m *MySQLdb) VideoVisitCountUp(ctx context.Context, videoID string) error {
+	sql := `UPDATE videos SET visit_count = visit_count + 1 WHERE id = ?`
+	_, err := m.db.ExecContext(ctx, sql, videoID)
+	return err
+}
+
 func (m *MySQLdb) GetVideoByUserID(ctx context.Context, userID string, pageSize int64, pageNum int64) ([]entity.VideoEntity, error) {
 	var video []entity.VideoEntity
 	sql := `select * from videos where user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`

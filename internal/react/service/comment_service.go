@@ -1,13 +1,16 @@
 package service
 
 import (
-	"Tiktok/kitex_gen/react"
+	react "Tiktok/kitex_gen/react"
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type CommentDatabase interface {
@@ -21,12 +24,18 @@ type CommentDatabase interface {
 	CreateComment(ctx context.Context, commentId string, videoId string, userId string, content string, targetType string) error
 }
 
-type CommentRepo struct {
-	db CommentDatabase
+type CommentRedis interface {
+	VideoHotIncrBy(ctx context.Context, key string, videoId string, delta float64) error
+	VideoInfoDelete(ctx context.Context, videoId string) error
 }
 
-func NewCommentService(db CommentDatabase) *CommentRepo {
-	return &CommentRepo{db: db}
+type CommentRepo struct {
+	db  CommentDatabase
+	rdb CommentRedis
+}
+
+func NewCommentService(db CommentDatabase, rdb CommentRedis) *CommentRepo {
+	return &CommentRepo{db: db, rdb: rdb}
 }
 
 func toCommentInfo(e entity.CommentEntity) *react.CommentInfo {
@@ -56,6 +65,7 @@ func (s *CommentRepo) CommentPublish(ctx context.Context, targetId, userId, cont
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentPublish Update comment count error ")
 		}
+		s.updateHotScoreAsync(ctx, targetId, consts.HotScoreWeightComment)
 		return consts.Success, nil
 	case "2":
 		commentId := utils.IDGenerate()
@@ -104,6 +114,7 @@ func (s *CommentRepo) CommentDelete(ctx context.Context, commentId string, targe
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
+		s.updateHotScoreAsync(ctx, targetId, -consts.HotScoreWeightComment)
 		return consts.Success, nil
 	case "2":
 		err = s.db.CommentCommentCountDown(ctx, targetId)
@@ -112,4 +123,20 @@ func (s *CommentRepo) CommentDelete(ctx context.Context, commentId string, targe
 		}
 	}
 	return consts.ReactReqValueError, nil
+}
+
+func (s *CommentRepo) updateHotScoreAsync(ctx context.Context, videoID string, delta float64) {
+	if s.rdb == nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := s.rdb.VideoHotIncrBy(ctx, "videoHot", videoID, delta); err != nil {
+			logger.Error("CommentRepo hot incr error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+		if err := s.rdb.VideoInfoDelete(ctx, videoID); err != nil {
+			logger.Error("CommentRepo cache delete error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+	}()
 }

@@ -5,20 +5,23 @@ import (
 
 	"Tiktok/pkg/consts"
 	"Tiktok/pkg/entity"
+	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
 	"context"
-	"math/rand"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 type VideoRedis interface {
 	VideoHotSet(ctx context.Context, key string, member interface{}, score float64) error
 	VideoHotGet(ctx context.Context, key string, pageNum int64, pageSize int64) ([]redis.Z, error)
+	VideoHotIncrBy(ctx context.Context, key string, videoID string, delta float64) error
 	VideoInfoSet(ctx context.Context, VideoID string, video *entity.VideoEntity) error
 	VideoInfoGet(ctx context.Context, VideoID string) (*entity.VideoEntity, error)
+	VideoInfoDelete(ctx context.Context, VideoID string) error
 }
 type VideoDatabase interface {
 	CreateVideo(ctx context.Context, entity entity.VideoEntity) error
@@ -27,6 +30,7 @@ type VideoDatabase interface {
 	GetVideoByVideoId(ctx context.Context, videoId string) (entity.VideoEntity, error)
 	GetVideoStream(ctx context.Context) ([]entity.VideoEntity, error)
 	GetVideoByIds(ctx context.Context, ids []string) ([]entity.VideoEntity, error)
+	VideoVisitCountUp(ctx context.Context, videoID string) error
 }
 type VideoRepo struct {
 	videoDb    VideoDatabase
@@ -69,9 +73,9 @@ func (s *VideoRepo) VideoPublish(ctx context.Context, title string, description 
 	videoEntity.VideoURL = url
 	videoEntity.CoverURL = coverURL
 	videoEntity.UserID = userID
-	videoEntity.VisitCount = rand.Intn(100)
+	videoEntity.VisitCount = 0
 	videoEntity.ID = utils.IDGenerate()
-	err := s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, float64(videoEntity.VisitCount))
+	err := s.VideoRedis.VideoHotSet(ctx, "videoHot", videoEntity.ID, 0)
 	if err != nil {
 		return consts.VideoRedisSetError, errors.Wrap(err, "->VideoPublish redis hot set err")
 	}
@@ -133,6 +137,11 @@ func (s *VideoRepo) VideoStream(ctx context.Context) (int32, []*video.VideoInfo,
 	if err != nil {
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->video stream select video error")
 	}
+	for _, v := range videoEntity {
+		if _, err := s.VideoVisitCountUp(ctx, v.ID); err != nil {
+			logger.Error("VideoStream visit count error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+	}
 	return consts.Success, toVideoInfoList(videoEntity), nil
 }
 
@@ -143,4 +152,23 @@ func (s *VideoRepo) BatchGetVideo(ctx context.Context, ids []string) (int32, []*
 		return consts.VideoDBSelectError, nil, errors.Wrap(err, "->BatchGetVideo GetVideoByIds err")
 	}
 	return consts.Success, toVideoInfoList(videos), nil
+}
+
+func (s *VideoRepo) VideoVisitCountUp(ctx context.Context, videoID string) (int32, error) {
+	defer utils.TrackTime(ctx, "VideoVisitCountUp")()
+	err := s.videoDb.VideoVisitCountUp(ctx, videoID)
+	if err != nil {
+		return consts.VideoDBUpdateError, errors.Wrap(err, "->VideoVisitCountUp update visit count err")
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := s.VideoRedis.VideoHotIncrBy(ctx, "videoHot", videoID, consts.HotScoreWeightView); err != nil {
+			logger.Error("VideoVisitCountUp hot incr error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+		if err := s.VideoRedis.VideoInfoDelete(ctx, videoID); err != nil {
+			logger.Error("VideoVisitCountUp cache delete error", zap.Error(err), logger.WithTraceID(utils.GetTraceID(ctx)))
+		}
+	}()
+	return consts.Success, nil
 }
