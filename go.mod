@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/alibaba/sentinel-golang v1.0.4
+	github.com/bytedance/gopkg v0.1.4
 	github.com/cloudwego/hertz v0.10.4
 	github.com/cloudwego/kitex v0.16.2
 	github.com/cloudwego/prutal v0.1.3
@@ -62,7 +63,6 @@ require (
 	github.com/aws/smithy-go v1.24.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/boombuler/barcode v1.1.0 // indirect
-	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

@@ -17,6 +17,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// uploadProvider is overridable in tests so UserAvatar can be unit-tested
+// without making real Qiniu requests.
+var uploadProvider = utils.NewQiNiuProvider()
+
 // UserRegister .
 // @router /user/register [POST]
 func UserRegister(ctx context.Context, c *app.RequestContext) {
@@ -173,7 +177,7 @@ func UserAvatar(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, resp)
 		return
 	}
-	qiniuKey, err := utils.UploadImageToQiNiu(ctx, data, "avatar/")
+	qiniuKey, err := uploadProvider.UploadImage(ctx, data, "avatar/")
 	if err != nil {
 		logger.Error("user avatar upload failed",
 			logger.WithServiceName("api"),

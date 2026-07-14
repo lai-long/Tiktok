@@ -18,6 +18,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// uploadProvider is overridable in tests so VideoPublish can be unit-tested
+// without making real Qiniu requests.
+var uploadProvider = utils.NewQiNiuProvider()
+
 // VideoPublish .
 // @router /video/publish [POST]
 func VideoPublish(ctx context.Context, c *app.RequestContext) {
@@ -87,7 +91,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	filename := utils.IDGenerate()
 	ext := filepath.Ext(data.Filename)
 	objectName := "video/" + filename + ext
-	qiniuKey, uploadErr := utils.UploadToQiNiu(ctx, dataFile, objectName, data.Filename)
+	qiniuKey, uploadErr := uploadProvider.UploadFile(ctx, dataFile, objectName, data.Filename)
 	_ = dataFile.Close()
 	if uploadErr != nil {
 		logger.Error("video publish upload to qiniu failed",
@@ -108,7 +112,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	var coverKey string
 	coverFileHeader, coverErr := c.FormFile("cover")
 	if coverErr == nil {
-		coverKey, err = utils.UploadImageToQiNiu(ctx, coverFileHeader, "cover/")
+		coverKey, err = uploadProvider.UploadImage(ctx, coverFileHeader, "cover/")
 		if err != nil {
 			logger.Error("cover upload failed",
 				logger.WithServiceName("api"),

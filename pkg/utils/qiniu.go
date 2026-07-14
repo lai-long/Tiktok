@@ -19,6 +19,28 @@ import (
 
 const qiniuPrefix = "qiniu://"
 
+// UploadProvider abstracts file/image upload so handlers can be unit-tested
+// without touching the real Qiniu backend.
+type UploadProvider interface {
+	UploadImage(ctx context.Context, fileHeader *multipart.FileHeader, prefix string) (string, error)
+	UploadFile(ctx context.Context, reader io.Reader, objectName string, fileName string) (string, error)
+}
+
+type qiniuProvider struct{}
+
+// NewQiNiuProvider returns the production UploadProvider backed by Qiniu.
+func NewQiNiuProvider() UploadProvider {
+	return &qiniuProvider{}
+}
+
+func (p *qiniuProvider) UploadImage(ctx context.Context, fileHeader *multipart.FileHeader, prefix string) (string, error) {
+	return UploadImageToQiNiu(ctx, fileHeader, prefix)
+}
+
+func (p *qiniuProvider) UploadFile(ctx context.Context, reader io.Reader, objectName string, fileName string) (string, error) {
+	return UploadToQiNiu(ctx, reader, objectName, fileName)
+}
+
 func UploadToQiNiu(ctx context.Context, reader io.Reader, objectName string, fileName string) (string, error) {
 	creds := credentials.NewCredentials(config.GetCfg().QiNiu.AccessKey, config.GetCfg().QiNiu.SecretKey)
 
