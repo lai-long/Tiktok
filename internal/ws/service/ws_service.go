@@ -223,13 +223,17 @@ func (ws *WebsocketService) startBroadcastOneOnline(broadcast *Broadcast) {
 	flag := false
 	if client, ok := ws.Manager.GetClient(sendId); ok {
 		replyMSg := chat.ReplyMsg{From: client.ID, Code: consts.Success, Content: string(message)}
-		msg, _ := protojson.Marshal(&replyMSg)
-		select {
-		case client.Send <- msg:
-			flag = true
-		default:
-			if ws.Manager.RemoveClient(client.ID) {
-				close(client.Send)
+		msg, err := protojson.Marshal(&replyMSg)
+		if err != nil {
+			logger.Error("marshal online reply message failed", zap.Error(err))
+		} else {
+			select {
+			case client.Send <- msg:
+				flag = true
+			default:
+				if ws.Manager.RemoveClient(client.ID) {
+					close(client.Send)
+				}
 			}
 		}
 	}
@@ -267,10 +271,20 @@ func (ws *WebsocketService) startBroadcastOneHistory(broadcast *Broadcast) {
 	pageNum := 0
 	pageSize := 10
 	if broadcast.PageNum != "" {
-		pageNum, _ = strconv.Atoi(broadcast.PageNum)
+		pn, err := strconv.Atoi(broadcast.PageNum)
+		if err != nil {
+			logger.Error("parse page num error", zap.Error(err), zap.String("page_num", broadcast.PageNum))
+		} else {
+			pageNum = pn
+		}
 	}
 	if broadcast.PageSize != "" {
-		pageSize, _ = strconv.Atoi(broadcast.PageSize)
+		ps, err := strconv.Atoi(broadcast.PageSize)
+		if err != nil {
+			logger.Error("parse page size error", zap.Error(err), zap.String("page_size", broadcast.PageSize))
+		} else {
+			pageSize = ps
+		}
 	}
 	msgs, err := ws.mysql.GetWebsocketHistory(broadcast.Clients.ID, broadcast.Clients.SendID, pageNum, pageSize)
 	if err != nil || msgs == nil {
@@ -301,13 +315,21 @@ func (ws *WebsocketService) aiReplyToClient(resp string, c *Client) {
 
 func (ws *WebsocketService) sendReplyMsg(client *Client, from string, code int32, content string) {
 	replyMSg := chat.ReplyMsg{From: from, Code: code, Content: content}
-	msg, _ := protojson.Marshal(&replyMSg)
+	msg, err := protojson.Marshal(&replyMSg)
+	if err != nil {
+		logger.Error("marshal reply message failed", zap.Error(err))
+		return
+	}
 	client.Send <- msg
 }
 
 func (ws *WebsocketService) sendReplyMsgAndSendID(c *Client, from string, code int32, content string) {
 	replyMSg := chat.ReplyMsg{From: from, Code: code, Content: content}
-	msg, _ := protojson.Marshal(&replyMSg)
+	msg, err := protojson.Marshal(&replyMSg)
+	if err != nil {
+		logger.Error("marshal reply message failed", zap.Error(err))
+		return
+	}
 	c.Send <- msg
 	if c.SendID != "" {
 		if peer, ok := ws.Manager.GetClient(c.SendID); ok {

@@ -55,7 +55,10 @@ func UploadImageToQiNiu(ctx context.Context, fileHeader *multipart.FileHeader, p
 	}
 	defer func() { _ = file.Close() }()
 
-	isImage, _ := IsImage(file)
+	isImage, err := IsImage(file)
+	if err != nil {
+		return "", err
+	}
 	if !isImage {
 		return "", nil
 	}

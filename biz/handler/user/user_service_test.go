@@ -20,7 +20,10 @@ import (
 
 // jsonBody 辅助函数：构造 JSON body 和 Content-Type Header
 func jsonBody(v any) (*ut.Body, []ut.Header) {
-	b, _ := json.Marshal(v)
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
 	return &ut.Body{Body: bytes.NewReader(b), Len: len(b)},
 		[]ut.Header{{Key: "Content-Type", Value: "application/json"}}
 }

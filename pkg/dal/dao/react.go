@@ -44,7 +44,10 @@ func (m *MySQLdb) LikeDelete(ctx context.Context, userId, targetID, targetType s
 	if err != nil {
 		return errors.Wrap(err, "dao LikeDelete")
 	}
-	rows, _ := result.RowsAffected()
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return errors.Wrap(err, "dao LikeDelete RowsAffected")
+	}
 	if rows == 0 {
 		return fmt.Errorf("no like found to delete")
 	}

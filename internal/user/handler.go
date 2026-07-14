@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"Tiktok/internal/user/service"
 	user "Tiktok/kitex_gen/user"
 	"Tiktok/pkg/logger"
 	"Tiktok/pkg/utils"
@@ -10,18 +9,37 @@ import (
 	"go.uber.org/zap"
 )
 
-// UserServiceImpl implements the last service interface defined in the IDL.
-type UserServiceImpl struct {
-	service *service.UserRepo
+// userService 是 UserServiceImpl 依赖的最小接口，便于测试时注入 mock。
+type userService interface {
+	GenerateMfa(ctx context.Context, username string, userId string) (string, string, int32, error)
+	MfaBindBySecret(ctx context.Context, secret string, userId string) (int32, error)
+	MfaBindByCode(ctx context.Context, code string, userId string) (int32, error)
+	MfaConfirm(ctx context.Context, mfaCode string, userID string) (int32, error)
+	Register(ctx context.Context, userName string, password string) (int32, error)
+	Login(ctx context.Context, userName, password, mfaCode string) (int32, *user.UserInfo, string, string, error)
+	UserInfo(ctx context.Context, userId string) (*user.UserInfo, int32, error)
+	UserAvatar(ctx context.Context, url string, userID string) (int32, *user.UserInfo, error)
+	RefreshToken(ctx context.Context, refreshToken string) (int32, string, string, error)
 }
 
-func NewUserService(service *service.UserRepo) *UserServiceImpl {
+// UserServiceImpl implements the last service interface defined in the IDL.
+type UserServiceImpl struct {
+	service userService
+}
+
+func NewUserService(service userService) *UserServiceImpl {
 	return &UserServiceImpl{service: service}
 }
 
 // MfaQrcode implements the UserServiceImpl interface.
 func (s *UserServiceImpl) MfaQrcode(ctx context.Context, req *user.MfaQrcodeReq) (resp *user.MfaQrcodeResp, err error) {
-	qrCode, secret, code, _ := s.service.GenerateMfa(ctx, req.UserName, req.UserID)
+	qrCode, secret, code, err := s.service.GenerateMfa(ctx, req.UserName, req.UserID)
+	if err != nil {
+		resp = &user.MfaQrcodeResp{
+			Code: code,
+		}
+		return resp, err
+	}
 	resp = &user.MfaQrcodeResp{
 		Code: code,
 		Data: &user.MfaData{
@@ -35,17 +53,24 @@ func (s *UserServiceImpl) MfaQrcode(ctx context.Context, req *user.MfaQrcodeReq)
 // MfaBind implements the UserServiceImpl interface.
 func (s *UserServiceImpl) MfaBind(ctx context.Context, req *user.MfaBindReq) (resp *user.MfaBindResp, err error) {
 	var code int32
+	resp = &user.MfaBindResp{}
 	switch req.Type {
 	case "secret":
-		code, _ = s.service.MfaBindBySecret(ctx, req.Secret, req.UserID)
+		code, err = s.service.MfaBindBySecret(ctx, req.Secret, req.UserID)
+		if err != nil {
+			resp.Code = code
+			return resp, err
+		}
 	case "qrcode":
-		code, _ = s.service.MfaBindByCode(ctx, req.MfaCode, req.UserID)
+		code, err = s.service.MfaBindByCode(ctx, req.MfaCode, req.UserID)
+		if err != nil {
+			resp.Code = code
+			return resp, err
+		}
 	default:
 		code = 1
 	}
-	resp = &user.MfaBindResp{
-		Code: code,
-	}
+	resp.Code = code
 	return resp, nil
 }
 
@@ -64,7 +89,11 @@ func (s *UserServiceImpl) MfaConfirm(ctx context.Context, req *user.MfaConfirmRe
 // UserRegister implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserRegister(ctx context.Context, req *user.RegisterReq) (resp *user.RegisterResp, err error) {
 	resp = &user.RegisterResp{}
-	code, _ := s.service.Register(ctx, req.UserName, req.Password)
+	code, err := s.service.Register(ctx, req.UserName, req.Password)
+	if err != nil {
+		resp.Code = code
+		return resp, err
+	}
 	resp.Code = code
 	return resp, nil
 }
@@ -75,6 +104,10 @@ func (s *UserServiceImpl) UserLogin(ctx context.Context, req *user.LoginReq) (re
 	code, userInfo, reToken, acToken, err := s.service.Login(ctx, req.UserName, req.Password, req.Code)
 	if err != nil {
 		resp.Code = code
+		resp.Data = userInfo
+		resp.RefreshToken = reToken
+		resp.AccessToken = acToken
+		return resp, err
 	}
 	resp.Code = code
 	resp.Data = userInfo
@@ -91,7 +124,7 @@ func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.UserInfoReq) (
 		logger.Error("UserInfo failed", zap.Error(err), logger.WithUserID(req.UserId), logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp.Code = code
 		resp.Data = userInfo
-		return resp, nil
+		return resp, err
 	}
 	resp.Code = code
 	resp.Data = userInfo
@@ -106,7 +139,7 @@ func (s *UserServiceImpl) UserAvatar(ctx context.Context, req *user.UserAvatarRe
 		logger.Error("UserAvatar failed", zap.Error(err), logger.WithUserID(req.UserID), logger.WithTraceID(utils.GetTraceID(ctx)))
 		resp.Code = code
 		resp.Data = userInfo
-		return resp, nil
+		return resp, err
 	}
 	resp.Code = code
 	resp.Data = userInfo
@@ -122,7 +155,7 @@ func (s *UserServiceImpl) RefreshToken(ctx context.Context, req *user.RefreshTok
 		resp.Code = code
 		resp.RefreshToken = reToken
 		resp.AccessToken = acToken
-		return resp, nil
+		return resp, err
 	}
 	resp.Code = code
 	resp.RefreshToken = reToken

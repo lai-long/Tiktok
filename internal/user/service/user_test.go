@@ -140,7 +140,14 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hashPassword, _ := utils.HashPassword("password")
+	hashPassword, err := utils.HashPassword("password")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mfaCode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []struct {
 		name     string
 		userName string
@@ -240,7 +247,7 @@ func TestLogin(t *testing.T) {
 			name:     "Success_login_with_mfa",
 			userName: "username",
 			password: "password",
-			mfaCode:  func() string { code, _ := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now()); return code }(),
+			mfaCode:  mfaCode,
 			ctx:      context.Background(),
 			setMock: func(m *MockUser) {
 				m.On("GetUserByUsername", mock.Anything, "username").Return(entity.UserEntity{ID: "ID", Username: "username", Password: hashPassword}, nil)
