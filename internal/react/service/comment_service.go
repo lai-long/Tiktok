@@ -121,6 +121,7 @@ func (s *CommentRepo) CommentDelete(ctx context.Context, commentId string, targe
 		if err != nil {
 			return consts.ReactDBUpdateError, errors.Wrap(err, "->CommentDelete update comment count error ")
 		}
+		return consts.Success, nil
 	}
 	return consts.ReactReqValueError, nil
 }

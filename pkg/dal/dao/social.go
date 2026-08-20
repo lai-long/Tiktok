@@ -6,7 +6,7 @@ import (
 )
 
 func (m *MySQLdb) CreateFollowing(ctx context.Context, userID string, toUserID string) error {
-	sql := `INSERT INTO following (user_id, following_id) VALUES (?,?)`
+	sql := `INSERT INTO following (user_id, following_id) VALUES (?,?) ON DUPLICATE KEY UPDATE deleted_at = NULL`
 	_, err := m.db.ExecContext(ctx, sql, userID, toUserID)
 	return err
 }

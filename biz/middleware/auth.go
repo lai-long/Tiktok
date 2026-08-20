@@ -28,6 +28,7 @@ func AuthMiddleware(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		logger.Error("AuthMiddleware BindAndValidate error", zap.Error(err))
 		return
+
 	}
 	if req.AccessToken == "" {
 		c.JSON(200, user.AuthResp{Base: &common.Base{
